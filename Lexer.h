@@ -2,7 +2,7 @@
 #define VERIPYTHON_LEXER__
 
 enum VeriPythonTokens {
-    TOKEN_module,
+    TOKEN_module = -1024,
     TOKEN_endmodule,
     TOKEN_output,
     TOKEN_input,

@@ -4,10 +4,19 @@
 
 #ifndef VERIPYTHON_PARSER_H
 #define VERIPYTHON_PARSER_H
+
 #include "Lexer.h"
+#include <string>
+#include <tuple>
 
 class Parser {
+    std::tuple<bool, enum VeriPythonTokens> nextToken();
+
 public:
+    explicit Parser(const std::string &filename);
+
+    ~Parser();
+
     void doParse();
 };
 
