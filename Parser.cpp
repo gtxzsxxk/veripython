@@ -79,6 +79,15 @@ std::tuple<bool, LexTokenType> Parser::nextToken() {
 }
 
 void Parser::errorParsing(const std::string &message, const std::string &expectToken) {
+std::tuple<bool, LexTokenType>
+Parser::nextToken(enum VeriPythonTokens expectedTokenEnum, const std::string &expectTokenName) {
+    auto tokenTuple = nextToken();
+    if (std::get<0>(tokenTuple) && std::get<1>(tokenTuple).first != expectedTokenEnum) {
+        errorParsing("Unexpected token", expectTokenName);
+    }
+    return tokenTuple;
+}
+
     std::cerr << "Verilog parsing error: " << message << "\n";
     std::cerr << "Expecting token: " << expectToken << "\n";
     std::cerr << "Fetched Tokens: " << "\n";
