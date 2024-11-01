@@ -6,6 +6,9 @@
 #include <iostream>
 #include <filesystem>
 #include <cstdio>
+#include <exception>
+
+#define VERIFY_NEXT_TOKEN(name)         nextToken(TOKEN_##name, #name)
 
 extern "C" {
 int yylex();
@@ -35,9 +38,28 @@ void Parser::parseHDL() {
     }
 }
 
+/*
+ * module ::= "module" identifier "(" module_port_list ")" ";" module_body "endmodule"
+ * */
 void Parser::parseModule() {
+    VERIFY_NEXT_TOKEN(module);
+    auto identifierTokenData = VERIFY_NEXT_TOKEN(identifier);
+    VERIFY_NEXT_TOKEN(lparen);
+    parseModulePortList();
+    VERIFY_NEXT_TOKEN(rparen);
+    VERIFY_NEXT_TOKEN(semicolon);
+    parseModuleBody();
+    VERIFY_NEXT_TOKEN(endmodule);
+}
+
+void Parser::parseModulePortList() {
 
 }
+
+void Parser::parseModuleBody() {
+
+}
+
 
 Parser::~Parser() {
     fclose(yyin);
@@ -78,7 +100,6 @@ std::tuple<bool, LexTokenType> Parser::nextToken() {
     }
 }
 
-void Parser::errorParsing(const std::string &message, const std::string &expectToken) {
 std::tuple<bool, LexTokenType>
 Parser::nextToken(enum VeriPythonTokens expectedTokenEnum, const std::string &expectTokenName) {
     auto tokenTuple = nextToken();
@@ -88,8 +109,9 @@ Parser::nextToken(enum VeriPythonTokens expectedTokenEnum, const std::string &ex
     return tokenTuple;
 }
 
+void Parser::errorParsing(const std::string &message, const std::string &expectTokenName) {
     std::cerr << "Verilog parsing error: " << message << "\n";
-    std::cerr << "Expecting token: " << expectToken << "\n";
+    std::cerr << "Expecting token: " << expectTokenName << "\n";
     std::cerr << "Fetched Tokens: " << "\n";
     while (!tokenBuffer.empty()) {
         auto tokenData = tokenBuffer.front();
@@ -97,4 +119,5 @@ Parser::nextToken(enum VeriPythonTokens expectedTokenEnum, const std::string &ex
         std::cerr << tokenData.second << " ";
     }
     std::cerr << std::endl;
+    throw std::runtime_error("Code syntax error");
 }

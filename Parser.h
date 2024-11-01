@@ -21,7 +21,16 @@ class Parser {
 
     std::tuple<bool, LexTokenType> nextToken();
 
-    void errorParsing(const std::string &message, const std::string &expectToken = "");
+    std::tuple<bool, LexTokenType> nextToken(enum VeriPythonTokens expectedTokenEnum,
+                                             const std::string &expectTokenName);
+
+    void errorParsing(const std::string &message, const std::string &expectTokenName = "");
+
+    void parseModule();
+
+    void parseModulePortList();
+
+    void parseModuleBody();
 
 public:
     explicit Parser(const std::string &filename);
@@ -29,8 +38,6 @@ public:
     ~Parser();
 
     void parseHDL();
-
-    void parseModule();
 };
 
 #endif //VERIPYTHON_PARSER_H
