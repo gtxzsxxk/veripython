@@ -13,12 +13,15 @@
 typedef std::pair<enum VeriPythonTokens, std::string> LexTokenType;
 
 class Parser {
-    std::tuple<bool, enum VeriPythonTokens> nextToken();
+    const int TOKEN_FETCHED_SIZE = 100;
     std::queue<LexTokenType> tokenBuffer;
+    std::queue<LexTokenType> tokenFetched;
 
     std::tuple<bool, LexTokenType> lookAhead();
 
     std::tuple<bool, LexTokenType> nextToken();
+
+    void errorParsing(const std::string &message, const std::string &expectToken = "");
 
 public:
     explicit Parser(const std::string &filename);

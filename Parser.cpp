@@ -61,3 +61,15 @@ std::tuple<bool, LexTokenType> Parser::nextToken() {
         return {true, tokenData};
     }
 }
+
+void Parser::errorParsing(const std::string &message, const std::string &expectToken) {
+    std::cerr << "Verilog parsing error: " << message << "\n";
+    std::cerr << "Expecting token: " << expectToken << "\n";
+    std::cerr << "Fetched Tokens: " << "\n";
+    while (!tokenBuffer.empty()) {
+        auto tokenData = tokenBuffer.front();
+        tokenBuffer.pop();
+        std::cerr << tokenData.second << " ";
+    }
+    std::cerr << std::endl;
+}
