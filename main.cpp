@@ -1,6 +1,7 @@
-#include <iostream>
+#include "Parser.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    auto parser = Parser();
+    parser.doParse();
     return 0;
 }
