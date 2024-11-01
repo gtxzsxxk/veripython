@@ -13,7 +13,7 @@ add_custom_command(
         OUTPUT  ${FLEX_OUT}
         COMMAND cp ${CMAKE_SOURCE_DIR}/Lexer.h ${FLEX_DIR}
         COMMAND ${FLEX_EXECUTABLE}  ${FLEX_SRC}
-        MAIN_DEPENDENCY ${FLEX_SRC}
+        MAIN_DEPENDENCY ${FLEX_SRC} ${CMAKE_SOURCE_DIR}/Lexer.h
         COMMENT "Generating lex.yy.c from verilog.l"
 )
 

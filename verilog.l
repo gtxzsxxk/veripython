@@ -2,12 +2,6 @@
     #include <stdio.h>
     #include <string.h>
     #include "Lexer.h"
-    #define RET_KEYWORD(token)      {   unput(yytext[yyleng - 1]); \
-                                        char *thistok = strdup(yytext); \
-                                        thistok[yyleng - 1] = 0; \
-                                        yylval.str = thistok; \
-                                        return TOKEN_##token; \
-                                    }
     #define RET_TOKEN(name)         { yylval.str = strdup(yytext); return TOKEN_##name; }
 
     void yyerror(const char *s);
@@ -15,21 +9,21 @@
 
 %%
 
-module[^A-Za-z0-9]                      RET_KEYWORD(module)
-endmodule[^A-Za-z0-9]                   RET_KEYWORD(endmodule)
-output[^A-Za-z0-9]                      RET_KEYWORD(output)
-input[^A-Za-z0-9]                       RET_KEYWORD(input)
-assign[^A-Za-z0-9]                      RET_KEYWORD(assign)
-wire[^A-Za-z0-9]                        RET_KEYWORD(wire)
-begin[^A-Za-z0-9]                       RET_KEYWORD(begin)
-end[^A-Za-z0-9]                         RET_KEYWORD(end)
-case[^A-Za-z0-9]                        RET_KEYWORD(case)
-casez[^A-Za-z0-9]                       RET_KEYWORD(casez)
-casex[^A-Za-z0-9]                       RET_KEYWORD(casex)
-endcase[^A-Za-z0-9]                     RET_KEYWORD(endcase)
-if[^A-Za-z0-9]                          RET_KEYWORD(if)
-posedge[^A-Za-z0-9]                     RET_KEYWORD(posedge)
-reg[^A-Za-z0-9]                         RET_KEYWORD(reg)
+"module"                                RET_TOKEN(module)
+"endmodule"                             RET_TOKEN(endmodule)
+"output"                                RET_TOKEN(output)
+"input"                                 RET_TOKEN(input)
+"assign"                                RET_TOKEN(assign)
+"wire"                                  RET_TOKEN(wire)
+"begin"                                 RET_TOKEN(begin)
+"end"                                   RET_TOKEN(end)
+"casez"                                 RET_TOKEN(casez)
+"casex"                                 RET_TOKEN(casex)
+"case"                                  RET_TOKEN(case)
+"endcase"                               RET_TOKEN(endcase)
+"if"                                    RET_TOKEN(if)
+"posedge"                               RET_TOKEN(posedge)
+"reg"                                   RET_TOKEN(reg)
 ","                                     RET_TOKEN(comma)
 ";"                                     RET_TOKEN(semicolon)
 ":"                                     RET_TOKEN(colon)
