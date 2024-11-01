@@ -28,7 +28,9 @@ public:
 
     ~Parser();
 
-    void doParse();
+    void parseHDL();
+
+    void parseModule();
 };
 
 #endif //VERIPYTHON_PARSER_H

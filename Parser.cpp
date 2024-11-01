@@ -19,7 +19,23 @@ Parser::Parser(const std::string &filename) {
     yyin = fopen(filename.c_str(), "r");
 }
 
-void Parser::doParse() {
+/*
+ * hdl ::= module hdl | epsilon
+ * */
+void Parser::parseHDL() {
+    auto [tokenReady, tokenData] = lookAhead();
+    if (!tokenReady) {
+        return;
+    }
+    if (tokenData.first == TOKEN_module) {
+        parseModule();
+        parseHDL();
+    } else {
+        errorParsing("Unexpected lookahead at parseHDL", "module");
+    }
+}
+
+void Parser::parseModule() {
 
 }
 
