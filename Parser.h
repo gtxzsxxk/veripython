@@ -32,6 +32,8 @@ class Parser {
 
     void parseModuleBody();
 
+    void parseModulePort();
+
 public:
     explicit Parser(const std::string &filename);
 

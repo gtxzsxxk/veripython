@@ -52,7 +52,30 @@ void Parser::parseModule() {
     VERIFY_NEXT_TOKEN(endmodule);
 }
 
+/*
+ * modulePortList ::= modulePort "," modulePortList | modulePort
+ * */
 void Parser::parseModulePortList() {
+    auto [tokenReady, rparenOrId] = lookAhead();
+    if (!tokenReady) {
+        errorParsing("Unexpected EOF");
+    }
+    parseModulePort();
+    auto [commaTokenReady, commaOrRparen] = lookAhead();
+    if (!commaTokenReady) {
+        errorParsing("Unexpected EOF");
+    }
+    if (commaOrRparen.first == TOKEN_comma) {
+        nextToken();
+        parseModulePortList();
+    } else if (commaOrRparen.first == TOKEN_rparen) {
+        return;
+    } else {
+        errorParsing("Unexpected Token after parseModulePort");
+    }
+}
+
+void Parser::parseModulePort() {
 
 }
 
