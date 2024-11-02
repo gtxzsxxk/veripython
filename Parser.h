@@ -42,6 +42,10 @@ class Parser {
 
     void parseModulePort();
 
+    void parseInputOutputStatement();
+
+    void parseAssignStatement();
+
     PortSlicingAST *parsePortSlicing();
 
     ConstantExpressionAST *parseConstantPrimary();

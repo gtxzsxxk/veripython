@@ -132,12 +132,12 @@ PortSlicingAST *Parser::parsePortSlicing() {
     VERIFY_NEXT_TOKEN(lbracket);
     auto *firstValAST = parseConstantExpr();
     auto [lookAheadReady, lookAheadToken] = nextToken();
-    if(!lookAheadReady) {
+    if (!lookAheadReady) {
         errorParsing("Unexpected EOF");
     }
 
     PortSlicingAST *portSlicing;
-    if(lookAheadToken.first == TOKEN_rbracket) {
+    if (lookAheadToken.first == TOKEN_rbracket) {
         nextToken();
         portSlicing = new PortSlicingAST(firstValAST->eval());
     } else {
@@ -226,8 +226,48 @@ ConstantExpressionAST *Parser::parseConstantPrimary() {
     return primaryAST;
 }
 
-
+/*
+ * moduleBody ::= statement moduleBody | statement
+ * */
 void Parser::parseModuleBody() {
+    auto [lookAheadReady, lookAheadTokenData] = lookAhead();
+    if (!lookAheadReady) {
+        errorParsing("Unexpected EOF");
+    }
+    if (lookAheadTokenData.first == TOKEN_input || lookAheadTokenData.first == TOKEN_output) {
+        parseInputOutputStatement();
+    } else if (lookAheadTokenData.first == TOKEN_assign) {
+        parseAssignStatement();
+    } else {
+        errorParsing("Unexpected token");
+    }
+}
+
+/*
+ * output_stmt ::= "input"|"output" var1 "," var2 ";"
+ * */
+void Parser::parseInputOutputStatement() {
+    auto [_, inOutToken] = nextToken();
+    PortDirection direction;
+    if (inOutToken.first == TOKEN_input) {
+        direction = PortDirection::Input;
+    } else if (inOutToken.first == TOKEN_output) {
+        direction = PortDirection::Output;
+    }
+    while (true) {
+        auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+        auto &port = hardwareModule.getModuleIOPortByName(identifierToken.second);
+        port.setPortDirection(direction);
+        auto [_2, commaOrSemicolonToken] = nextToken();
+        if (commaOrSemicolonToken.first == TOKEN_semicolon) {
+            return;
+        } else if (commaOrSemicolonToken.first != TOKEN_comma) {
+            errorParsing("Expecting comma");
+        }
+    }
+}
+
+void Parser::parseAssignStatement() {
 
 }
 

@@ -32,12 +32,18 @@ public:
                           std::string identifier) : direction(direction),
                                                     identifier(std::move(identifier)),
                                                     slicing(slicing) {}
+
+    [[nodiscard]] const std::string &getPortName() const;
+
+    void setPortDirection(PortDirection newDirection);
 };
 
 class HardwareModule {
 public:
     std::vector<ModuleIOPort> ioPorts;
     std::string moduleName;
+
+    ModuleIOPort &getModuleIOPortByName(const std::string &name);
 };
 
 
