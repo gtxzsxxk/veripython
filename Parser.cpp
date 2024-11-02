@@ -127,9 +127,9 @@ void Parser::parsePortSlicing() {
 
 }
 
-AST *Parser::parseConstantExpr() {
+ConstantExpressionAST *Parser::parseConstantExpr() {
     /* a+b*c/2-1+(d+e)*c+2 */
-    std::vector<AST *> astStack;
+    std::vector<ConstantExpressionAST *> astStack;
     std::vector<std::pair<VeriPythonTokens, int>> operandStack;
     while (true) {
         int currentPrecedence = 0;
@@ -144,9 +144,8 @@ AST *Parser::parseConstantExpr() {
         }
         if (lookAheadToken.first == TOKEN_number) {
             nextToken();
-            auto *ast = new NumberAST();
-            ast->value = std::atoi(lookAheadToken.second.c_str());
-            astStack.push_back(ast);
+            auto *ast = new NumberAST(std::atoi(lookAheadToken.second.c_str()));
+            astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(ast));
 
             /* 继续前瞻，根据后一个 operand 决定是否要对当前栈上元素进行合并 */
             auto [nextOpReady, nextOperand] = lookAhead();
@@ -160,7 +159,7 @@ AST *Parser::parseConstantExpr() {
                 astStack.pop_back();
                 astStack.pop_back();
                 operandStack.pop_back();
-                astStack.push_back(merge_ast);
+                astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
             }
         } else {
             int precedence = getOperandPrecedence(lookAheadToken);
@@ -174,17 +173,14 @@ AST *Parser::parseConstantExpr() {
 
     out:
     while (!operandStack.empty()) {
-        int currentPrecedence = 0;
-        VeriPythonTokens currentOperand = TOKEN_identifier;
-        currentPrecedence = operandStack[operandStack.size() - 1].second;
-        currentOperand = operandStack[operandStack.size() - 1].first;
+        VeriPythonTokens currentOperand = operandStack[operandStack.size() - 1].first;
         auto *merge_ast = new AST(binaryOpToString[currentOperand]);
         merge_ast->children.push_back(astStack[astStack.size() - 2]);
         merge_ast->children.push_back(astStack[astStack.size() - 1]);
         astStack.pop_back();
         astStack.pop_back();
         operandStack.pop_back();
-        astStack.push_back(merge_ast);
+        astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
     }
     return astStack[0];
 }

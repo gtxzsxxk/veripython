@@ -44,14 +44,14 @@ class Parser {
 
     void parsePortSlicing();
 
-    AST *parseConstantExpr();
-
 public:
     explicit Parser(const std::string &filename);
 
     ~Parser();
 
     void parseHDL();
+
+    ConstantExpressionAST *parseConstantExpr();
 };
 
 #endif //VERIPYTHON_PARSER_H
