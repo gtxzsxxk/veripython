@@ -43,4 +43,16 @@ public:
     int eval() override;
 };
 
+class PortSlicingAST : public AST {
+public:
+    explicit PortSlicingAST(int high, int low) : AST("PortSlicing"), isDownTo(true), downToHigh(high), downToLow(low) {}
+
+    explicit PortSlicingAST(int which) : AST("PortSlicing"), isDownTo(false), onlyWhich(which) {}
+
+    bool isDownTo = false;
+    int downToHigh = 0;
+    int downToLow = 0;
+    int onlyWhich = 0;
+};
+
 #endif //VERIPYTHON_AST_H

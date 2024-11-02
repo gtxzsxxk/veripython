@@ -7,6 +7,7 @@
 
 #include "Lexer.h"
 #include "AST.h"
+#include "HardwareModel.h"
 #include <string>
 #include <tuple>
 #include <queue>
@@ -18,10 +19,9 @@ class Parser {
     const std::size_t TOKEN_FETCHED_SIZE = 100;
     std::queue<LexTokenType> tokenBuffer;
     std::queue<LexTokenType> tokenFetched;
-
     static std::unordered_map<VeriPythonTokens, int> binaryOpPrecedence;
-
     static std::unordered_map<VeriPythonTokens, std::string> binaryOpToString;
+    HardwareModule hardwareModule;
 
     static int getOperandPrecedence(LexTokenType &token);
 
@@ -42,7 +42,7 @@ class Parser {
 
     void parseModulePort();
 
-    void parsePortSlicing();
+    PortSlicingAST *parsePortSlicing();
 
     ConstantExpressionAST *parseConstantPrimary();
 

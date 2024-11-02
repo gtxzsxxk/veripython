@@ -36,7 +36,10 @@ add_executable(veripython
         Parser.h
         Lexer.h
         AST.h
-        AST.cpp)
+        AST.cpp
+        HardwareModel.cpp
+        HardwareModel.h
+)
 
 target_link_libraries(veripython lexer -lfl)
 

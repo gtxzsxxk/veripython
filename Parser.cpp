@@ -58,7 +58,8 @@ void Parser::parseHDL() {
  * */
 void Parser::parseModule() {
     VERIFY_NEXT_TOKEN(module);
-    auto identifierTokenData = VERIFY_NEXT_TOKEN(identifier);
+    auto [_, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+    hardwareModule.moduleName = identifierToken.second;
     VERIFY_NEXT_TOKEN(lparen);
     parseModulePortList();
     VERIFY_NEXT_TOKEN(rparen);
@@ -102,17 +103,21 @@ void Parser::parseModulePort() {
     }
     if (idOrInOut.first == TOKEN_identifier) {
         auto [_, identifierToken] = nextToken();
+        hardwareModule.ioPorts.emplace_back(identifierToken.second);
     } else if (idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
         nextToken();
         auto [lookAheadTokenReady, idOrPortSlicing] = lookAhead();
         if (!lookAheadTokenReady) {
             errorParsing("Unexpected EOF");
         }
+        auto direction = idOrInOut.first == TOKEN_input ? PortDirection::Input : PortDirection::Output;
         if (idOrPortSlicing.first == TOKEN_identifier) {
             auto [_, identifierToken] = nextToken();
+            hardwareModule.ioPorts.emplace_back(direction, identifierToken.second);
         } else if (idOrPortSlicing.first == TOKEN_lbracket) {
-            parsePortSlicing();
+            auto *slicing = parsePortSlicing();
             auto [_, identifierToken] = nextToken();
+            hardwareModule.ioPorts.emplace_back(direction, slicing, identifierToken.second);
         } else {
             errorParsing("Unexpected Token after input/output");
         }
@@ -123,8 +128,26 @@ void Parser::parseModulePort() {
  * portSlicing ::= "[" constantExpr "]"
  *             ||= "[" constantExpr ":" constantExpr "]"
  * */
-void Parser::parsePortSlicing() {
+PortSlicingAST *Parser::parsePortSlicing() {
+    VERIFY_NEXT_TOKEN(lbracket);
+    auto *firstValAST = parseConstantExpr();
+    auto [lookAheadReady, lookAheadToken] = nextToken();
+    if(!lookAheadReady) {
+        errorParsing("Unexpected EOF");
+    }
 
+    PortSlicingAST *portSlicing;
+    if(lookAheadToken.first == TOKEN_rbracket) {
+        nextToken();
+        portSlicing = new PortSlicingAST(firstValAST->eval());
+    } else {
+        VERIFY_NEXT_TOKEN(colon);
+        auto *secondValAST = parseConstantExpr();
+        VERIFY_NEXT_TOKEN(rbracket);
+        portSlicing = new PortSlicingAST(firstValAST->eval(), secondValAST->eval());
+        /* TODO: delete the two AST which are no longer used */
+    }
+    return portSlicing;
 }
 
 ConstantExpressionAST *Parser::parseConstantExpr() {
