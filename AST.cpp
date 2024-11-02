@@ -2,6 +2,7 @@
 // Created by hanyuan on 2024/11/2.
 //
 #include "AST.h"
+#include <stdexcept>
 
 std::string AST::toString() {
     std::string xmlOutput = "<" + nodeType + ">\n";
@@ -18,9 +19,36 @@ std::string AST::toString() {
 }
 
 int ConstantExpressionAST::eval() {
-    return 0;
+    if (children.size() != 2) {
+        throw std::runtime_error("Cannot eval an expression node");
+    }
+    int lhsValue = dynamic_cast<ConstantExpressionAST *>(children[0])->eval();
+    int rhsValue = dynamic_cast<ConstantExpressionAST *>(children[1])->eval();
+    int answer;
+    switch (operand) {
+        case TOKEN_op_add:
+            answer = lhsValue + rhsValue;
+            break;
+        case TOKEN_op_sub:
+            answer = lhsValue - rhsValue;
+            break;
+        case TOKEN_op_mul:
+            answer = lhsValue * rhsValue;
+            break;
+        case TOKEN_op_div:
+            answer = lhsValue / rhsValue;
+            break;
+        default:
+            throw std::runtime_error("Unsupported operand");
+            break;
+    }
+    return answer;
 }
 
 std::string NumberAST::toString() {
     return "<" + nodeType + ">\n    " + std::to_string(value) + "\n</" + nodeType + ">\n";
+}
+
+int NumberAST::eval() {
+    return value;
 }

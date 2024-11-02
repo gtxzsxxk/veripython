@@ -27,16 +27,20 @@ public:
 
     VeriPythonTokens operand;
 
-    int eval();
+    virtual int eval();
 };
 
-class NumberAST : public AST {
+class NumberAST : public ConstantExpressionAST {
 public:
-    explicit NumberAST(int value) : AST("number"), value(value) {}
+    explicit NumberAST(int value) : ConstantExpressionAST(TOKEN_number), value(value) {
+        nodeType = "number";
+    }
 
     int value = -1;
 
     std::string toString() override;
+
+    int eval() override;
 };
 
 #endif //VERIPYTHON_AST_H
