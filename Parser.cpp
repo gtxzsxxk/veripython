@@ -75,14 +75,46 @@ void Parser::parseModulePortList() {
     }
 }
 
+/*
+ * modulePort ::= id
+ *            ||= "input"|"output" portSlicing id
+ *            ||= "input"|"output" id
+ * */
 void Parser::parseModulePort() {
+    auto [tokenReady, idOrInOut] = lookAhead();
+    if(!tokenReady) {
+        errorParsing("Unexpected EOF");
+    }
+    if(idOrInOut.first == TOKEN_identifier) {
+        auto [_, identifierToken] = nextToken();
+    } else if(idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
+        nextToken();
+        auto [lookAheadTokenReady, idOrPortSlicing] = lookAhead();
+        if(!lookAheadTokenReady) {
+            errorParsing("Unexpected EOF");
+        }
+        if(idOrPortSlicing.first == TOKEN_identifier) {
+            auto [_, identifierToken] = nextToken();
+        } else if(idOrPortSlicing.first == TOKEN_lbracket) {
+            parsePortSlicing();
+            auto [_, identifierToken] = nextToken();
+        } else {
+            errorParsing("Unexpected Token after input/output");
+        }
+    }
+}
+
+/*
+ * portSlicing ::= "[" constantExpr "]"
+ *             ||= "[" constantExpr ":" constantExpr "]"
+ * */
+void Parser::parsePortSlicing() {
 
 }
 
 void Parser::parseModuleBody() {
 
 }
-
 
 Parser::~Parser() {
     fclose(yyin);
