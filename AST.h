@@ -30,9 +30,9 @@ public:
     virtual int eval();
 };
 
-class NumberAST : public ConstantExpressionAST {
+class ConstantNumberAST : public ConstantExpressionAST {
 public:
-    explicit NumberAST(int value) : ConstantExpressionAST(TOKEN_number), value(value) {
+    explicit ConstantNumberAST(int value) : ConstantExpressionAST(TOKEN_number), value(value) {
         nodeType = "number";
     }
 

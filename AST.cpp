@@ -45,10 +45,10 @@ int ConstantExpressionAST::eval() {
     return answer;
 }
 
-std::string NumberAST::toString() {
+std::string ConstantNumberAST::toString() {
     return "<" + nodeType + ">\n    " + std::to_string(value) + "\n</" + nodeType + ">\n";
 }
 
-int NumberAST::eval() {
+int ConstantNumberAST::eval() {
     return value;
 }
