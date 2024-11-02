@@ -15,7 +15,7 @@
 typedef std::pair<enum VeriPythonTokens, std::string> LexTokenType;
 
 class Parser {
-    const int TOKEN_FETCHED_SIZE = 100;
+    const std::size_t TOKEN_FETCHED_SIZE = 100;
     std::queue<LexTokenType> tokenBuffer;
     std::queue<LexTokenType> tokenFetched;
 

@@ -133,10 +133,8 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
     std::vector<std::pair<VeriPythonTokens, int>> operandStack;
     while (true) {
         int currentPrecedence = 0;
-        VeriPythonTokens currentOperand = TOKEN_identifier;
         if (!operandStack.empty()) {
             currentPrecedence = operandStack[operandStack.size() - 1].second;
-            currentOperand = operandStack[operandStack.size() - 1].first;
         }
         auto [tokenReady, lookAheadToken] = lookAhead();
         if (!tokenReady) {
@@ -151,15 +149,22 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
             auto [nextOpReady, nextOperand] = lookAhead();
             int nextPrecedence = getOperandPrecedence(nextOperand);
             /* 如果下一个token不是operand，说明已经到达了结尾，直接当作 -1 处理就行 */
+            /* 合并栈上元素，保证左结合性 */
             if (currentPrecedence >= nextPrecedence) {
-                /* 合并栈上元素 */
-                auto *merge_ast = new AST(binaryOpToString[currentOperand]);
-                merge_ast->children.push_back(astStack[astStack.size() - 2]);
-                merge_ast->children.push_back(astStack[astStack.size() - 1]);
-                astStack.pop_back();
-                astStack.pop_back();
-                operandStack.pop_back();
-                astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
+                while (!operandStack.empty()) {
+                    VeriPythonTokens currentOperand = operandStack[operandStack.size() - 1].first;
+                    auto *merge_ast = new ConstantExpressionAST(currentOperand);
+                    merge_ast->children.push_back(astStack[astStack.size() - 2]);
+                    merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                    astStack.pop_back();
+                    astStack.pop_back();
+                    operandStack.pop_back();
+                    astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
+
+                    if (currentPrecedence == nextPrecedence) {
+                        break;
+                    }
+                }
             }
         } else {
             int precedence = getOperandPrecedence(lookAheadToken);
@@ -172,15 +177,8 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
     }
 
     out:
-    while (!operandStack.empty()) {
-        VeriPythonTokens currentOperand = operandStack[operandStack.size() - 1].first;
-        auto *merge_ast = new AST(binaryOpToString[currentOperand]);
-        merge_ast->children.push_back(astStack[astStack.size() - 2]);
-        merge_ast->children.push_back(astStack[astStack.size() - 1]);
-        astStack.pop_back();
-        astStack.pop_back();
-        operandStack.pop_back();
-        astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
+    if (!operandStack.empty() || astStack.size() != 1) {
+        errorParsing("Failed to parse constant expression");
     }
     return astStack[0];
 }
