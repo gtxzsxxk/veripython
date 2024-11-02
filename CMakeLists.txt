@@ -3,8 +3,17 @@ project(veripython)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(FLEX REQUIRED)
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://gitee.com/mirrors/googletest.git
+  GIT_TAG v1.14.0
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
+find_package(FLEX REQUIRED)
 set(FLEX_SRC "${CMAKE_SOURCE_DIR}/verilog.l")
 set(FLEX_OUT "${CMAKE_BINARY_DIR}/lex.yy.c")
 set(FLEX_DIR "${CMAKE_BINARY_DIR}")
@@ -24,6 +33,20 @@ add_executable(veripython
         Parser.cpp
         Parser.h
         Lexer.h
-        AST.h)
+        AST.h
+        AST.cpp)
 
 target_link_libraries(veripython lexer -lfl)
+
+enable_testing()
+add_executable(ParserTests
+        tests/ParserTests.cpp
+        Parser.cpp
+        Parser.h
+        Lexer.h
+        AST.h
+        AST.cpp)
+target_link_libraries(ParserTests GTest::gtest_main)
+target_link_libraries(ParserTests lexer -lfl)
+include(GoogleTest)
+gtest_discover_tests(ParserTests)
