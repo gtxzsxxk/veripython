@@ -44,6 +44,8 @@ class Parser {
 
     void parsePortSlicing();
 
+    ConstantExpressionAST *parseConstantPrimary();
+
 public:
     explicit Parser(const std::string &filename);
 

@@ -140,9 +140,8 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
         if (!tokenReady) {
             goto out;
         }
-        if (lookAheadToken.first == TOKEN_number) {
-            nextToken();
-            auto *ast = new NumberAST(std::atoi(lookAheadToken.second.c_str()));
+        if (lookAheadToken.first == TOKEN_number || lookAheadToken.first == TOKEN_lparen) {
+            auto *ast = parseConstantPrimary();
             astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(ast));
 
             /* 继续前瞻，根据后一个 operand 决定是否要对当前栈上元素进行合并 */
@@ -182,6 +181,28 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
     }
     return astStack[0];
 }
+
+/*
+ * constantPrimary ::= number | "(" constantExpression ")"
+ * */
+ConstantExpressionAST *Parser::parseConstantPrimary() {
+    auto [lookAheadReady, lookAheadTokenData] = lookAhead();
+    if (!lookAheadReady) {
+        errorParsing("Unexpected EOF");
+    }
+    decltype(parseConstantPrimary()) primaryAST;
+    if (lookAheadTokenData.first == TOKEN_number) {
+        nextToken();
+        auto ast = new ConstantNumberAST(std::atoi(lookAheadTokenData.second.c_str()));
+        primaryAST = ast;
+    } else if (lookAheadTokenData.first == TOKEN_lparen) {
+        nextToken();
+        primaryAST = parseConstantExpr();
+        VERIFY_NEXT_TOKEN(rparen);
+    }
+    return primaryAST;
+}
+
 
 void Parser::parseModuleBody() {
 
