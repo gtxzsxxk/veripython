@@ -25,7 +25,7 @@ int evaluateExpression(const std::string &expression) {
     return result;
 }
 
-std::string generateComplexExpression(int depth) {
+std::string generateComplexExpressionNoParen(int depth) {
     if (depth == 0) {
         return std::to_string((rand() % 50) + 1);
     }
@@ -33,14 +33,14 @@ std::string generateComplexExpression(int depth) {
     std::ostringstream expression;
     remake:
     expression.clear();
-    expression << generateComplexExpression(depth - 1) << " ";
+    expression << generateComplexExpressionNoParen(depth - 1) << " ";
 
     char operators[] = {'+', '-', '*', '/'};
     char op = operators[rand() % 4]; // 随机选择一个操作符
-    std::string rhsExpr = generateComplexExpression(depth - 1);
+    std::string rhsExpr = generateComplexExpressionNoParen(depth - 1);
     if (op == '/') {
         while (evaluateExpression(rhsExpr) == 0) {
-            rhsExpr = generateComplexExpression(depth - 1);
+            rhsExpr = generateComplexExpressionNoParen(depth - 1);
         }
     }
     expression << op << " " << rhsExpr;
@@ -53,13 +53,74 @@ std::string generateComplexExpression(int depth) {
     return answer;
 }
 
-TEST(ParserTests, ConstantExpressionParsing) {
+std::string generateComplexExpressionWithParen(int depth) {
+    if (depth == 0) {
+        return std::to_string((rand() % 50) + 1);
+    }
+
+    std::ostringstream expression;
+    remake:
+    expression.str("");
+    expression.clear();
+    std::string lhsExpr = generateComplexExpressionWithParen(depth - 1);
+
+    if (rand() % 2 == 0) {
+        expression << lhsExpr << " ";
+    } else {
+        expression << "(" << lhsExpr << ") ";
+    }
+
+    char operators[] = {'+', '-', '*', '/'};
+    char op = operators[rand() % 4]; // 随机选择一个操作符
+    std::string rhsExpr = generateComplexExpressionWithParen(depth - 1);
+    if (op == '/') {
+        while (evaluateExpression(rhsExpr) == 0) {
+            rhsExpr = generateComplexExpressionWithParen(depth - 1);
+        }
+    }
+    expression << op << " ";
+
+    if (rand() % 2 == 0) {
+        expression << rhsExpr;
+    } else {
+        expression << "(" << rhsExpr << ")";
+    }
+
+    std::string answer = expression.str();
+    if (evaluateExpression(answer) == 0) {
+        goto remake;
+    }
+
+    return answer;
+}
+
+TEST(ParserTests, SimpleConstantExpressionParsing) {
     const std::string filename = "expressions.v";
     srand(static_cast<unsigned int>(time(nullptr)));
 
     for (int i = 0; i < 100; i++) {
         std::ofstream outFile(filename);
-        auto expressionString = generateComplexExpression((rand() % 6) + 1);
+        auto expressionString = generateComplexExpressionNoParen((rand() % 6) + 1);
+        std::cout << "Testing: " << expressionString << std::endl;
+        int realValue = evaluateExpression(expressionString);
+        outFile << expressionString << std::endl;
+        outFile.close();
+
+        auto parser = Parser(filename);
+        auto *ast = parser.parseConstantExpr();
+        int parserValue = ast->eval();
+        EXPECT_EQ(parserValue, realValue);
+        std::remove(filename.c_str());
+    }
+}
+
+TEST(ParserTests, HaveParenConstantExpressionParsing) {
+    const std::string filename = "expressions.v";
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    for (int i = 0; i < 100; i++) {
+        std::ofstream outFile(filename);
+        auto expressionString = generateComplexExpressionWithParen((rand() % 4) + 1);
         std::cout << "Testing: " << expressionString << std::endl;
         int realValue = evaluateExpression(expressionString);
         outFile << expressionString << std::endl;
