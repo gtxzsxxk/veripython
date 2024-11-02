@@ -6,9 +6,11 @@
 #define VERIPYTHON_PARSER_H
 
 #include "Lexer.h"
+#include "AST.h"
 #include <string>
 #include <tuple>
 #include <queue>
+#include <unordered_map>
 
 typedef std::pair<enum VeriPythonTokens, std::string> LexTokenType;
 
@@ -16,6 +18,12 @@ class Parser {
     const int TOKEN_FETCHED_SIZE = 100;
     std::queue<LexTokenType> tokenBuffer;
     std::queue<LexTokenType> tokenFetched;
+
+    static std::unordered_map<VeriPythonTokens, int> binaryOpPrecedence;
+
+    static std::unordered_map<VeriPythonTokens, std::string> binaryOpToString;
+
+    static int getOperandPrecedence(LexTokenType &token);
 
     std::tuple<bool, LexTokenType> lookAhead();
 
@@ -35,6 +43,8 @@ class Parser {
     void parseModulePort();
 
     void parsePortSlicing();
+
+    AST *parseConstantExpr();
 
 public:
     explicit Parser(const std::string &filename);

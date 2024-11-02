@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cstdio>
 #include <exception>
+#include <vector>
 
 #define VERIFY_NEXT_TOKEN(name)         nextToken(TOKEN_##name, #name)
 
@@ -17,6 +18,20 @@ extern FILE *yyin;
 }
 
 union LEXER_VALUE yylval;
+
+std::unordered_map<VeriPythonTokens, int> Parser::binaryOpPrecedence = {
+        {TOKEN_op_add, 10},
+        {TOKEN_op_sub, 10},
+        {TOKEN_op_mul, 20},
+        {TOKEN_op_div, 20},
+};
+
+std::unordered_map<VeriPythonTokens, std::string> Parser::binaryOpToString = {
+        {TOKEN_op_add, "op_add"},
+        {TOKEN_op_sub, "op_sub"},
+        {TOKEN_op_mul, "op_mul"},
+        {TOKEN_op_div, "op_div"},
+};
 
 Parser::Parser(const std::string &filename) {
     yyin = fopen(filename.c_str(), "r");
@@ -82,20 +97,20 @@ void Parser::parseModulePortList() {
  * */
 void Parser::parseModulePort() {
     auto [tokenReady, idOrInOut] = lookAhead();
-    if(!tokenReady) {
+    if (!tokenReady) {
         errorParsing("Unexpected EOF");
     }
-    if(idOrInOut.first == TOKEN_identifier) {
+    if (idOrInOut.first == TOKEN_identifier) {
         auto [_, identifierToken] = nextToken();
-    } else if(idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
+    } else if (idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
         nextToken();
         auto [lookAheadTokenReady, idOrPortSlicing] = lookAhead();
-        if(!lookAheadTokenReady) {
+        if (!lookAheadTokenReady) {
             errorParsing("Unexpected EOF");
         }
-        if(idOrPortSlicing.first == TOKEN_identifier) {
+        if (idOrPortSlicing.first == TOKEN_identifier) {
             auto [_, identifierToken] = nextToken();
-        } else if(idOrPortSlicing.first == TOKEN_lbracket) {
+        } else if (idOrPortSlicing.first == TOKEN_lbracket) {
             parsePortSlicing();
             auto [_, identifierToken] = nextToken();
         } else {
@@ -110,6 +125,68 @@ void Parser::parseModulePort() {
  * */
 void Parser::parsePortSlicing() {
 
+}
+
+AST *Parser::parseConstantExpr() {
+    /* a+b*c/2-1+(d+e)*c+2 */
+    std::vector<AST *> astStack;
+    std::vector<std::pair<VeriPythonTokens, int>> operandStack;
+    while (true) {
+        int currentPrecedence = 0;
+        VeriPythonTokens currentOperand = TOKEN_identifier;
+        if (!operandStack.empty()) {
+            currentPrecedence = operandStack[operandStack.size() - 1].second;
+            currentOperand = operandStack[operandStack.size() - 1].first;
+        }
+        auto [tokenReady, lookAheadToken] = lookAhead();
+        if (!tokenReady) {
+            goto out;
+        }
+        if (lookAheadToken.first == TOKEN_number) {
+            nextToken();
+            auto *ast = new NumberAST();
+            ast->value = std::atoi(lookAheadToken.second.c_str());
+            astStack.push_back(ast);
+
+            /* 继续前瞻，根据后一个 operand 决定是否要对当前栈上元素进行合并 */
+            auto [nextOpReady, nextOperand] = lookAhead();
+            int nextPrecedence = getOperandPrecedence(nextOperand);
+            /* 如果下一个token不是operand，说明已经到达了结尾，直接当作 -1 处理就行 */
+            if (currentPrecedence >= nextPrecedence) {
+                /* 合并栈上元素 */
+                auto *merge_ast = new AST(binaryOpToString[currentOperand]);
+                merge_ast->children.push_back(astStack[astStack.size() - 2]);
+                merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                astStack.pop_back();
+                astStack.pop_back();
+                operandStack.pop_back();
+                astStack.push_back(merge_ast);
+            }
+        } else {
+            int precedence = getOperandPrecedence(lookAheadToken);
+            if (precedence == -1) {
+                goto out;
+            }
+            nextToken();
+            operandStack.emplace_back(lookAheadToken.first, precedence);
+        }
+    }
+
+    out:
+    while (!operandStack.empty()) {
+        int currentPrecedence = 0;
+        VeriPythonTokens currentOperand = TOKEN_identifier;
+        currentPrecedence = operandStack[operandStack.size() - 1].second;
+        currentOperand = operandStack[operandStack.size() - 1].first;
+        auto *merge_ast = new AST(binaryOpToString[currentOperand]);
+        merge_ast->children.push_back(astStack[astStack.size() - 2]);
+        merge_ast->children.push_back(astStack[astStack.size() - 1]);
+        astStack.pop_back();
+        astStack.pop_back();
+        operandStack.pop_back();
+        astStack.push_back(merge_ast);
+    }
+    return astStack[0];
 }
 
 void Parser::parseModuleBody() {
@@ -175,4 +252,12 @@ void Parser::errorParsing(const std::string &message, const std::string &expectT
     }
     std::cerr << std::endl;
     throw std::runtime_error("Code syntax error");
+}
+
+int Parser::getOperandPrecedence(LexTokenType &token) {
+    if (token.first != TOKEN_op_add && token.first != TOKEN_op_sub &&
+        token.first != TOKEN_op_mul && token.first != TOKEN_op_div) {
+        return -1;
+    }
+    return binaryOpPrecedence[token.first];
 }
