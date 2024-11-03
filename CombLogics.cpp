@@ -14,3 +14,15 @@ void CombLogic::checkInputDataSlicing(CircuitData *s1, CircuitData *s2) {
         throw std::runtime_error("Width mismatched");
     }
 }
+
+std::size_t CombLogic::generateUnsignedIntegerFromData(CircuitData *data) {
+    std::size_t answer = 0;
+    for(long int i = (long int) data->getBitWidth() - 1; i >= 0; i--) {
+        auto bit = data->bits[i];
+        if(bit) {
+            answer |= 1;
+        }
+        answer <<= 1;
+    }
+    return answer;
+}

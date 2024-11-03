@@ -114,7 +114,6 @@ protected:
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
         checkInputDataSlicing(&data0, &data1);
-        auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(1);
         auto circuitData = CircuitData(slicing);
         auto cmp1 = generateUnsignedIntegerFromData(data0);
@@ -162,5 +161,84 @@ GEN_LOGICAL_OP_DEF_END(CompareGreatThan)
 GEN_LOGICAL_OP_DEF_BEGIN(CompareGreatEqual, cond_ge)
         return a >= b;
 GEN_LOGICAL_OP_DEF_END(CompareGreatEqual)
+
+/*
+ * Left Shift
+ * */
+
+template<class Op> requires requires { std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>; }
+class CombShiftLeft : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        auto data0 = inputDataVec[0];
+        auto data1 = inputDataVec[1];
+
+        auto shiftAmount = generateUnsignedIntegerFromData(data1);
+
+        auto width = data0.getBitWidth();
+        auto slicing = PortSlicingAST(width + shiftAmount);
+        auto circuitData = CircuitData(slicing);
+
+        for (long int i = (long int) circuitData.bits.size() - 1; i >= circuitData.bits.size() - width; i--) {
+            circuitData.bits[i] = data0.bits[i - shiftAmount];
+        }
+        for (long int i = circuitData.bits.size() - width - 1; i >= 0; i--) {
+            circuitData.bits[i] = false;
+        }
+        return circuitData;
+    }
+
+    int getMaxInputs() override {
+        return 2;
+    }
+
+public:
+    CombShiftLeft() : CombLogic(Op::token) {}
+};
+
+struct combOperatorShiftLeftArith {
+    static constexpr auto token = TOKEN_arith_lshift;
+};
+
+using CombLogicShiftLeftArith = CombShiftLeft<combOperatorShiftLeftArith>;
+
+struct combOperatorShiftLeftLogical {
+    static constexpr auto token = TOKEN_logical_lshift;
+};
+
+using CombLogicShiftLeftLogical = CombShiftLeft<combOperatorShiftLeftLogical>;
+
+/*
+ * Right Shift
+ * */
+template<class Op> requires requires { std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>; }
+class CombShiftRight : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        auto data0 = inputDataVec[0];
+        auto data1 = inputDataVec[1];
+
+        auto shiftAmount = generateUnsignedIntegerFromData(data1);
+
+        auto width = data0.getBitWidth();
+        auto slicing = PortSlicingAST(width);
+        auto circuitData = CircuitData(slicing);
+
+        auto signExtending = data0.bits[width - 1];
+
+        for (long int i = width - 1; i > width - shiftAmount; i++) {
+            circuitData.bits[i] = signExtending;
+        }
+
+        return circuitData;
+    }
+
+    int getMaxInputs() override {
+        return 2;
+    }
+
+public:
+    CombShiftRight() : CombLogic(Op::token) {}
+};
 
 #endif //VERIPYTHON_COMBLOGICS_H
