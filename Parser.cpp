@@ -216,7 +216,7 @@ ConstantExpressionAST *Parser::parseConstantPrimary() {
     decltype(parseConstantPrimary()) primaryAST;
     if (lookAheadTokenData.first == TOKEN_const_number) {
         nextToken();
-        auto ast = new ConstantNumberAST(std::atoi(lookAheadTokenData.second.c_str()));
+        auto ast = new ConstantNumberAST(std::stoi(lookAheadTokenData.second));
         primaryAST = ast;
     } else if (lookAheadTokenData.first == TOKEN_lparen) {
         nextToken();
