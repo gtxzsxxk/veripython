@@ -224,12 +224,17 @@ protected:
         auto slicing = PortSlicingAST(width);
         auto circuitData = CircuitData(slicing);
 
-        auto signExtending = data0.bits[width - 1];
-
-        for (long int i = width - 1; i > width - shiftAmount; i++) {
-            circuitData.bits[i] = signExtending;
+        bool signExtending = false;
+        if constexpr (Op::token == TOKEN_arith_rshift) {
+            signExtending = data0.bits[width - 1];
         }
 
+        for (long int i = width - 1; i >= width - shiftAmount; i--) {
+            circuitData.bits[i] = signExtending;
+        }
+        for (long int i = width - shiftAmount - 1; i >= 0; i--) {
+            circuitData.bits[i] = data0[i + shiftAmount];
+        }
         return circuitData;
     }
 
@@ -240,5 +245,17 @@ protected:
 public:
     CombShiftRight() : CombLogic(Op::token) {}
 };
+
+struct combOperatorShiftRightArith {
+    static constexpr auto token = TOKEN_arith_rshift;
+};
+
+using CombLogicShiftRightArith = CombShiftRight<combOperatorShiftRightArith>;
+
+struct combOperatorShiftRightLogical {
+    static constexpr auto token = TOKEN_logical_rshift;
+};
+
+using CombLogicShiftRightLogical = CombShiftRight<combOperatorShiftRightLogical>;
 
 #endif //VERIPYTHON_COMBLOGICS_H
