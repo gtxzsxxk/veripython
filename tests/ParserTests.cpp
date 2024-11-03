@@ -133,3 +133,18 @@ TEST(ParserTests, HaveParenConstantExpressionParsing) {
         std::remove(filename.c_str());
     }
 }
+
+TEST(ParserTests, SimpleSingleHDLExpressionTest) {
+    const std::string filename = "expressions.v";
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    std::ofstream outFile(filename);
+    auto expressionString = "(a ^ b) | (c | d) & (~c)[2] && (a[1] || a[2])";
+    outFile << expressionString << std::endl;
+    outFile.close();
+
+    auto parser = Parser(filename);
+    auto *ast = parser.parseHDLExpression();
+    std::cout << ast->toString() << std::endl;
+    std::remove(filename.c_str());
+}
