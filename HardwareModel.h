@@ -26,45 +26,79 @@ public:
             ast(connAST) {}
 };
 
+class CircuitData {
+    std::vector<bool> bits;
+public:
+    explicit CircuitData(PortSlicingAST *slicingData);
+};
+
 class CircuitSymbol {
 protected:
     std::string identifier;
-public:
-    explicit CircuitSymbol(std::string identifier) : identifier(std::move(identifier)) {}
-};
-
-class ModuleIOPort : public CircuitSymbol {
-    PortDirection direction = PortDirection::Unspecified;
     PortSlicingAST *slicing = nullptr;
+    int readyInputs = 0;
+    std::vector<CircuitData> inputDataVec;
+    std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
+
+    virtual CircuitData calculateOutput() = 0;
+
+    virtual int getMaxInputs() = 0;
+
 public:
-    explicit ModuleIOPort(std::string identifier) :
-            CircuitSymbol(std::move(identifier)) {}
+    explicit CircuitSymbol(std::string identifier) :
+            identifier(std::move(identifier)),
+            slicing(new PortSlicingAST(1)) {}
 
-    explicit ModuleIOPort(PortDirection direction,
-                          std::string identifier) :
-            CircuitSymbol(std::move(identifier)),
-            direction(direction) {}
+    [[nodiscard]] const PortSlicingAST *getSlicing() const;
 
-    explicit ModuleIOPort(PortDirection direction, PortSlicingAST *slicing,
-                          std::string identifier) :
-            CircuitSymbol(std::move(identifier)),
-            direction(direction),
-            slicing(slicing) {}
+    std::size_t registerInput(CircuitSymbol *symbol);
 
-    [[nodiscard]] const std::string &getPortName() const;
+    virtual void propagate(std::size_t pos, const CircuitData &data);
 
-    void setPortDirection(PortDirection newDirection);
+    ~CircuitSymbol();
 };
 
 class CircuitSymbolWire : public CircuitSymbol {
+protected:
+    CircuitData calculateOutput() override;
+
+    int getMaxInputs() override;
+
 public:
     explicit CircuitSymbolWire(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
 };
 
-class CircuitSymbolReg : public CircuitSymbol {
+class ModuleIOPort : public CircuitSymbolWire {
+    PortDirection direction = PortDirection::Unspecified;
+
 public:
-    explicit CircuitSymbolReg(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
+    explicit ModuleIOPort(std::string identifier) :
+            CircuitSymbolWire(std::move(identifier)) {}
+
+    explicit ModuleIOPort(PortDirection direction,
+                          std::string identifier) :
+            CircuitSymbolWire(std::move(identifier)),
+            direction(direction) {}
+
+    explicit ModuleIOPort(PortDirection direction, PortSlicingAST *slicingAST,
+                          std::string identifier) :
+            CircuitSymbolWire(std::move(identifier)),
+            direction(direction) {
+        /* TODO: 删除原来的 slicing */
+        slicing = slicingAST;
+    }
+
+    [[nodiscard]] const std::string &getPortName() const;
+
+    void setPortDirection(PortDirection newDirection);
+
+    void propagate(std::size_t pos, const CircuitData &data) override;
 };
+
+//class CircuitSymbolReg : public CircuitSymbol {
+//public:
+//    explicit CircuitSymbolReg(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
+//};
 
 class HardwareModule {
     std::vector<CircuitConnection> circuitConnections;
