@@ -68,45 +68,34 @@ public:
     CombNormalBinary() : CombLogic(Op::token) {}
 };
 
-/* Logical OR */
-struct combOperatorLogicalOr {
-    static constexpr auto token = TOKEN_logical_or;
+#define GEN_LOGICAL_OP_DEF_BEGIN(camel, underline)          struct combOperator##camel { \
+                                                                static constexpr auto token = TOKEN_##underline; \
+                                                                static bool apply(bool a, bool b) {
+#define GEN_LOGICAL_OP_DEF_END(camel)                } \
+                                                            }; \
+                                                            using CombLogic##camel = CombNormalBinary<combOperator##camel>;
 
-    static bool apply(bool a, bool b) {
+
+GEN_LOGICAL_OP_DEF_BEGIN(LogicalOr, logical_or)
         return a || b;
-    }
-};
+GEN_LOGICAL_OP_DEF_END(LogicalOr)
 
-using CombLogicLogicalOr = CombNormalBinary<combOperatorLogicalOr>;
-
-/* Logical AND */
-struct combOperatorLogicalAnd {
-    static constexpr auto token = TOKEN_logical_and;
-
-    static bool apply(bool a, bool b) {
+GEN_LOGICAL_OP_DEF_BEGIN(LogicalAnd, logical_and)
         return a && b;
-    }
-};
+GEN_LOGICAL_OP_DEF_END(LogicalAnd)
 
-using CombLogicLogicalAnd = CombNormalBinary<combOperatorLogicalAnd>;
-
-/* Bitwise OR */
-struct combOperatorBitwiseOr {
-    static constexpr auto token = TOKEN_bitwise_or;
-
-    static bool apply(bool a, bool b) {
+GEN_LOGICAL_OP_DEF_BEGIN(BitwiseOr, bitwise_or)
         return a || b;
-    }
-};
+GEN_LOGICAL_OP_DEF_END(BitwiseOr)
 
-using CombLogicBitwiseOr = CombNormalBinary<combOperatorBitwiseOr>;
-
-/* Bitwise XOR */
-struct combOperatorBitwiseXor {
-    static constexpr auto token = TOKEN_bitwise_xor;
-
-    static bool apply(bool a, bool b) {
+GEN_LOGICAL_OP_DEF_BEGIN(BitwiseXor, bitwise_xor)
         return a ^ b;
+GEN_LOGICAL_OP_DEF_END(BitwiseXor)
+
+GEN_LOGICAL_OP_DEF_BEGIN(BitwiseAnd, bitwise_and)
+        return a && b;
+GEN_LOGICAL_OP_DEF_END(BitwiseAnd)
+
     }
 };
 
