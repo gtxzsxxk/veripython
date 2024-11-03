@@ -19,6 +19,8 @@ protected:
 
     static void checkInputDataSlicing(CircuitData *s1, CircuitData *s2);
 
+    static std::size_t generateUnsignedIntegerFromData(CircuitData *data);
+
 public:
     explicit CombLogic(VeriPythonTokens _operator) : CircuitSymbol("") {
         if (Parser::operatorName.count(_operator) > 0) {
@@ -96,20 +98,69 @@ GEN_LOGICAL_OP_DEF_BEGIN(BitwiseAnd, bitwise_and)
         return a && b;
 GEN_LOGICAL_OP_DEF_END(BitwiseAnd)
 
-    }
+/*
+ * Compare Binary Operators
+ * */
+template<class Op>
+concept isCompareBinOp = requires {
+    Op::apply(114UL, 514UL);
+    std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>;
 };
 
-using CombLogicBitwiseXor = CombNormalBinary<combOperatorBitwiseXor>;
-
-/* Bitwise AND */
-struct combOperatorBitwiseAnd {
-    static constexpr auto token = TOKEN_bitwise_and;
-
-    static bool apply(bool a, bool b) {
-        return a && b;
+template<class Op> requires isCompareBinOp<Op>
+class CombCompareBinary : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        auto data0 = inputDataVec[0];
+        auto data1 = inputDataVec[1];
+        checkInputDataSlicing(&data0, &data1);
+        auto width = data0.getBitWidth();
+        auto slicing = PortSlicingAST(1);
+        auto circuitData = CircuitData(slicing);
+        auto cmp1 = generateUnsignedIntegerFromData(data0);
+        auto cmp2 = generateUnsignedIntegerFromData(data1);
+        circuitData.bits[0] = Op::apply(cmp1, cmp2);
+        return circuitData;
     }
+
+    int getMaxInputs() override {
+        return 2;
+    }
+
+public:
+    CombCompareBinary() : CombLogic(Op::token) {}
 };
 
-using CombLogicBitwiseAnd = CombNormalBinary<combOperatorBitwiseAnd>;
+#define GEN_COMPARE_OP_DEF_BEGIN(camel, underline)          struct combOperator##camel { \
+                                                                static constexpr auto token = TOKEN_##underline; \
+                                                                static bool apply(std::size_t a, std::size_t b) {
+#define GEN_COMPARE_OP_DEF_END(camel)                           } \
+                                                            }; \
+                                                            using CombLogic##camel = CombNormalBinary<combOperator##camel>;
+
+
+GEN_LOGICAL_OP_DEF_BEGIN(CompareEqual, cond_eq)
+        return a == b;
+GEN_LOGICAL_OP_DEF_END(CompareEqual)
+
+GEN_LOGICAL_OP_DEF_BEGIN(CompareNonEqual, cond_ne)
+        return a != b;
+GEN_LOGICAL_OP_DEF_END(CompareNonEqual)
+
+GEN_LOGICAL_OP_DEF_BEGIN(CompareLessThan, cond_lt)
+        return a < b;
+GEN_LOGICAL_OP_DEF_END(CompareLessThan)
+
+GEN_LOGICAL_OP_DEF_BEGIN(CompareLessEqual, cond_le)
+        return a <= b;
+GEN_LOGICAL_OP_DEF_END(CompareLessEqual)
+
+GEN_LOGICAL_OP_DEF_BEGIN(CompareGreatThan, cond_gt)
+        return a > b;
+GEN_LOGICAL_OP_DEF_END(CompareGreatThan)
+
+GEN_LOGICAL_OP_DEF_BEGIN(CompareGreatEqual, cond_ge)
+        return a >= b;
+GEN_LOGICAL_OP_DEF_END(CompareGreatEqual)
 
 #endif //VERIPYTHON_COMBLOGICS_H
