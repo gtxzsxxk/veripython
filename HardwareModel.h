@@ -16,28 +16,6 @@ enum class PortDirection {
     Unspecified
 };
 
-class ModuleIOPort {
-    PortDirection direction = PortDirection::Unspecified;
-    std::string identifier;
-    PortSlicingAST *slicing = nullptr;
-public:
-    explicit ModuleIOPort(std::string identifier) :
-            identifier(std::move(identifier)) {}
-
-    explicit ModuleIOPort(PortDirection direction,
-                          std::string identifier) : direction(direction),
-                                                    identifier(std::move(identifier)) {}
-
-    explicit ModuleIOPort(PortDirection direction, PortSlicingAST *slicing,
-                          std::string identifier) : direction(direction),
-                                                    identifier(std::move(identifier)),
-                                                    slicing(slicing) {}
-
-    [[nodiscard]] const std::string &getPortName() const;
-
-    void setPortDirection(PortDirection newDirection);
-};
-
 class CircuitConnection {
     std::string destIdentifier;
     HDLExpressionAST *ast;
@@ -52,29 +30,54 @@ class CircuitSymbol {
 protected:
     std::string identifier;
 public:
-    explicit CircuitSymbol(std::string identifier): identifier(std::move(identifier)) {}
+    explicit CircuitSymbol(std::string identifier) : identifier(std::move(identifier)) {}
 };
 
-class CircuitSymbolWire: public CircuitSymbol {
+class ModuleIOPort : public CircuitSymbol {
+    PortDirection direction = PortDirection::Unspecified;
+    PortSlicingAST *slicing = nullptr;
 public:
-    explicit CircuitSymbolWire(std::string identifier): CircuitSymbol(std::move(identifier)) {}
+    explicit ModuleIOPort(std::string identifier) :
+            CircuitSymbol(std::move(identifier)) {}
+
+    explicit ModuleIOPort(PortDirection direction,
+                          std::string identifier) :
+            CircuitSymbol(std::move(identifier)),
+            direction(direction) {}
+
+    explicit ModuleIOPort(PortDirection direction, PortSlicingAST *slicing,
+                          std::string identifier) :
+            CircuitSymbol(std::move(identifier)),
+            direction(direction),
+            slicing(slicing) {}
+
+    [[nodiscard]] const std::string &getPortName() const;
+
+    void setPortDirection(PortDirection newDirection);
 };
 
-class CircuitSymbolReg: public CircuitSymbol {
+class CircuitSymbolWire : public CircuitSymbol {
 public:
-    explicit CircuitSymbolReg(std::string identifier): CircuitSymbol(std::move(identifier)) {}
+    explicit CircuitSymbolWire(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
+};
+
+class CircuitSymbolReg : public CircuitSymbol {
+public:
+    explicit CircuitSymbolReg(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
 };
 
 class HardwareModule {
     std::vector<CircuitConnection> circuitConnections;
 public:
     std::vector<ModuleIOPort> ioPorts;
-    std::vector<CircuitSymbol*> circuitSymbols;
+    std::vector<CircuitSymbol *> circuitSymbols;
     std::string moduleName;
 
     ModuleIOPort &getModuleIOPortByName(const std::string &name);
 
     void addCircuitConnection(CircuitConnection &&connection);
+
+
 };
 
 
