@@ -46,8 +46,6 @@ class Parser {
 
     void parseRegWireStatement();
 
-    HDLExpressionAST *parseHDLExpression();
-
     HDLExpressionAST *parseHDLPrimary();
 
     PortSlicingAST *parsePortSlicing();
@@ -65,6 +63,8 @@ public:
     void parseHDL();
 
     ConstantExpressionAST *parseConstantExpr();
+
+    HDLExpressionAST *parseHDLExpression();
 };
 
 #endif //VERIPYTHON_PARSER_H

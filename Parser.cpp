@@ -314,7 +314,64 @@ void Parser::parseRegWireStatement() {
 }
 
 HDLExpressionAST *Parser::parseHDLExpression() {
+    /* (a ^ b) | (c | d) & (~c)[2] && (a[1] || a[2]) */
+    std::vector<HDLExpressionAST *> astStack;
+    std::vector<std::pair<VeriPythonTokens, int>> operatorStack;
+    while (true) {
+        int currentPrecedence = 0;
+        if (!operatorStack.empty()) {
+            currentPrecedence = operatorStack[operatorStack.size() - 1].second;
+        }
+        auto [tokenReady, lookAheadToken] = lookAhead();
+        if (!tokenReady) {
+            goto out;
+        }
+        if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_sized_number ||
+            lookAheadToken.first == TOKEN_identifier || lookAheadToken.first == TOKEN_lparen) {
+            auto *ast = parseHDLPrimary();
+            astStack.push_back(reinterpret_cast<HDLExpressionAST *>(ast));
 
+            /* 继续前瞻，根据后一个 operator 决定是否要对当前栈上元素进行合并 */
+            auto [nextOpReady, nextOperator] = lookAhead();
+            int nextPrecedence = getOperatorPrecedence(nextOperator);
+            /* 如果下一个token不是operator，说明已经到达了结尾，直接当作 -1 处理就行 */
+            /* 合并栈上元素，保证左结合性 */
+            if (currentPrecedence >= nextPrecedence) {
+                while (!operatorStack.empty()) {
+                    VeriPythonTokens currentOperator = operatorStack[operatorStack.size() - 1].first;
+                    auto *merge_ast = new HDLExpressionAST(currentOperator);
+                    if (currentOperator == TOKEN_logical_not || currentOperator == TOKEN_bitwise_not) {
+                        merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                        astStack.pop_back();
+                    } else {
+                        merge_ast->children.push_back(astStack[astStack.size() - 2]);
+                        merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                        astStack.pop_back();
+                        astStack.pop_back();
+                    }
+                    operatorStack.pop_back();
+                    astStack.push_back(reinterpret_cast<HDLExpressionAST *>(merge_ast));
+
+                    if (currentPrecedence == nextPrecedence) {
+                        break;
+                    }
+                }
+            }
+        } else {
+            int precedence = getOperatorPrecedence(lookAheadToken);
+            if (precedence == -1) {
+                goto out;
+            }
+            nextToken();
+            operatorStack.emplace_back(lookAheadToken.first, precedence);
+        }
+    }
+
+    out:
+    if (!operatorStack.empty() || astStack.size() != 1) {
+        errorParsing("Failed to parse HDL expression");
+    }
+    return astStack[0];
 }
 
 /*
@@ -342,8 +399,8 @@ HDLExpressionAST *Parser::parseHDLPrimary() {
         char *dataStr = strtok(nullptr, "'");
         int base = dataStr[0] == 'd' ? 10 : 16;
         std::string realData;
-        for(int i = 1; i < strlen(dataStr); i++) {
-            if(dataStr[i] != '_') {
+        for (std::size_t i = 1; i < strlen(dataStr); i++) {
+            if (dataStr[i] != '_') {
                 realData += dataStr[i];
             }
         }
@@ -361,6 +418,13 @@ HDLExpressionAST *Parser::parseHDLPrimary() {
         primaryAST = parseHDLExpression();
         VERIFY_NEXT_TOKEN(rparen);
     }
+
+    auto [_, isLBracket] = lookAhead();
+    if (isLBracket.first == TOKEN_lbracket) {
+        auto *slicing = parsePortSlicing();
+        primaryAST->setSlicing(slicing);
+    }
+
     return primaryAST;
 }
 
@@ -416,9 +480,9 @@ void Parser::errorParsing(const std::string &message, const std::string &expectT
     std::cerr << "Verilog parsing error: " << message << "\n";
     std::cerr << "Expecting token: " << expectTokenName << "\n";
     std::cerr << "Fetched Tokens: " << "\n";
-    while (!tokenBuffer.empty()) {
-        auto tokenData = tokenBuffer.front();
-        tokenBuffer.pop();
+    while (!tokenFetched.empty()) {
+        auto tokenData = tokenFetched.front();
+        tokenFetched.pop();
         std::cerr << tokenData.second << " ";
     }
     std::cerr << std::endl;
