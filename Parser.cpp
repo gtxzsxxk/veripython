@@ -262,7 +262,7 @@ ConstantExpressionAST *Parser::parseConstantPrimary() {
 }
 
 /*
- * moduleBody ::= statement moduleBody | statement
+ * moduleBody ::= statement moduleBody | epsilon
  * */
 void Parser::parseModuleBody() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
@@ -273,9 +273,15 @@ void Parser::parseModuleBody() {
         parseInputOutputStatement();
     } else if (lookAheadTokenData.first == TOKEN_assign) {
         parseAssignStatement();
+    } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
+        parseRegWireStatement();
     } else {
+        if(lookAheadTokenData.first == TOKEN_endmodule) {
+            return;
+        }
         errorParsing("Unexpected token");
     }
+    parseModuleBody();
 }
 
 /*
