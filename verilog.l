@@ -29,6 +29,7 @@
 ":"                                     RET_TOKEN(colon)
 [A-Za-z][A-Za-z0-9]*                    RET_TOKEN(identifier)
 \-?[0-9]+                               RET_TOKEN(number)
+\-?[0-9]+                               RET_TOKEN(const_number)
 "("                                     RET_TOKEN(lparen)
 ")"                                     RET_TOKEN(rparen)
 "{"                                     RET_TOKEN(lbrace)

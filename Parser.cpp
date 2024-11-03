@@ -163,7 +163,7 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
         if (!tokenReady) {
             goto out;
         }
-        if (lookAheadToken.first == TOKEN_number || lookAheadToken.first == TOKEN_lparen) {
+        if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_lparen) {
             auto *ast = parseConstantPrimary();
             astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(ast));
 
@@ -206,7 +206,7 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
 }
 
 /*
- * constantPrimary ::= number | "(" constantExpression ")"
+ * constantPrimary ::= const_number | "(" constantExpression ")"
  * */
 ConstantExpressionAST *Parser::parseConstantPrimary() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
@@ -214,7 +214,7 @@ ConstantExpressionAST *Parser::parseConstantPrimary() {
         errorParsing("Unexpected EOF");
     }
     decltype(parseConstantPrimary()) primaryAST;
-    if (lookAheadTokenData.first == TOKEN_number) {
+    if (lookAheadTokenData.first == TOKEN_const_number) {
         nextToken();
         auto ast = new ConstantNumberAST(std::atoi(lookAheadTokenData.second.c_str()));
         primaryAST = ast;

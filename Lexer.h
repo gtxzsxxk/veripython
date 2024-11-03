@@ -22,6 +22,7 @@ enum VeriPythonTokens {
     TOKEN_colon,
     TOKEN_identifier,
     TOKEN_number,
+    TOKEN_const_number,
     TOKEN_lparen,
     TOKEN_rparen,
     TOKEN_lbrace,

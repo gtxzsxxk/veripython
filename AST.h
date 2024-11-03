@@ -32,8 +32,8 @@ public:
 
 class ConstantNumberAST : public ConstantExpressionAST {
 public:
-    explicit ConstantNumberAST(int value) : ConstantExpressionAST(TOKEN_number), value(value) {
-        nodeType = "number";
+    explicit ConstantNumberAST(int value) : ConstantExpressionAST(TOKEN_const_number), value(value) {
+        nodeType = "const_number";
     }
 
     int value = -1;
