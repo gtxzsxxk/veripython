@@ -48,9 +48,9 @@ class Parser {
 
     void parseRegWireStatement();
 
-    void parseHDLExpression();
+    HDLExpressionAST *parseHDLExpression();
 
-    void parseHDLPrimary();
+    HDLExpressionAST *parseHDLPrimary();
 
     PortSlicingAST *parsePortSlicing();
 

@@ -55,4 +55,39 @@ public:
     int onlyWhich = 0;
 };
 
+class HDLExpressionAST : public AST {
+public:
+    explicit HDLExpressionAST(VeriPythonTokens _operator) : AST("hdlExpression"), _operator(_operator) {}
+
+    VeriPythonTokens _operator;
+
+    int constantNumber = 0;
+
+};
+
+class HDLPrimaryAST : public HDLExpressionAST {
+    bool isIdentifier = false;
+    int base = 10;
+    int width = 32;
+    int value = 0;
+    PortSlicingAST *slicing = nullptr;
+    std::string identifier;
+public:
+    explicit HDLPrimaryAST(int constantNumber) :
+            HDLExpressionAST(TOKEN_const_number),
+            isIdentifier(false), value(constantNumber) {}
+
+    explicit HDLPrimaryAST(int constantNumber,
+                           int width, int base) :
+            HDLExpressionAST(TOKEN_sized_number),
+            isIdentifier(false),
+            base(base),
+            width(width),
+            value(constantNumber) {}
+
+    explicit HDLPrimaryAST(std::string identifier) :
+            HDLExpressionAST(TOKEN_identifier),
+            isIdentifier(true), identifier(std::move(identifier)) {}
+};
+
 #endif //VERIPYTHON_AST_H

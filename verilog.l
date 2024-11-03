@@ -28,7 +28,7 @@
 ";"                                     RET_TOKEN(semicolon)
 ":"                                     RET_TOKEN(colon)
 [A-Za-z][A-Za-z0-9]*                    RET_TOKEN(identifier)
-\-?[0-9]+                               RET_TOKEN(number)
+\-?[0-9]+'(d|h)[0-9a-f\_]+              RET_TOKEN(sized_number)
 \-?[0-9]+                               RET_TOKEN(const_number)
 "("                                     RET_TOKEN(lparen)
 ")"                                     RET_TOKEN(rparen)

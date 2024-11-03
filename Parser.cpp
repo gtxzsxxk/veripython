@@ -278,12 +278,55 @@ void Parser::parseRegWireStatement() {
 
 }
 
-void Parser::parseHDLExpression() {
+HDLExpressionAST *Parser::parseHDLExpression() {
 
 }
 
-void Parser::parseHDLPrimary() {
+/*
+ * hdlPrimary ::= (const_number | sized_number | identifier | "(" hdlExpression ")") portSlicing?
+ * */
+HDLExpressionAST *Parser::parseHDLPrimary() {
+    auto [lookAheadReady, lookAheadTokenData] = lookAhead();
+    if (!lookAheadReady) {
+        errorParsing("Unexpected EOF");
+    }
+    decltype(parseHDLPrimary()) primaryAST;
+    if (lookAheadTokenData.first == TOKEN_const_number) {
+        nextToken();
+        auto ast = new HDLPrimaryAST(std::stoi(lookAheadTokenData.second));
+        primaryAST = ast;
+    } else if (lookAheadTokenData.first == TOKEN_sized_number) {
+        nextToken();
+        /* 4'd8000_0000 */
+        std::string sizedNumberString = lookAheadTokenData.second;
+        char *sizedNumberCstr = strdup(sizedNumberString.c_str());
 
+        char *widthStr = strtok(sizedNumberCstr, "'");
+        int width = std::atoi(widthStr);
+
+        char *dataStr = strtok(nullptr, "'");
+        int base = dataStr[0] == 'd' ? 10 : 16;
+        std::string realData;
+        for(int i = 1; i < strlen(dataStr); i++) {
+            if(dataStr[i] != '_') {
+                realData += dataStr[i];
+            }
+        }
+        int data = std::stoi(realData, nullptr, base);
+
+        primaryAST = new HDLPrimaryAST(data, width, base);
+
+        free(sizedNumberCstr);
+    } else if (lookAheadTokenData.first == TOKEN_identifier) {
+        nextToken();
+        auto ast = new HDLPrimaryAST(lookAheadTokenData.second);
+        primaryAST = ast;
+    } else if (lookAheadTokenData.first == TOKEN_lparen) {
+        nextToken();
+        primaryAST = parseHDLExpression();
+        VERIFY_NEXT_TOKEN(rparen);
+    }
+    return primaryAST;
 }
 
 Parser::~Parser() {
