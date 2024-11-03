@@ -6,14 +6,26 @@
 #include <iostream>
 #include <stdexcept>
 
-CircuitData::CircuitData(PortSlicingAST *slicingData) {
-    if (slicingData->isDownTo) {
-        for (int i = slicingData->downToLow; i <= slicingData->downToHigh; i++) {
+std::string CircuitConnection::getDestIdentifier() const {
+    return destIdentifier;
+}
+
+HDLExpressionAST *CircuitConnection::getHDLExpressionAST() const {
+    return ast;
+}
+
+CircuitData::CircuitData(const PortSlicingAST &slicingData) {
+    if (slicingData.isDownTo) {
+        for (int i = slicingData.downToLow; i <= slicingData.downToHigh; i++) {
             bits.push_back(false);
         }
     } else {
         bits.push_back(false);
     }
+}
+
+std::size_t CircuitData::getBitWidth() const {
+    return bits.size();
 }
 
 const PortSlicingAST *CircuitSymbol::getSlicing() const {
@@ -44,6 +56,10 @@ void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
             nextSymbol->propagate(nextPos, outputData);
         }
     }
+}
+
+std::string CircuitSymbol::getIdentifier() const {
+    return identifier;
 }
 
 CircuitData CircuitSymbolWire::calculateOutput() {
@@ -88,4 +104,33 @@ ModuleIOPort &HardwareModule::getModuleIOPortByName(const std::string &name) {
 
 void HardwareModule::addCircuitConnection(CircuitConnection &&connection) {
     circuitConnections.push_back(connection);
+}
+
+CircuitSymbol *HardwareModule::getPortOrSymbolById(const std::string& id) {
+    for(auto & ioPort : ioPorts) {
+        if(ioPort.getIdentifier() == id) {
+            return &ioPort;
+        }
+    }
+
+    for(auto *symbol : circuitSymbols) {
+        if(symbol->getIdentifier() == id) {
+            return symbol;
+        }
+    }
+
+    throw std::runtime_error("No such an identifier when lookup the circuit");
+    return nullptr;
+}
+
+void HardwareModule::traverseHDLExprAST(HDLExpressionAST *ast) {
+
+}
+
+void HardwareModule::buildCircuit() {
+    for(auto &conn : circuitConnections) {
+        auto *destSymbol = getPortOrSymbolById(conn.getDestIdentifier());
+        auto *ast = conn.getHDLExpressionAST();
+
+    }
 }

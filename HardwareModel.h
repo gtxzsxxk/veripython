@@ -24,12 +24,19 @@ public:
                                HDLExpressionAST *connAST) :
             destIdentifier(std::move(dest)),
             ast(connAST) {}
+
+    [[nodiscard]] std::string getDestIdentifier() const;
+
+    [[nodiscard]] HDLExpressionAST *getHDLExpressionAST() const;
 };
 
 class CircuitData {
-    std::vector<bool> bits;
 public:
-    explicit CircuitData(PortSlicingAST *slicingData);
+    std::vector<bool> bits;
+
+    explicit CircuitData(const PortSlicingAST &slicingData);
+
+    [[nodiscard]] std::size_t getBitWidth() const;
 };
 
 class CircuitSymbol {
@@ -54,6 +61,8 @@ public:
     std::size_t registerInput(CircuitSymbol *symbol);
 
     virtual void propagate(std::size_t pos, const CircuitData &data);
+
+    [[nodiscard]] std::string getIdentifier() const;
 
     ~CircuitSymbol();
 };
@@ -102,6 +111,11 @@ public:
 
 class HardwareModule {
     std::vector<CircuitConnection> circuitConnections;
+
+    CircuitSymbol *getPortOrSymbolById(const std::string &id);
+
+    void traverseHDLExprAST(HDLExpressionAST *ast);
+
 public:
     std::vector<ModuleIOPort> ioPorts;
     std::vector<CircuitSymbol *> circuitSymbols;
@@ -111,7 +125,7 @@ public:
 
     void addCircuitConnection(CircuitConnection &&connection);
 
-
+    void buildCircuit();
 };
 
 
