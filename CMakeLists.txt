@@ -39,6 +39,8 @@ add_executable(veripython
         AST.cpp
         HardwareModel.cpp
         HardwareModel.h
+        CombLogics.cpp
+        CombLogics.h
 )
 
 target_link_libraries(veripython lexer -lfl)
@@ -52,7 +54,9 @@ add_executable(ParserTests
         AST.h
         AST.cpp
         HardwareModel.cpp
-        HardwareModel.h)
+        HardwareModel.h
+        CombLogics.cpp
+        CombLogics.h)
 target_link_libraries(ParserTests GTest::gtest_main)
 target_link_libraries(ParserTests lexer -lfl)
 include(GoogleTest)
