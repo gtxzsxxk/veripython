@@ -174,7 +174,6 @@ PortSlicingAST *Parser::parsePortSlicing() {
 
     PortSlicingAST *portSlicing;
     if (lookAheadToken.first == TOKEN_rbracket) {
-        nextToken();
         portSlicing = new PortSlicingAST(firstValAST->eval());
     } else {
         VERIFY_NEXT_TOKEN(colon);
