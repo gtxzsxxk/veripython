@@ -19,14 +19,14 @@ extern FILE *yyin;
 
 union LEXER_VALUE yylval;
 
-std::unordered_map<VeriPythonTokens, int> Parser::binaryOpPrecedence = {
+std::unordered_map<VeriPythonTokens, int> Parser::operatorPrecedence = {
         {TOKEN_op_add, 10},
         {TOKEN_op_sub, 10},
         {TOKEN_op_mul, 20},
         {TOKEN_op_div, 20},
 };
 
-std::unordered_map<VeriPythonTokens, std::string> Parser::binaryOpToString = {
+std::unordered_map<VeriPythonTokens, std::string> Parser::operatorToString = {
         {TOKEN_op_add, "op_add"},
         {TOKEN_op_sub, "op_sub"},
         {TOKEN_op_mul, "op_mul"},
@@ -352,5 +352,5 @@ int Parser::getOperatorPrecedence(LexTokenType &token) {
         token.first != TOKEN_op_mul && token.first != TOKEN_op_div) {
         return -1;
     }
-    return binaryOpPrecedence[token.first];
+    return operatorPrecedence[token.first];
 }
