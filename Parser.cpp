@@ -20,10 +20,53 @@ extern FILE *yyin;
 union LEXER_VALUE yylval;
 
 std::unordered_map<VeriPythonTokens, int> Parser::operatorPrecedence = {
-        {TOKEN_op_add, 10},
-        {TOKEN_op_sub, 10},
-        {TOKEN_op_mul, 20},
-        {TOKEN_op_div, 20},
+        {TOKEN_logical_or,     10},
+        {TOKEN_logical_and,    20},
+        {TOKEN_bitwise_or,     30},
+        {TOKEN_bitwise_xor,    40},
+        {TOKEN_bitwise_and,    50},
+        {TOKEN_cond_eq,        60},
+        {TOKEN_cond_ne,        60},
+        {TOKEN_cond_lt,        70},
+        {TOKEN_cond_le,        70},
+        {TOKEN_cond_gt,        70},
+        {TOKEN_cond_ge,        70},
+        {TOKEN_arith_lshift,   80},
+        {TOKEN_logical_lshift, 80},
+        {TOKEN_arith_rshift,   80},
+        {TOKEN_logical_rshift, 80},
+        {TOKEN_op_add,         90},
+        {TOKEN_op_sub,         90},
+        {TOKEN_op_mod,         100},
+        {TOKEN_op_mul,         100},
+        {TOKEN_op_div,         100},
+        {TOKEN_logical_not,    110},
+        {TOKEN_bitwise_not,    110},
+};
+
+std::unordered_map<VeriPythonTokens, std::string> Parser::operatorName = {
+        {TOKEN_logical_or,     "logical_or"},
+        {TOKEN_logical_and,    "logical_and"},
+        {TOKEN_bitwise_or,     "bitwise_or"},
+        {TOKEN_bitwise_xor,    "bitwise_xor"},
+        {TOKEN_bitwise_and,    "bitwise_and"},
+        {TOKEN_cond_eq,        "cond_eq"},
+        {TOKEN_cond_ne,        "cond_ne"},
+        {TOKEN_cond_lt,        "cond_lt"},
+        {TOKEN_cond_le,        "cond_le"},
+        {TOKEN_cond_gt,        "cond_gt"},
+        {TOKEN_cond_ge,        "cond_ge"},
+        {TOKEN_arith_lshift,   "arith_lshift"},
+        {TOKEN_logical_lshift, "logical_lshift"},
+        {TOKEN_arith_rshift,   "arith_rshift"},
+        {TOKEN_logical_rshift, "logical_rshift"},
+        {TOKEN_op_add,         "op_add"},
+        {TOKEN_op_sub,         "op_sub"},
+        {TOKEN_op_mod,         "op_mod"},
+        {TOKEN_op_mul,         "op_mul"},
+        {TOKEN_op_div,         "op_div"},
+        {TOKEN_logical_not,    "logical_not"},
+        {TOKEN_bitwise_not,    "bitwise_not"}
 };
 
 Parser::Parser(const std::string &filename) {

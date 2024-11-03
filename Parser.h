@@ -19,7 +19,6 @@ class Parser {
     const std::size_t TOKEN_FETCHED_SIZE = 100;
     std::queue<LexTokenType> tokenBuffer;
     std::queue<LexTokenType> tokenFetched;
-    static std::unordered_map<VeriPythonTokens, int> operatorPrecedence;
     HardwareModule hardwareModule;
 
     static int getOperatorPrecedence(LexTokenType &token);
@@ -56,6 +55,9 @@ class Parser {
     ConstantExpressionAST *parseConstantPrimary();
 
 public:
+    static std::unordered_map<VeriPythonTokens, int> operatorPrecedence;
+    static std::unordered_map<VeriPythonTokens, std::string> operatorName;
+
     explicit Parser(const std::string &filename);
 
     ~Parser();
