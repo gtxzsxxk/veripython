@@ -50,7 +50,9 @@ add_executable(ParserTests
         Parser.h
         Lexer.h
         AST.h
-        AST.cpp)
+        AST.cpp
+        HardwareModel.cpp
+        HardwareModel.h)
 target_link_libraries(ParserTests GTest::gtest_main)
 target_link_libraries(ParserTests lexer -lfl)
 include(GoogleTest)

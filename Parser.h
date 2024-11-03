@@ -23,7 +23,7 @@ class Parser {
     static std::unordered_map<VeriPythonTokens, std::string> binaryOpToString;
     HardwareModule hardwareModule;
 
-    static int getOperandPrecedence(LexTokenType &token);
+    static int getOperatorPrecedence(LexTokenType &token);
 
     std::tuple<bool, LexTokenType> lookAhead();
 
@@ -45,6 +45,12 @@ class Parser {
     void parseInputOutputStatement();
 
     void parseAssignStatement();
+
+    void parseRegWireStatement();
+
+    void parseHDLExpression();
+
+    void parseHDLPrimary();
 
     PortSlicingAST *parsePortSlicing();
 

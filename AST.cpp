@@ -25,7 +25,7 @@ int ConstantExpressionAST::eval() {
     int lhsValue = dynamic_cast<ConstantExpressionAST *>(children[0])->eval();
     int rhsValue = dynamic_cast<ConstantExpressionAST *>(children[1])->eval();
     int answer;
-    switch (operand) {
+    switch (_operator) {
         case TOKEN_op_add:
             answer = lhsValue + rhsValue;
             break;
@@ -39,7 +39,7 @@ int ConstantExpressionAST::eval() {
             answer = lhsValue / rhsValue;
             break;
         default:
-            throw std::runtime_error("Unsupported operand");
+            throw std::runtime_error("Unsupported operator");
             break;
     }
     return answer;

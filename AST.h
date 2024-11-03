@@ -23,9 +23,9 @@ public:
 
 class ConstantExpressionAST : public AST {
 public:
-    explicit ConstantExpressionAST(VeriPythonTokens operand) : AST("constantExpression"), operand(operand) {}
+    explicit ConstantExpressionAST(VeriPythonTokens _operator) : AST("constantExpression"), _operator(_operator) {}
 
-    VeriPythonTokens operand;
+    VeriPythonTokens _operator;
 
     virtual int eval();
 };

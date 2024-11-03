@@ -153,11 +153,11 @@ PortSlicingAST *Parser::parsePortSlicing() {
 ConstantExpressionAST *Parser::parseConstantExpr() {
     /* a+b*c/2-1+(d+e)*c+2 */
     std::vector<ConstantExpressionAST *> astStack;
-    std::vector<std::pair<VeriPythonTokens, int>> operandStack;
+    std::vector<std::pair<VeriPythonTokens, int>> operatorStack;
     while (true) {
         int currentPrecedence = 0;
-        if (!operandStack.empty()) {
-            currentPrecedence = operandStack[operandStack.size() - 1].second;
+        if (!operatorStack.empty()) {
+            currentPrecedence = operatorStack[operatorStack.size() - 1].second;
         }
         auto [tokenReady, lookAheadToken] = lookAhead();
         if (!tokenReady) {
@@ -167,20 +167,20 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
             auto *ast = parseConstantPrimary();
             astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(ast));
 
-            /* 继续前瞻，根据后一个 operand 决定是否要对当前栈上元素进行合并 */
-            auto [nextOpReady, nextOperand] = lookAhead();
-            int nextPrecedence = getOperandPrecedence(nextOperand);
-            /* 如果下一个token不是operand，说明已经到达了结尾，直接当作 -1 处理就行 */
+            /* 继续前瞻，根据后一个 operator 决定是否要对当前栈上元素进行合并 */
+            auto [nextOpReady, nextOperator] = lookAhead();
+            int nextPrecedence = getOperatorPrecedence(nextOperator);
+            /* 如果下一个token不是operator，说明已经到达了结尾，直接当作 -1 处理就行 */
             /* 合并栈上元素，保证左结合性 */
             if (currentPrecedence >= nextPrecedence) {
-                while (!operandStack.empty()) {
-                    VeriPythonTokens currentOperand = operandStack[operandStack.size() - 1].first;
-                    auto *merge_ast = new ConstantExpressionAST(currentOperand);
+                while (!operatorStack.empty()) {
+                    VeriPythonTokens currentOperator = operatorStack[operatorStack.size() - 1].first;
+                    auto *merge_ast = new ConstantExpressionAST(currentOperator);
                     merge_ast->children.push_back(astStack[astStack.size() - 2]);
                     merge_ast->children.push_back(astStack[astStack.size() - 1]);
                     astStack.pop_back();
                     astStack.pop_back();
-                    operandStack.pop_back();
+                    operatorStack.pop_back();
                     astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
 
                     if (currentPrecedence == nextPrecedence) {
@@ -189,17 +189,17 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
                 }
             }
         } else {
-            int precedence = getOperandPrecedence(lookAheadToken);
+            int precedence = getOperatorPrecedence(lookAheadToken);
             if (precedence == -1) {
                 goto out;
             }
             nextToken();
-            operandStack.emplace_back(lookAheadToken.first, precedence);
+            operatorStack.emplace_back(lookAheadToken.first, precedence);
         }
     }
 
     out:
-    if (!operandStack.empty() || astStack.size() != 1) {
+    if (!operatorStack.empty() || astStack.size() != 1) {
         errorParsing("Failed to parse constant expression");
     }
     return astStack[0];
@@ -267,7 +267,22 @@ void Parser::parseInputOutputStatement() {
     }
 }
 
+/*
+ * assign_stmt ::= "assign" id "=" HDLExpression ";"
+ * */
 void Parser::parseAssignStatement() {
+
+}
+
+void Parser::parseRegWireStatement() {
+
+}
+
+void Parser::parseHDLExpression() {
+
+}
+
+void Parser::parseHDLPrimary() {
 
 }
 
@@ -332,7 +347,7 @@ void Parser::errorParsing(const std::string &message, const std::string &expectT
     throw std::runtime_error("Code syntax error");
 }
 
-int Parser::getOperandPrecedence(LexTokenType &token) {
+int Parser::getOperatorPrecedence(LexTokenType &token) {
     if (token.first != TOKEN_op_add && token.first != TOKEN_op_sub &&
         token.first != TOKEN_op_mul && token.first != TOKEN_op_div) {
         return -1;
