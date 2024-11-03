@@ -29,25 +29,34 @@ public:
     }
 };
 
+/*
+ * Normal Binary Operators
+ * */
+
 template<class Op>
-concept isLogicalBinOp = requires {
+concept isNormalBinOp = requires {
     Op::apply(true, true);
     std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>;
 };
 
-template<class Op> requires isLogicalBinOp<Op>
-class CombLogicBinary : public CombLogic {
+template<class Op> requires isNormalBinOp<Op>
+class CombNormalBinary : public CombLogic {
 protected:
     CircuitData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
         checkInputDataSlicing(&data0, &data1);
-        if (data0.getBitWidth() != 1) {
-            throw std::runtime_error("Logical operation should only work with bit width 1");
+        if constexpr (Op::token == TOKEN_logical_or || TOKEN_logical_and) {
+            if (data0.getBitWidth() != 1) {
+                throw std::runtime_error("Logical operation should only work with bit width 1");
+            }
         }
-        auto slicing = PortSlicingAST(1);
+        auto width = data0.getBitWidth();
+        auto slicing = PortSlicingAST(width);
         auto circuitData = CircuitData(slicing);
-        circuitData.bits[0] = Op::apply(data0.bits[0], data1.bits[0]);
+        for (auto i = 0; i < width; i++) {
+            circuitData.bits[i] = Op::apply(data0.bits[i], data1.bits[i]);
+        }
         return circuitData;
     }
 
@@ -56,7 +65,7 @@ protected:
     }
 
 public:
-    CombLogicBinary() : CombLogic(Op::token) {}
+    CombNormalBinary() : CombLogic(Op::token) {}
 };
 
 /* Logical OR */
@@ -68,7 +77,7 @@ struct combOperatorLogicalOr {
     }
 };
 
-using CombLogicLogicalOr = CombLogicBinary<combOperatorLogicalOr>;
+using CombLogicLogicalOr = CombNormalBinary<combOperatorLogicalOr>;
 
 /* Logical AND */
 struct combOperatorLogicalAnd {
@@ -79,6 +88,39 @@ struct combOperatorLogicalAnd {
     }
 };
 
-using CombLogicLogicalAnd = CombLogicBinary<combOperatorLogicalAnd>;
+using CombLogicLogicalAnd = CombNormalBinary<combOperatorLogicalAnd>;
+
+/* Bitwise OR */
+struct combOperatorBitwiseOr {
+    static constexpr auto token = TOKEN_bitwise_or;
+
+    static bool apply(bool a, bool b) {
+        return a || b;
+    }
+};
+
+using CombLogicBitwiseOr = CombNormalBinary<combOperatorBitwiseOr>;
+
+/* Bitwise XOR */
+struct combOperatorBitwiseXor {
+    static constexpr auto token = TOKEN_bitwise_xor;
+
+    static bool apply(bool a, bool b) {
+        return a ^ b;
+    }
+};
+
+using CombLogicBitwiseXor = CombNormalBinary<combOperatorBitwiseXor>;
+
+/* Bitwise AND */
+struct combOperatorBitwiseAnd {
+    static constexpr auto token = TOKEN_bitwise_and;
+
+    static bool apply(bool a, bool b) {
+        return a && b;
+    }
+};
+
+using CombLogicBitwiseAnd = CombNormalBinary<combOperatorBitwiseAnd>;
 
 #endif //VERIPYTHON_COMBLOGICS_H
