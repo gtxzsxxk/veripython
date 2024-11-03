@@ -258,4 +258,39 @@ struct combOperatorShiftRightLogical {
 
 using CombLogicShiftRightLogical = CombShiftRight<combOperatorShiftRightLogical>;
 
+/*
+ * Arithmetic Binary Operators
+ * */
+template<class Op> requires isCompareBinOp<Op>
+class CombArithmeticBinary : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        auto data0 = inputDataVec[0];
+        auto data1 = inputDataVec[1];
+
+        auto width = std::max(data0.getBitWidth(), data1.getBitWidth());
+
+        auto slicing = PortSlicingAST(width);
+        auto circuitData = CircuitData(slicing);
+
+        auto operand1 = generateUnsignedIntegerFromData(data0);
+        auto operand2 = generateUnsignedIntegerFromData(data1);
+
+        std::size_t ans = Op::apply(operand1, operand2);
+
+        for (auto i = 0; i < width; i++) {
+            circuitData.bits[i] = (ans & 0x01UL) == 1;
+            ans >>= 1;
+        }
+        return circuitData;
+    }
+
+    int getMaxInputs() override {
+        return 2;
+    }
+
+public:
+    CombArithmeticBinary() : CombLogic(Op::token) {}
+};
+
 #endif //VERIPYTHON_COMBLOGICS_H
