@@ -25,3 +25,7 @@ ModuleIOPort &HardwareModule::getModuleIOPortByName(const std::string &name) {
 
     throw std::runtime_error("No such an I/O port");
 }
+
+void HardwareModule::addCircuitConnection(CircuitConnection &&connection) {
+    circuitConnections.push_back(connection);
+}

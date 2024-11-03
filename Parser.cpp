@@ -306,11 +306,38 @@ void Parser::parseInputOutputStatement() {
  * assign_stmt ::= "assign" id "=" HDLExpression ";"
  * */
 void Parser::parseAssignStatement() {
+    VERIFY_NEXT_TOKEN(assign);
+    auto [_, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+    VERIFY_NEXT_TOKEN(single_eq);
+    auto *hdlExpr = parseHDLExpression();
+    VERIFY_NEXT_TOKEN(semicolon);
 
+    hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, hdlExpr});
 }
 
+/*
+ * reg_wire_stmt ::= "wire" identifier "=" HDLExpression ";"
+ *               ||= "reg" identifier ";"
+ * */
 void Parser::parseRegWireStatement() {
-
+    auto [_, wireOrRegToken] = nextToken();
+    auto [_1, identifierToken] = nextToken();
+    if (wireOrRegToken.first == TOKEN_wire) {
+        auto *wire = new CircuitSymbolWire(identifierToken.second);
+        hardwareModule.circuitSymbols.push_back(wire);
+        auto [_2, equalOrSemicolonToken] = nextToken();
+        if (equalOrSemicolonToken.first == TOKEN_single_eq) {
+            auto *hdlExpr = parseHDLExpression();
+            hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, hdlExpr});
+            VERIFY_NEXT_TOKEN(semicolon);
+        }
+    } else if (wireOrRegToken.first == TOKEN_reg) {
+        auto *reg = new CircuitSymbolReg(identifierToken.second);
+        hardwareModule.circuitSymbols.push_back(reg);
+        VERIFY_NEXT_TOKEN(semicolon);
+    } else {
+        errorParsing("Expecting wire or reg");
+    }
 }
 
 HDLExpressionAST *Parser::parseHDLExpression() {
