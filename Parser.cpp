@@ -426,8 +426,7 @@ void Parser::errorParsing(const std::string &message, const std::string &expectT
 }
 
 int Parser::getOperatorPrecedence(LexTokenType &token) {
-    if (token.first != TOKEN_op_add && token.first != TOKEN_op_sub &&
-        token.first != TOKEN_op_mul && token.first != TOKEN_op_div) {
+    if (operatorPrecedence.count(token.first) == 0) {
         return -1;
     }
     return operatorPrecedence[token.first];
