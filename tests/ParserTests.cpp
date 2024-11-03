@@ -148,3 +148,10 @@ TEST(ParserTests, SimpleSingleHDLExpressionTest) {
     std::cout << ast->toString() << std::endl;
     std::remove(filename.c_str());
 }
+
+TEST(ParserTests, SimpleSingleModuleVerilogTest) {
+    const std::string filename = "../tests/verilog_srcs/full_adder.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+}
