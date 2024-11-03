@@ -26,13 +26,6 @@ std::unordered_map<VeriPythonTokens, int> Parser::operatorPrecedence = {
         {TOKEN_op_div, 20},
 };
 
-std::unordered_map<VeriPythonTokens, std::string> Parser::operatorToString = {
-        {TOKEN_op_add, "op_add"},
-        {TOKEN_op_sub, "op_sub"},
-        {TOKEN_op_mul, "op_mul"},
-        {TOKEN_op_div, "op_div"},
-};
-
 Parser::Parser(const std::string &filename) {
     yyin = fopen(filename.c_str(), "r");
 }

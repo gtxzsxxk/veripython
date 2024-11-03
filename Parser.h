@@ -20,7 +20,6 @@ class Parser {
     std::queue<LexTokenType> tokenBuffer;
     std::queue<LexTokenType> tokenFetched;
     static std::unordered_map<VeriPythonTokens, int> operatorPrecedence;
-    static std::unordered_map<VeriPythonTokens, std::string> operatorToString;
     HardwareModule hardwareModule;
 
     static int getOperatorPrecedence(LexTokenType &token);
