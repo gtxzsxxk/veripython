@@ -57,7 +57,7 @@ protected:
             }
         }
         auto width = data0.getBitWidth();
-        auto slicing = PortSlicingAST(width);
+        auto slicing = PortSlicingAST(width - 1, 0);
         auto circuitData = CircuitData(slicing);
         for (decltype(width) i = 0; i < width; i++) {
             circuitData.bits[i] = Op::apply(data0.bits[i], data1.bits[i]);
@@ -117,7 +117,7 @@ protected:
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
         checkInputDataSlicing(&data0, &data1);
-        auto slicing = PortSlicingAST(1);
+        auto slicing = PortSlicingAST(0, 0);
         auto circuitData = CircuitData(slicing);
         auto cmp1 = generateUnsignedIntegerFromData(&data0);
         auto cmp2 = generateUnsignedIntegerFromData(&data1);
@@ -179,7 +179,7 @@ protected:
         auto shiftAmount = generateUnsignedIntegerFromData(&data1);
 
         auto width = data0.getBitWidth();
-        auto slicing = PortSlicingAST(width + shiftAmount);
+        auto slicing = PortSlicingAST(width + shiftAmount - 1, 0);
         auto circuitData = CircuitData(slicing);
 
         for (long int i = (long int) circuitData.bits.size() - 1;
@@ -225,7 +225,7 @@ protected:
         auto shiftAmount = generateUnsignedIntegerFromData(&data1);
 
         auto width = data0.getBitWidth();
-        auto slicing = PortSlicingAST(width);
+        auto slicing = PortSlicingAST(width - 1, 0);
         auto circuitData = CircuitData(slicing);
 
         bool signExtending = false;
@@ -283,7 +283,7 @@ protected:
             width = std::max(data0.getBitWidth(), data1.getBitWidth());
         }
 
-        auto slicing = PortSlicingAST(width);
+        auto slicing = PortSlicingAST(width - 1, 0);
         auto circuitData = CircuitData(slicing);
 
         auto operand1 = generateUnsignedIntegerFromData(&data0);
@@ -355,7 +355,7 @@ protected:
             }
         }
 
-        auto slicing = PortSlicingAST(width);
+        auto slicing = PortSlicingAST(width - 1, 0);
         auto circuitData = CircuitData(slicing);
 
         for (decltype(width) i = 0; i < width; i++) {
