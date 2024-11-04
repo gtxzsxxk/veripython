@@ -184,9 +184,9 @@ PortSlicingAST Parser::parsePortSlicing() {
     return portSlicing;
 }
 
-ConstantExpressionAST *Parser::parseConstantExpr() {
+std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
     /* a+b*c/2-1+(d+e)*c+2 */
-    std::vector<ConstantExpressionAST *> astStack;
+    std::vector<std::unique_ptr<ConstantExpressionAST>> astStack;
     std::vector<std::pair<VeriPythonTokens, int>> operatorStack;
     while (true) {
         int currentPrecedence = 0;
@@ -198,8 +198,8 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
             goto out;
         }
         if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_lparen) {
-            auto *ast = parseConstantPrimary();
-            astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(ast));
+            auto ast = parseConstantPrimary();
+            astStack.push_back(std::move(ast));
 
             /* 继续前瞻，根据后一个 operator 决定是否要对当前栈上元素进行合并 */
             auto [nextOpReady, nextOperator] = lookAhead();
@@ -209,13 +209,13 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
             if (currentPrecedence >= nextPrecedence) {
                 while (!operatorStack.empty()) {
                     VeriPythonTokens currentOperator = operatorStack[operatorStack.size() - 1].first;
-                    auto *merge_ast = new ConstantExpressionAST(currentOperator);
-                    merge_ast->children.push_back(astStack[astStack.size() - 2]);
-                    merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                    auto merge_ast = std::make_unique<ConstantExpressionAST>(currentOperator);
+                    merge_ast->children.push_back(std::move(astStack[astStack.size() - 2]));
+                    merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                     astStack.pop_back();
                     astStack.pop_back();
                     operatorStack.pop_back();
-                    astStack.push_back(reinterpret_cast<ConstantExpressionAST *>(merge_ast));
+                    astStack.push_back(std::move(merge_ast));
 
                     if (currentPrecedence == nextPrecedence) {
                         break;
@@ -236,22 +236,22 @@ ConstantExpressionAST *Parser::parseConstantExpr() {
     if (!operatorStack.empty() || astStack.size() != 1) {
         errorParsing("Failed to parse constant expression");
     }
-    return astStack[0];
+    return std::move(astStack[0]);
 }
 
 /*
  * constantPrimary ::= const_number | "(" constantExpression ")"
  * */
-ConstantExpressionAST *Parser::parseConstantPrimary() {
+std::unique_ptr<ConstantExpressionAST> Parser::parseConstantPrimary() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
     if (!lookAheadReady) {
         errorParsing("Unexpected EOF");
     }
-    decltype(parseConstantPrimary()) primaryAST = nullptr;
+    decltype(parseConstantPrimary()) primaryAST;
     if (lookAheadTokenData.first == TOKEN_const_number) {
         nextToken();
-        auto ast = new ConstantNumberAST(std::stoi(lookAheadTokenData.second));
-        primaryAST = ast;
+        auto ast = static_cast<ConstantExpressionAST *>(new ConstantNumberAST{std::stoi(lookAheadTokenData.second)});
+        primaryAST = std::unique_ptr<ConstantExpressionAST>{ast};
     } else if (lookAheadTokenData.first == TOKEN_lparen) {
         nextToken();
         primaryAST = parseConstantExpr();
@@ -314,10 +314,10 @@ void Parser::parseAssignStatement() {
     VERIFY_NEXT_TOKEN(assign);
     auto [_, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
     VERIFY_NEXT_TOKEN(single_eq);
-    auto *hdlExpr = parseHDLExpression();
+    auto hdlExpr = parseHDLExpression();
     VERIFY_NEXT_TOKEN(semicolon);
 
-    hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, hdlExpr});
+    hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
 }
 
 /*
@@ -332,8 +332,8 @@ void Parser::parseRegWireStatement() {
         hardwareModule.circuitSymbols.push_back(wire);
         auto [_2, equalOrSemicolonToken] = nextToken();
         if (equalOrSemicolonToken.first == TOKEN_single_eq) {
-            auto *hdlExpr = parseHDLExpression();
-            hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, hdlExpr});
+            auto hdlExpr = parseHDLExpression();
+            hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
             VERIFY_NEXT_TOKEN(semicolon);
         }
     }
@@ -347,9 +347,9 @@ void Parser::parseRegWireStatement() {
     }
 }
 
-HDLExpressionAST *Parser::parseHDLExpression() {
+std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
     /* (a ^ b) | (c | d) & (~c)[2] && (a[1] || a[2]) */
-    std::vector<HDLExpressionAST *> astStack;
+    std::vector<std::unique_ptr<HDLExpressionAST>> astStack;
     std::vector<std::pair<VeriPythonTokens, int>> operatorStack;
     while (true) {
         int currentPrecedence = 0;
@@ -362,8 +362,8 @@ HDLExpressionAST *Parser::parseHDLExpression() {
         }
         if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_sized_number ||
             lookAheadToken.first == TOKEN_identifier || lookAheadToken.first == TOKEN_lparen) {
-            auto *ast = parseHDLPrimary();
-            astStack.push_back(reinterpret_cast<HDLExpressionAST *>(ast));
+            auto ast = parseHDLPrimary();
+            astStack.push_back(std::move(ast));
 
             /* 继续前瞻，根据后一个 operator 决定是否要对当前栈上元素进行合并 */
             auto [nextOpReady, nextOperator] = lookAhead();
@@ -373,18 +373,18 @@ HDLExpressionAST *Parser::parseHDLExpression() {
             if (currentPrecedence >= nextPrecedence) {
                 while (!operatorStack.empty()) {
                     VeriPythonTokens currentOperator = operatorStack[operatorStack.size() - 1].first;
-                    auto *merge_ast = new HDLExpressionAST(currentOperator);
+                    auto merge_ast = std::make_unique<HDLExpressionAST>(currentOperator);
                     if (currentOperator == TOKEN_logical_not || currentOperator == TOKEN_bitwise_not) {
-                        merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                        merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                         astStack.pop_back();
                     } else {
-                        merge_ast->children.push_back(astStack[astStack.size() - 2]);
-                        merge_ast->children.push_back(astStack[astStack.size() - 1]);
+                        merge_ast->children.push_back(std::move(astStack[astStack.size() - 2]));
+                        merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                         astStack.pop_back();
                         astStack.pop_back();
                     }
                     operatorStack.pop_back();
-                    astStack.push_back(reinterpret_cast<HDLExpressionAST *>(merge_ast));
+                    astStack.push_back(std::move(merge_ast));
 
                     if (currentPrecedence == nextPrecedence) {
                         break;
@@ -405,22 +405,22 @@ HDLExpressionAST *Parser::parseHDLExpression() {
     if (!operatorStack.empty() || astStack.size() != 1) {
         errorParsing("Failed to parse HDL expression");
     }
-    return astStack[0];
+    return std::move(astStack[0]);
 }
 
 /*
  * hdlPrimary ::= (const_number | sized_number | identifier | "(" hdlExpression ")") portSlicing?
  * */
-HDLExpressionAST *Parser::parseHDLPrimary() {
+std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
     if (!lookAheadReady) {
         errorParsing("Unexpected EOF");
     }
-    decltype(parseHDLPrimary()) primaryAST = nullptr;
+    decltype(parseHDLPrimary()) primaryAST;
     if (lookAheadTokenData.first == TOKEN_const_number) {
         nextToken();
-        auto ast = new HDLPrimaryAST(std::stoi(lookAheadTokenData.second));
-        primaryAST = ast;
+        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{std::stoi(lookAheadTokenData.second)});
+        primaryAST = std::unique_ptr<HDLExpressionAST>(ast);
     } else if (lookAheadTokenData.first == TOKEN_sized_number) {
         nextToken();
         /* 4'd8000_0000 */
@@ -440,13 +440,13 @@ HDLExpressionAST *Parser::parseHDLPrimary() {
         }
         int data = std::stoi(realData, nullptr, base);
 
-        primaryAST = new HDLPrimaryAST(data, width, base);
-
+        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{data, width, base});
+        primaryAST = std::unique_ptr<HDLExpressionAST>(ast);
         free(sizedNumberCstr);
     } else if (lookAheadTokenData.first == TOKEN_identifier) {
         nextToken();
-        auto ast = new HDLPrimaryAST(lookAheadTokenData.second);
-        primaryAST = ast;
+        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{lookAheadTokenData.second});
+        primaryAST = std::unique_ptr<HDLExpressionAST>(ast);
     } else if (lookAheadTokenData.first == TOKEN_lparen) {
         nextToken();
         primaryAST = parseHDLExpression();

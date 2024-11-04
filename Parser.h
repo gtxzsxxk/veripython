@@ -8,6 +8,7 @@
 #include "Lexer.h"
 #include "AST.h"
 #include "HardwareModel.h"
+#include <memory>
 #include <string>
 #include <tuple>
 #include <queue>
@@ -45,11 +46,11 @@ class Parser {
 
     void parseRegWireStatement();
 
-    HDLExpressionAST *parseHDLPrimary();
+    std::unique_ptr<HDLExpressionAST> parseHDLPrimary();
 
-    PortSlicingAST *parsePortSlicing();
+    PortSlicingAST parsePortSlicing();
 
-    ConstantExpressionAST *parseConstantPrimary();
+    std::unique_ptr<ConstantExpressionAST> parseConstantPrimary();
 
 public:
     HardwareModule hardwareModule;
@@ -62,9 +63,9 @@ public:
 
     void parseHDL();
 
-    ConstantExpressionAST *parseConstantExpr();
+    std::unique_ptr<ConstantExpressionAST> parseConstantExpr();
 
-    HDLExpressionAST *parseHDLExpression();
+    std::unique_ptr<HDLExpressionAST> parseHDLExpression();
 };
 
 #endif //VERIPYTHON_PARSER_H
