@@ -3,7 +3,6 @@
 //
 
 #include "HardwareModel.h"
-#include "CombLogics.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -124,14 +123,14 @@ void HardwareModule::addCircuitConnection(CircuitConnection &&connection) {
     circuitConnections.push_back(connection);
 }
 
-CircuitSymbol *HardwareModule::getPortOrSymbolById(const std::string &id) {
+std::shared_ptr<CircuitSymbol> HardwareModule::getPortOrSymbolById(const std::string &id) {
     for (auto &ioPort: ioPorts) {
-        if (ioPort.getIdentifier() == id) {
-            return &ioPort;
+        if (ioPort->getIdentifier() == id) {
+            return ioPort;
         }
     }
 
-    for (auto *symbol: circuitSymbols) {
+    for (auto symbol: circuitSymbols) {
         if (symbol->getIdentifier() == id) {
             return symbol;
         }
@@ -141,22 +140,23 @@ CircuitSymbol *HardwareModule::getPortOrSymbolById(const std::string &id) {
     return nullptr;
 }
 
-CircuitSymbol *HardwareModule::genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast) {
+std::shared_ptr<CircuitSymbol> HardwareModule::genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast) {
     if (ast->nodeType == "const_number") {
-        return new CircuitSymbolConstant(dynamic_cast<HDLPrimaryAST *>(ast));
+        return std::make_shared<CircuitSymbolConstant>(CircuitSymbolConstant(dynamic_cast<HDLPrimaryAST *>(ast)));
     } else if (ast->nodeType == "identifier") {
         return getPortOrSymbolById(dynamic_cast<HDLPrimaryAST *>(ast)->getIdentifier());
     } else {
         if (!ast->isOperator()) {
             throw std::runtime_error("AST is not an operator");
         }
-        auto *combLogic = CombLogicFactory::create(ast->_operator);
+        auto combLogic = CombLogicFactory::create(ast->_operator);
         for (auto *child: ast->children) {
-            auto *circuitSymbol = genCircuitSymbolByHDLExprAST(dynamic_cast<HDLExpressionAST *>(child));
+            auto circuitSymbol = genCircuitSymbolByHDLExprAST(dynamic_cast<HDLExpressionAST *>(child));
             combLogic->registerInput(circuitSymbol);
         }
-        circuitSymbols.push_back(combLogic);
-        return combLogic;
+        std::shared_ptr<CombLogic> sharedCombLogic = std::move(combLogic);
+        circuitSymbols.push_back(sharedCombLogic);
+        return sharedCombLogic;
     }
 }
 

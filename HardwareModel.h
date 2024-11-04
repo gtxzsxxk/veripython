@@ -6,6 +6,8 @@
 #define VERIPYTHON_HARDWAREMODEL_H
 
 #include "AST.h"
+#include "CombLogics.h"
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -139,13 +141,13 @@ public:
 class HardwareModule {
     std::vector<CircuitConnection> circuitConnections;
 
-    CircuitSymbol *getPortOrSymbolById(const std::string &id);
+    std::shared_ptr<CircuitSymbol> getPortOrSymbolById(const std::string &id);
 
-    CircuitSymbol *genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast);
+    std::shared_ptr<CircuitSymbol> genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast);
 
 public:
-    std::vector<ModuleIOPort> ioPorts;
-    std::vector<CircuitSymbol *> circuitSymbols;
+    std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;
+    std::vector<std::shared_ptr<CircuitSymbol>> circuitSymbols;
     std::string moduleName;
 
     ModuleIOPort &getModuleIOPortByName(const std::string &name);
