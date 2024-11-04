@@ -20,12 +20,17 @@ enum class PortDirection {
 
 class CircuitConnection {
     std::string destIdentifier;
-    HDLExpressionAST *ast;
+    std::unique_ptr<HDLExpressionAST> ast;
 public:
-    explicit CircuitConnection(std::string dest,
-                               HDLExpressionAST *connAST) :
+    CircuitConnection(std::string dest,
+                      std::unique_ptr<HDLExpressionAST> connAST) :
             destIdentifier(std::move(dest)),
-            ast(connAST) {}
+            ast(std::move(connAST)) {}
+
+    CircuitConnection(CircuitConnection &&conn) {
+        destIdentifier = conn.destIdentifier;
+        ast = std::move(conn.ast);
+    }
 
     [[nodiscard]] std::string getDestIdentifier() const;
 

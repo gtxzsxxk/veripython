@@ -117,7 +117,7 @@ std::shared_ptr<ModuleIOPort> HardwareModule::getModuleIOPortByName(const std::s
 }
 
 void HardwareModule::addCircuitConnection(CircuitConnection &&connection) {
-    circuitConnections.push_back(connection);
+    circuitConnections.push_back(std::move(connection));
 }
 
 std::shared_ptr<CircuitSymbol> HardwareModule::getPortOrSymbolById(const std::string &id) {
