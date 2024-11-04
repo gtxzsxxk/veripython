@@ -56,6 +56,20 @@ int ConstantNumberAST::eval() {
 }
 
 void HDLExpressionAST::setSlicing(PortSlicingAST *slicingAst) {
+PortSlicingAST::PortSlicingAST(const PortSlicingAST &slicingAST) : AST("PortSlicing") {
+    isDownTo = slicingAST.isDownTo;
+    downToHigh = slicingAST.downToHigh;
+    downToLow = slicingAST.downToLow;
+    onlyWhich = slicingAST.onlyWhich;
+}
+
+PortSlicingAST &PortSlicingAST::operator=(const PortSlicingAST &slicingAST) {
+    isDownTo = slicingAST.isDownTo;
+    downToHigh = slicingAST.downToHigh;
+    downToLow = slicingAST.downToLow;
+    onlyWhich = slicingAST.onlyWhich;
+    return *this;
+}
     slicing = slicingAst;
 }
 

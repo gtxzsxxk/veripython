@@ -45,9 +45,18 @@ public:
 
 class PortSlicingAST : public AST {
 public:
-    explicit PortSlicingAST(int high, int low) : AST("PortSlicing"), isDownTo(true), downToHigh(high), downToLow(low) {}
+    PortSlicingAST(int high, int low) :
+            AST("PortSlicing"), isDownTo(true),
+            downToHigh(high), downToLow(low) {}
 
-    explicit PortSlicingAST(int which) : AST("PortSlicing"), isDownTo(false), onlyWhich(which) {}
+    explicit PortSlicingAST(int which) :
+            AST("PortSlicing"),
+            isDownTo(false),
+            onlyWhich(which) {}
+
+    PortSlicingAST(const PortSlicingAST &slicingAST);
+
+    PortSlicingAST &operator=(const PortSlicingAST &slicingAST);
 
     bool isDownTo = false;
     int downToHigh = 0;
