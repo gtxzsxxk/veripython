@@ -5,7 +5,7 @@
 #ifndef VERIPYTHON_COMBLOGICS_H
 #define VERIPYTHON_COMBLOGICS_H
 
-#include "HardwareModel.h"
+#include "RtlModule.h"
 #include "Parser.h"
 #include <vector>
 #include <stdexcept>

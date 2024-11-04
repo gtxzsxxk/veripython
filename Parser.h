@@ -7,7 +7,7 @@
 
 #include "Lexer.h"
 #include "AST.h"
-#include "HardwareModel.h"
+#include "RtlModule.h"
 #include <memory>
 #include <string>
 #include <tuple>
@@ -53,7 +53,7 @@ class Parser {
     std::unique_ptr<ConstantExpressionAST> parseConstantPrimary();
 
 public:
-    HardwareModule hardwareModule;
+    RtlModule hardwareModule;
     static std::unordered_map<VeriPythonTokens, int> operatorPrecedence;
     static std::unordered_map<VeriPythonTokens, std::string> operatorName;
 

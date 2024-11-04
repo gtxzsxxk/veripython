@@ -37,10 +37,12 @@ add_executable(veripython
         Lexer.h
         AST.h
         AST.cpp
-        HardwareModel.cpp
-        HardwareModel.h
+        RtlModule.cpp
+        RtlModule.h
         CombLogics.cpp
         CombLogics.h
+        CircuitSymbol.cpp
+        CircuitSymbol.h
 )
 
 target_link_libraries(veripython lexer -lfl)
@@ -53,8 +55,10 @@ add_executable(ParserTests
         Lexer.h
         AST.h
         AST.cpp
-        HardwareModel.cpp
-        HardwareModel.h
+        RtlModule.cpp
+        RtlModule.h
+        CircuitSymbol.cpp
+        CircuitSymbol.h
         CombLogics.cpp
         CombLogics.h)
 target_link_libraries(ParserTests GTest::gtest_main)

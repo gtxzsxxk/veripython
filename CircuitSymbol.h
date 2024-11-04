@@ -1,9 +1,9 @@
 //
-// Created by hanyuan on 2024/11/2.
+// Created by hanyuan on 2024/11/4.
 //
 
-#ifndef VERIPYTHON_HARDWAREMODEL_H
-#define VERIPYTHON_HARDWAREMODEL_H
+#ifndef VERIPYTHON_CIRCUITSYMBOL_H
+#define VERIPYTHON_CIRCUITSYMBOL_H
 
 #include "AST.h"
 #include <memory>
@@ -139,24 +139,4 @@ public:
 //    explicit CircuitSymbolReg(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
 //};
 
-class HardwareModule {
-    std::vector<CircuitConnection> circuitConnections;
-
-    std::shared_ptr<CircuitSymbol> getPortOrSymbolById(const std::string &id);
-
-    std::shared_ptr<CircuitSymbol> genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast);
-
-public:
-    std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;
-    std::vector<std::shared_ptr<CircuitSymbol>> circuitSymbols;
-    std::string moduleName;
-
-    std::shared_ptr<ModuleIOPort> getModuleIOPortByName(const std::string &name);
-
-    void addCircuitConnection(CircuitConnection &&connection);
-
-    void buildCircuit();
-};
-
-
-#endif //VERIPYTHON_HARDWAREMODEL_H
+#endif //VERIPYTHON_CIRCUITSYMBOL_H
