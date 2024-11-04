@@ -67,6 +67,32 @@ public:
     ~CircuitSymbol();
 };
 
+class CircuitSymbolConstant : public CircuitSymbol {
+    static int counter;
+    int value;
+    int width;
+    PortSlicingAST *slicing;
+protected:
+    CircuitData calculateOutput() override;
+
+    int getMaxInputs() override;
+
+public:
+    explicit CircuitSymbolConstant(HDLPrimaryAST *ast) : CircuitSymbol("__hwconst_" + std::to_string(counter++)),
+                                                         value(ast->value), width(ast->width) {
+        if (ast->getIsIdentifier()) {
+            throw std::runtime_error("The ast can't be an identifier");
+        }
+        if (width == 0) {
+            throw std::runtime_error("Bad width");
+        } else if (width == 1) {
+            slicing = new PortSlicingAST(0);
+        } else {
+            slicing = new PortSlicingAST(width - 1, 0);
+        }
+    }
+};
+
 class CircuitSymbolWire : public CircuitSymbol {
 protected:
     CircuitData calculateOutput() override;

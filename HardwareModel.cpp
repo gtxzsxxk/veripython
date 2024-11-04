@@ -62,6 +62,20 @@ std::string CircuitSymbol::getIdentifier() const {
     return identifier;
 }
 
+CircuitData CircuitSymbolConstant::calculateOutput() {
+    CircuitData data{*slicing};
+    int tmpValue = value;
+    for (int i = 0; i < width; i++) {
+        data.bits[i] = (tmpValue & 0x01UL) == 1;
+        tmpValue >>= 1;
+    }
+    return data;
+}
+
+int CircuitSymbolConstant::getMaxInputs() {
+    return 0;
+}
+
 CircuitData CircuitSymbolWire::calculateOutput() {
     return inputDataVec[0];
 }
