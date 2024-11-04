@@ -48,7 +48,7 @@ protected:
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
         checkInputDataSlicing(&data0, &data1);
-        if constexpr (Op::token == TOKEN_logical_or || TOKEN_logical_and) {
+        if constexpr (Op::token == TOKEN_logical_or || Op::token == TOKEN_logical_and) {
             if (data0.getBitWidth() != 1) {
                 throw std::runtime_error("Logical operation should only work with bit width 1");
             }
