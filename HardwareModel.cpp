@@ -147,8 +147,8 @@ std::shared_ptr<CircuitSymbol> HardwareModule::genCircuitSymbolByHDLExprAST(HDLE
             throw std::runtime_error("AST is not an operator");
         }
         auto combLogic = CombLogicFactory::create(ast->_operator);
-        for (auto *child: ast->children) {
-            auto circuitSymbol = genCircuitSymbolByHDLExprAST(dynamic_cast<HDLExpressionAST *>(child));
+        for (const auto &child: ast->children) {
+            auto circuitSymbol = genCircuitSymbolByHDLExprAST(dynamic_cast<HDLExpressionAST *>(child.get()));
             combLogic->registerInput(circuitSymbol);
         }
         std::shared_ptr<CombLogic> sharedCombLogic = std::move(combLogic);

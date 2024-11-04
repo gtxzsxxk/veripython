@@ -6,6 +6,7 @@
 #define VERIPYTHON_AST_H
 
 #include "Lexer.h"
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -14,16 +15,20 @@
 class AST {
 public:
     std::string nodeType;
-    std::vector<AST *> children;
+    std::vector<std::unique_ptr<AST>> children;
 
     explicit AST(std::string nodeType) : nodeType(std::move(nodeType)) {}
 
     virtual std::string toString();
+
+    virtual ~AST() = default;
 };
 
 class ConstantExpressionAST : public AST {
 public:
-    explicit ConstantExpressionAST(VeriPythonTokens _operator) : AST("constantExpression"), _operator(_operator) {}
+    explicit ConstantExpressionAST(VeriPythonTokens _operator) :
+            AST("constantExpression"),
+            _operator(_operator) {}
 
     VeriPythonTokens _operator;
 
@@ -32,7 +37,9 @@ public:
 
 class ConstantNumberAST : public ConstantExpressionAST {
 public:
-    explicit ConstantNumberAST(int value) : ConstantExpressionAST(TOKEN_const_number), value(value) {
+    explicit ConstantNumberAST(int value) :
+            ConstantExpressionAST(TOKEN_const_number),
+            value(value) {
         nodeType = "const_number";
     }
 
@@ -68,7 +75,8 @@ class HDLExpressionAST : public AST {
 protected:
     PortSlicingAST slicing{0};
 public:
-    explicit HDLExpressionAST(VeriPythonTokens _operator) : AST("hdlExpression"), _operator(_operator) {}
+    explicit HDLExpressionAST(VeriPythonTokens _operator) :
+            AST("hdlExpression"), _operator(_operator) {}
 
     VeriPythonTokens _operator;
 
@@ -89,7 +97,8 @@ public:
 
     explicit HDLPrimaryAST(int constantNumber) :
             HDLExpressionAST(TOKEN_const_number),
-            identifierFlag(false), value(constantNumber) {
+            identifierFlag(false),
+            value(constantNumber) {
         nodeType = "const_number";
     }
 
@@ -105,7 +114,8 @@ public:
 
     explicit HDLPrimaryAST(std::string identifier) :
             HDLExpressionAST(TOKEN_identifier),
-            identifierFlag(true), identifier(std::move(identifier)) {
+            identifierFlag(true),
+            identifier(std::move(identifier)) {
         nodeType = "identifier";
     }
 

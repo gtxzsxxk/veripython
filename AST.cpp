@@ -8,7 +8,7 @@
 
 std::string AST::toString() {
     std::string xmlOutput = "<" + nodeType + ">\n";
-    for (auto *ast: children) {
+    for (const auto &ast: children) {
         std::string tmp = ast->toString();
         char *childOutput = strdup(tmp.c_str());
         for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
@@ -24,8 +24,8 @@ int ConstantExpressionAST::eval() {
     if (children.size() != 2) {
         throw std::runtime_error("Cannot eval an expression node");
     }
-    int lhsValue = dynamic_cast<ConstantExpressionAST *>(children[0])->eval();
-    int rhsValue = dynamic_cast<ConstantExpressionAST *>(children[1])->eval();
+    int lhsValue = dynamic_cast<ConstantExpressionAST *>(children[0].get())->eval();
+    int rhsValue = dynamic_cast<ConstantExpressionAST *>(children[1].get())->eval();
     int answer;
     switch (_operator) {
         case TOKEN_op_add:
@@ -55,7 +55,6 @@ int ConstantNumberAST::eval() {
     return value;
 }
 
-void HDLExpressionAST::setSlicing(PortSlicingAST *slicingAst) {
 PortSlicingAST::PortSlicingAST(const PortSlicingAST &slicingAST) : AST("PortSlicing") {
     isDownTo = slicingAST.isDownTo;
     downToHigh = slicingAST.downToHigh;
@@ -86,7 +85,7 @@ std::string HDLExpressionAST::toString() {
         nodeName += "__" + std::to_string(slicing.onlyWhich);
     }
     std::string xmlOutput = "<" + nodeName + ">\n";
-    for (auto *ast: children) {
+    for (const auto &ast: children) {
         std::string tmp = ast->toString();
         char *childOutput = strdup(tmp.c_str());
         for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
