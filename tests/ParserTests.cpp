@@ -154,4 +154,6 @@ TEST(ParserTests, SimpleSingleModuleVerilogTest) {
 
     auto parser = Parser(filename);
     parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    std::cout << "ok" << std::endl;
 }
