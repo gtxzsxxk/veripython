@@ -66,6 +66,8 @@ public:
     void setSlicing(PortSlicingAST *slicingAst);
 
     std::string toString() override;
+
+    [[nodiscard]] bool isOperator() const;
 };
 
 class HDLPrimaryAST : public HDLExpressionAST {

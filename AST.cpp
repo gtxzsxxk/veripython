@@ -84,6 +84,10 @@ std::string HDLExpressionAST::toString() {
     return xmlOutput;
 }
 
+bool HDLExpressionAST::isOperator() const {
+    return Parser::operatorPrecedence.count(_operator) > 0;
+}
+
 std::string HDLPrimaryAST::toString() {
     std::string output;
     std::string nodeName = nodeType;
