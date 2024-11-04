@@ -388,4 +388,9 @@ struct combUnaryBitwiseNot {
 
 using CombLogicBitwiseNot = CombUnary<combUnaryBitwiseNot>;
 
+class CombLogicFactory {
+public:
+    static CombLogic *create(VeriPythonTokens token);
+};
+
 #endif //VERIPYTHON_COMBLOGICS_H
