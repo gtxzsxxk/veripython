@@ -116,8 +116,8 @@ protected:
         checkInputDataSlicing(&data0, &data1);
         auto slicing = PortSlicingAST(1);
         auto circuitData = CircuitData(slicing);
-        auto cmp1 = generateUnsignedIntegerFromData(data0);
-        auto cmp2 = generateUnsignedIntegerFromData(data1);
+        auto cmp1 = generateUnsignedIntegerFromData(&data0);
+        auto cmp2 = generateUnsignedIntegerFromData(&data1);
         circuitData.bits[0] = Op::apply(cmp1, cmp2);
         return circuitData;
     }
@@ -173,7 +173,7 @@ protected:
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
 
-        auto shiftAmount = generateUnsignedIntegerFromData(data1);
+        auto shiftAmount = generateUnsignedIntegerFromData(&data1);
 
         auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(width + shiftAmount);
@@ -218,7 +218,7 @@ protected:
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
 
-        auto shiftAmount = generateUnsignedIntegerFromData(data1);
+        auto shiftAmount = generateUnsignedIntegerFromData(&data1);
 
         auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(width);
@@ -233,7 +233,7 @@ protected:
             circuitData.bits[i] = signExtending;
         }
         for (long int i = width - shiftAmount - 1; i >= 0; i--) {
-            circuitData.bits[i] = data0[i + shiftAmount];
+            circuitData.bits[i] = data0.bits[i + shiftAmount];
         }
         return circuitData;
     }
@@ -282,8 +282,8 @@ protected:
         auto slicing = PortSlicingAST(width);
         auto circuitData = CircuitData(slicing);
 
-        auto operand1 = generateUnsignedIntegerFromData(data0);
-        auto operand2 = generateUnsignedIntegerFromData(data1);
+        auto operand1 = generateUnsignedIntegerFromData(&data0);
+        auto operand2 = generateUnsignedIntegerFromData(&data1);
 
         std::size_t ans = Op::apply(operand1, operand2);
 
