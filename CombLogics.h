@@ -322,4 +322,63 @@ GEN_LOGICAL_OP_DEF_BEGIN(ArithDiv, op_div)
         return a / b;
 GEN_LOGICAL_OP_DEF_END(ArithDiv)
 
+/*
+ * Unary Operators
+ * */
+template<class Op>
+concept isUnaryOp = requires {
+    Op::apply(true);
+    std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>;
+};
+
+template<class Op> requires isUnaryOp<Op>
+class CombUnary : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        auto data0 = inputDataVec[0];
+        auto width = data0.getBitWidth();
+
+        if constexpr (Op::token == TOKEN_logical_not) {
+            if (data0.getBitWidth() != 1) {
+                throw std::runtime_error("Logical operation should only work with bit width 1");
+            }
+        }
+
+        auto slicing = PortSlicingAST(width);
+        auto circuitData = CircuitData(slicing);
+
+        for (auto i = 0; i < width; i++) {
+            circuitData.bits[i] = Op::apply(data0.bits[i]);
+        }
+        return circuitData;
+    }
+
+    int getMaxInputs() override {
+        return 1;
+    }
+
+public:
+    CombUnary() : CombLogic(Op::token) {}
+};
+
+struct combUnaryLogicalNot {
+    static constexpr auto token = TOKEN_logical_not;
+
+    static bool apply(bool a) {
+        return !a;
+    }
+};
+
+using CombLogicLogicalNot = CombUnary<combUnaryLogicalNot>;
+
+struct combUnaryBitwiseNot {
+    static constexpr auto token = TOKEN_bitwise_not;
+
+    static bool apply(bool a) {
+        return !a;
+    }
+};
+
+using CombLogicBitwiseNot = CombUnary<combUnaryBitwiseNot>;
+
 #endif //VERIPYTHON_COMBLOGICS_H
