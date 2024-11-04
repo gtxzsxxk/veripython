@@ -71,22 +71,23 @@ public:
 };
 
 class HDLPrimaryAST : public HDLExpressionAST {
-    bool isIdentifier = false;
+    bool identifierFlag = false;
     int base = 10;
-    int width = 32;
-    int value = 0;
     std::string identifier;
 public:
+    int width = 32;
+    int value = 0;
+
     explicit HDLPrimaryAST(int constantNumber) :
             HDLExpressionAST(TOKEN_const_number),
-            isIdentifier(false), value(constantNumber) {
+            identifierFlag(false), value(constantNumber) {
         nodeType = "const_number";
     }
 
     explicit HDLPrimaryAST(int constantNumber,
                            int width, int base) :
             HDLExpressionAST(TOKEN_sized_number),
-            isIdentifier(false),
+            identifierFlag(false),
             base(base),
             width(width),
             value(constantNumber) {
@@ -95,11 +96,15 @@ public:
 
     explicit HDLPrimaryAST(std::string identifier) :
             HDLExpressionAST(TOKEN_identifier),
-            isIdentifier(true), identifier(std::move(identifier)) {
+            identifierFlag(true), identifier(std::move(identifier)) {
         nodeType = "identifier";
     }
 
     std::string toString() override;
+
+    [[nodiscard]] bool isIdentifier() const;
+
+    [[nodiscard]] std::string getIdentifier() const;
 };
 
 #endif //VERIPYTHON_AST_H

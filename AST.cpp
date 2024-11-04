@@ -91,7 +91,7 @@ bool HDLExpressionAST::isOperator() const {
 std::string HDLPrimaryAST::toString() {
     std::string output;
     std::string nodeName = nodeType;
-    if (isIdentifier) {
+    if (identifierFlag) {
         output = identifier;
     } else {
         if (base == 10) {
@@ -110,4 +110,12 @@ std::string HDLPrimaryAST::toString() {
         }
     }
     return "<" + nodeName + ">\n    " + output + "\n</" + nodeName + ">\n";
+}
+
+bool HDLPrimaryAST::isIdentifier() const {
+    return identifierFlag;
+}
+
+std::string HDLPrimaryAST::getIdentifier() const {
+    return identifier;
 }
