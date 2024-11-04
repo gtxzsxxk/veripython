@@ -52,7 +52,7 @@ protected:
     PortSlicingAST slicing;
     int readyInputs = 0;
     std::vector<CircuitData> inputDataVec;
-    std::vector<std::pair<std::size_t, std::shared_ptr<CircuitSymbol>>> propagateTargets;
+    std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
 
     virtual CircuitData calculateOutput() = 0;
 
