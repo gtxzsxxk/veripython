@@ -43,6 +43,8 @@ add_executable(veripython
         CombLogics.h
         CircuitSymbol.cpp
         CircuitSymbol.h
+        RtlVisualizer.cpp
+        RtlVisualizer.h
 )
 
 target_link_libraries(veripython lexer -lfl)
@@ -60,7 +62,10 @@ add_executable(ParserTests
         CircuitSymbol.cpp
         CircuitSymbol.h
         CombLogics.cpp
-        CombLogics.h)
+        CombLogics.h
+        RtlVisualizer.cpp
+        RtlVisualizer.h
+)
 target_link_libraries(ParserTests GTest::gtest_main)
 target_link_libraries(ParserTests lexer -lfl)
 include(GoogleTest)
