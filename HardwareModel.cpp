@@ -14,7 +14,7 @@ std::string CircuitConnection::getDestIdentifier() const {
 }
 
 HDLExpressionAST *CircuitConnection::getHDLExpressionAST() const {
-    return ast;
+    return ast.get();
 }
 
 CircuitData::CircuitData(const PortSlicingAST &slicingData) {
