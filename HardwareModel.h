@@ -73,8 +73,8 @@ class CircuitSymbolConstant : public CircuitSymbol {
     static int counter;
     int value;
     int width;
-    PortSlicingAST slicing{0};
 protected:
+
     CircuitData calculateOutput() override;
 
     int getMaxInputs() override;
@@ -115,11 +115,11 @@ public:
             CircuitSymbolWire(std::move(identifier)),
             direction(direction) {}
 
-    explicit ModuleIOPort(PortDirection direction, PortSlicingAST *slicingAST,
+    explicit ModuleIOPort(PortDirection direction, const PortSlicingAST &slicingAST,
                           std::string identifier) :
             CircuitSymbolWire(std::move(identifier)),
             direction(direction) {
-        slicing = *slicingAST;
+        slicing = slicingAST;
     }
 
     [[nodiscard]] const std::string &getPortName() const;

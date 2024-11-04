@@ -66,13 +66,13 @@ public:
 
 class HDLExpressionAST : public AST {
 protected:
-    PortSlicingAST *slicing = nullptr;
+    PortSlicingAST slicing{0};
 public:
     explicit HDLExpressionAST(VeriPythonTokens _operator) : AST("hdlExpression"), _operator(_operator) {}
 
     VeriPythonTokens _operator;
 
-    void setSlicing(PortSlicingAST *slicingAst);
+    void setSlicing(const PortSlicingAST &slicingAst);
 
     std::string toString() override;
 
