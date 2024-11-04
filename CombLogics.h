@@ -9,6 +9,7 @@
 #include "Parser.h"
 #include <vector>
 #include <stdexcept>
+#include <memory>
 
 class CombLogic : public CircuitSymbol {
     static int counter;
@@ -29,6 +30,8 @@ public:
             throw std::runtime_error("Unsupported operator type");
         }
     }
+
+    virtual ~CombLogic() = default;
 };
 
 /*
@@ -179,7 +182,8 @@ protected:
         auto slicing = PortSlicingAST(width + shiftAmount);
         auto circuitData = CircuitData(slicing);
 
-        for (long int i = (long int) circuitData.bits.size() - 1; i >= static_cast<long int>(circuitData.bits.size() - width); i--) {
+        for (long int i = (long int) circuitData.bits.size() - 1;
+             i >= static_cast<long int>(circuitData.bits.size() - width); i--) {
             circuitData.bits[i] = data0.bits[i - shiftAmount];
         }
         for (long int i = circuitData.bits.size() - width - 1; i >= 0; i--) {
@@ -390,7 +394,7 @@ using CombLogicBitwiseNot = CombUnary<combUnaryBitwiseNot>;
 
 class CombLogicFactory {
 public:
-    static CombLogic *create(VeriPythonTokens token);
+    static std::unique_ptr<CombLogic> create(VeriPythonTokens token);
 };
 
 #endif //VERIPYTHON_COMBLOGICS_H

@@ -27,52 +27,52 @@ std::size_t CombLogic::generateUnsignedIntegerFromData(CircuitData *data) {
     return answer;
 }
 
-CombLogic *CombLogicFactory::create(VeriPythonTokens token) {
+std::unique_ptr<CombLogic> CombLogicFactory::create(VeriPythonTokens token) {
     switch (token) {
         case TOKEN_logical_or:
-            return new CombLogicLogicalOr;
+            return std::make_unique<CombLogicLogicalOr>();
         case TOKEN_logical_and:
-            return new CombLogicLogicalAnd;
+            return std::make_unique<CombLogicLogicalAnd>();
         case TOKEN_bitwise_or:
-            return new CombLogicBitwiseOr;
+            return std::make_unique<CombLogicBitwiseOr>();
         case TOKEN_bitwise_xor:
-            return new CombLogicBitwiseXor;
+            return std::make_unique<CombLogicBitwiseXor>();
         case TOKEN_bitwise_and:
-            return new CombLogicBitwiseAnd;
+            return std::make_unique<CombLogicBitwiseAnd>();
         case TOKEN_cond_eq:
-            return new CombLogicCompareEqual;
+            return std::make_unique<CombLogicCompareEqual>();
         case TOKEN_cond_ne:
-            return new CombLogicCompareNonEqual;
+            return std::make_unique<CombLogicCompareNonEqual>();
         case TOKEN_cond_lt:
-            return new CombLogicCompareLessThan;
+            return std::make_unique<CombLogicCompareLessThan>();
         case TOKEN_cond_le:
-            return new CombLogicCompareLessEqual;
+            return std::make_unique<CombLogicCompareLessEqual>();
         case TOKEN_cond_gt:
-            return new CombLogicCompareGreatThan;
+            return std::make_unique<CombLogicCompareGreatThan>();
         case TOKEN_cond_ge:
-            return new CombLogicCompareGreatEqual;
+            return std::make_unique<CombLogicCompareGreatEqual>();
         case TOKEN_arith_lshift:
-            return new CombLogicShiftLeftArith;
+            return std::make_unique<CombLogicShiftLeftArith>();
         case TOKEN_logical_lshift:
-            return new CombLogicShiftLeftLogical;
+            return std::make_unique<CombLogicShiftLeftLogical>();
         case TOKEN_arith_rshift:
-            return new CombLogicShiftRightArith;
+            return std::make_unique<CombLogicShiftRightArith>();
         case TOKEN_logical_rshift:
-            return new CombLogicShiftRightLogical;
+            return std::make_unique<CombLogicShiftRightLogical>();
         case TOKEN_op_add:
-            return new CombLogicArithAdd;
+            return std::make_unique<CombLogicArithAdd>();
         case TOKEN_op_sub:
-            return new CombLogicArithSub;
+            return std::make_unique<CombLogicArithSub>();
         case TOKEN_op_mod:
-            return new CombLogicArithMod;
+            return std::make_unique<CombLogicArithMod>();
         case TOKEN_op_mul:
-            return new CombLogicArithMul;
+            return std::make_unique<CombLogicArithMul>();
         case TOKEN_op_div:
-            return new CombLogicArithDiv;
+            return std::make_unique<CombLogicArithDiv>();
         case TOKEN_logical_not:
-            return new CombLogicLogicalNot;
+            return std::make_unique<CombLogicLogicalNot>();
         case TOKEN_bitwise_not:
-            return new CombLogicBitwiseNot;
+            return std::make_unique<CombLogicBitwiseNot>();
         default:
             throw std::runtime_error("Unknown operator");
     }
