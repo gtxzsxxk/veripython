@@ -56,7 +56,7 @@ protected:
         auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(width);
         auto circuitData = CircuitData(slicing);
-        for (auto i = 0; i < width; i++) {
+        for (decltype(width) i = 0; i < width; i++) {
             circuitData.bits[i] = Op::apply(data0.bits[i], data1.bits[i]);
         }
         return circuitData;
@@ -179,7 +179,7 @@ protected:
         auto slicing = PortSlicingAST(width + shiftAmount);
         auto circuitData = CircuitData(slicing);
 
-        for (long int i = (long int) circuitData.bits.size() - 1; i >= circuitData.bits.size() - width; i--) {
+        for (long int i = (long int) circuitData.bits.size() - 1; i >= static_cast<long int>(circuitData.bits.size() - width); i--) {
             circuitData.bits[i] = data0.bits[i - shiftAmount];
         }
         for (long int i = circuitData.bits.size() - width - 1; i >= 0; i--) {
@@ -229,7 +229,7 @@ protected:
             signExtending = data0.bits[width - 1];
         }
 
-        for (long int i = width - 1; i >= width - shiftAmount; i--) {
+        for (long int i = width - 1; i >= static_cast<long int>(width - shiftAmount); i--) {
             circuitData.bits[i] = signExtending;
         }
         for (long int i = width - shiftAmount - 1; i >= 0; i--) {
@@ -287,7 +287,7 @@ protected:
 
         std::size_t ans = Op::apply(operand1, operand2);
 
-        for (auto i = 0; i < width; i++) {
+        for (decltype(width) i = 0; i < width; i++) {
             circuitData.bits[i] = (ans & 0x01UL) == 1;
             ans >>= 1;
         }
@@ -354,7 +354,7 @@ protected:
         auto slicing = PortSlicingAST(width);
         auto circuitData = CircuitData(slicing);
 
-        for (auto i = 0; i < width; i++) {
+        for (decltype(width) i = 0; i < width; i++) {
             circuitData.bits[i] = Op::apply(data0.bits[i]);
         }
         return circuitData;
