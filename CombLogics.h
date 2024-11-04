@@ -268,7 +268,16 @@ protected:
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
 
-        auto width = std::max(data0.getBitWidth(), data1.getBitWidth());
+        decltype(data0.getBitWidth()) width;
+        if constexpr (Op::token == TOKEN_op_mul) {
+            width = data0.getBitWidth() + data1.getBitWidth();
+        } else if constexpr (Op::token == TOKEN_op_mod) {
+            width = std::min(data0.getBitWidth(), data1.getBitWidth());
+        } else if constexpr (Op::token == TOKEN_op_div) {
+            width = data0.getBitWidth();
+        } else {
+            width = std::max(data0.getBitWidth(), data1.getBitWidth());
+        }
 
         auto slicing = PortSlicingAST(width);
         auto circuitData = CircuitData(slicing);
@@ -292,5 +301,25 @@ protected:
 public:
     CombArithmeticBinary() : CombLogic(Op::token) {}
 };
+
+GEN_LOGICAL_OP_DEF_BEGIN(ArithAdd, op_add)
+        return a + b;
+GEN_LOGICAL_OP_DEF_END(ArithAdd)
+
+GEN_LOGICAL_OP_DEF_BEGIN(ArithSub, op_sub)
+        return a - b;
+GEN_LOGICAL_OP_DEF_END(ArithSub)
+
+GEN_LOGICAL_OP_DEF_BEGIN(ArithMod, op_mod)
+        return a % b;
+GEN_LOGICAL_OP_DEF_END(ArithMod)
+
+GEN_LOGICAL_OP_DEF_BEGIN(ArithMul, op_mul)
+        return a * b;
+GEN_LOGICAL_OP_DEF_END(ArithMul)
+
+GEN_LOGICAL_OP_DEF_BEGIN(ArithDiv, op_div)
+        return a / b;
+GEN_LOGICAL_OP_DEF_END(ArithDiv)
 
 #endif //VERIPYTHON_COMBLOGICS_H
