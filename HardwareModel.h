@@ -45,10 +45,10 @@ public:
 class CircuitSymbol {
 protected:
     std::string identifier;
-    PortSlicingAST *slicing = nullptr;
+    PortSlicingAST slicing;
     int readyInputs = 0;
     std::vector<CircuitData> inputDataVec;
-    std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
+    std::vector<std::pair<std::size_t, std::shared_ptr<CircuitSymbol>>> propagateTargets;
 
     virtual CircuitData calculateOutput() = 0;
 
@@ -57,9 +57,9 @@ protected:
 public:
     explicit CircuitSymbol(std::string identifier) :
             identifier(std::move(identifier)),
-            slicing(new PortSlicingAST(1)) {}
+            slicing(PortSlicingAST(1)) {}
 
-    [[nodiscard]] const PortSlicingAST *getSlicing() const;
+    [[nodiscard]] const PortSlicingAST &getSlicing() const;
 
     std::size_t registerInput(CircuitSymbol *symbol);
 
@@ -67,14 +67,16 @@ public:
 
     [[nodiscard]] std::string getIdentifier() const;
 
-    ~CircuitSymbol();
+    virtual ~CircuitSymbol() = default;
 };
+
+class CombLogic : public CircuitSymbol;
 
 class CircuitSymbolConstant : public CircuitSymbol {
     static int counter;
     int value;
     int width;
-    PortSlicingAST *slicing;
+    PortSlicingAST slicing{0};
 protected:
     CircuitData calculateOutput() override;
 
@@ -88,10 +90,8 @@ public:
         }
         if (width == 0) {
             throw std::runtime_error("Bad width");
-        } else if (width == 1) {
-            slicing = new PortSlicingAST(0);
-        } else {
-            slicing = new PortSlicingAST(width - 1, 0);
+        } else if (width > 1) {
+            slicing = PortSlicingAST{width - 1, 0};
         }
     }
 };
@@ -122,8 +122,7 @@ public:
                           std::string identifier) :
             CircuitSymbolWire(std::move(identifier)),
             direction(direction) {
-        /* TODO: 删除原来的 slicing */
-        slicing = slicingAST;
+        slicing = *slicingAST;
     }
 
     [[nodiscard]] const std::string &getPortName() const;
@@ -150,7 +149,7 @@ public:
     std::vector<std::shared_ptr<CircuitSymbol>> circuitSymbols;
     std::string moduleName;
 
-    ModuleIOPort &getModuleIOPortByName(const std::string &name);
+    std::shared_ptr<ModuleIOPort> getModuleIOPortByName(const std::string &name);
 
     void addCircuitConnection(CircuitConnection &&connection);
 

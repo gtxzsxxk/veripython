@@ -30,12 +30,8 @@ std::size_t CircuitData::getBitWidth() const {
     return bits.size();
 }
 
-const PortSlicingAST *CircuitSymbol::getSlicing() const {
+const PortSlicingAST &CircuitSymbol::getSlicing() const {
     return slicing;
-}
-
-CircuitSymbol::~CircuitSymbol() {
-    /* TODO: delete slicing */
 }
 
 std::size_t CircuitSymbol::registerInput(CircuitSymbol *symbol) {
@@ -43,7 +39,7 @@ std::size_t CircuitSymbol::registerInput(CircuitSymbol *symbol) {
     if (currentPos >= getMaxInputs()) {
         throw std::runtime_error("Cannot bind more input ports!");
     }
-    inputDataVec.emplace_back(*symbol->slicing);
+    inputDataVec.emplace_back(symbol->slicing);
     symbol->propagateTargets.emplace_back(currentPos, this);
     return currentPos;
 }
@@ -66,7 +62,7 @@ std::string CircuitSymbol::getIdentifier() const {
 }
 
 CircuitData CircuitSymbolConstant::calculateOutput() {
-    CircuitData data{*slicing};
+    CircuitData data{slicing};
     int tmpValue = value;
     for (int i = 0; i < width; i++) {
         data.bits[i] = (tmpValue & 0x01UL) == 1;
@@ -109,9 +105,9 @@ void ModuleIOPort::propagate(std::size_t pos, const CircuitData &data) {
     }
 }
 
-ModuleIOPort &HardwareModule::getModuleIOPortByName(const std::string &name) {
-    for (auto &port: ioPorts) {
-        if (port.getPortName() == name) {
+std::shared_ptr<ModuleIOPort> HardwareModule::getModuleIOPortByName(const std::string &name) {
+    for (auto port: ioPorts) {
+        if (port->getPortName() == name) {
             return port;
         }
     }
