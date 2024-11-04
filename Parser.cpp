@@ -4,7 +4,6 @@
 
 #include "Parser.h"
 #include <iostream>
-#include <filesystem>
 #include <cstdio>
 #include <exception>
 #include <vector>
@@ -139,7 +138,7 @@ void Parser::parseModulePort() {
     }
     if (idOrInOut.first == TOKEN_identifier) {
         auto [_, identifierToken] = nextToken();
-        hardwareModule.ioPorts.emplace_back(identifierToken.second);
+        hardwareModule.ioPorts.emplace_back(new ModuleIOPort{identifierToken.second});
     } else if (idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
         nextToken();
         auto [lookAheadTokenReady, idOrPortSlicing] = lookAhead();
@@ -149,11 +148,11 @@ void Parser::parseModulePort() {
         auto direction = idOrInOut.first == TOKEN_input ? PortDirection::Input : PortDirection::Output;
         if (idOrPortSlicing.first == TOKEN_identifier) {
             auto [_, identifierToken] = nextToken();
-            hardwareModule.ioPorts.emplace_back(direction, identifierToken.second);
+            hardwareModule.ioPorts.emplace_back(new ModuleIOPort{direction, identifierToken.second});
         } else if (idOrPortSlicing.first == TOKEN_lbracket) {
             auto *slicing = parsePortSlicing();
             auto [_, identifierToken] = nextToken();
-            hardwareModule.ioPorts.emplace_back(direction, slicing, identifierToken.second);
+            hardwareModule.ioPorts.emplace_back(new ModuleIOPort{direction, slicing, identifierToken.second});
         } else {
             errorParsing("Unexpected Token after input/output");
         }
@@ -248,7 +247,7 @@ ConstantExpressionAST *Parser::parseConstantPrimary() {
     if (!lookAheadReady) {
         errorParsing("Unexpected EOF");
     }
-    decltype(parseConstantPrimary()) primaryAST;
+    decltype(parseConstantPrimary()) primaryAST = nullptr;
     if (lookAheadTokenData.first == TOKEN_const_number) {
         nextToken();
         auto ast = new ConstantNumberAST(std::stoi(lookAheadTokenData.second));
@@ -276,7 +275,7 @@ void Parser::parseModuleBody() {
     } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
         parseRegWireStatement();
     } else {
-        if(lookAheadTokenData.first == TOKEN_endmodule) {
+        if (lookAheadTokenData.first == TOKEN_endmodule) {
             return;
         }
         errorParsing("Unexpected token");
@@ -289,7 +288,7 @@ void Parser::parseModuleBody() {
  * */
 void Parser::parseInputOutputStatement() {
     auto [_, inOutToken] = nextToken();
-    PortDirection direction;
+    PortDirection direction{};
     if (inOutToken.first == TOKEN_input) {
         direction = PortDirection::Input;
     } else if (inOutToken.first == TOKEN_output) {
@@ -297,8 +296,8 @@ void Parser::parseInputOutputStatement() {
     }
     while (true) {
         auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
-        auto &port = hardwareModule.getModuleIOPortByName(identifierToken.second);
-        port.setPortDirection(direction);
+        auto port = hardwareModule.getModuleIOPortByName(identifierToken.second);
+        port->setPortDirection(direction);
         auto [_2, commaOrSemicolonToken] = nextToken();
         if (commaOrSemicolonToken.first == TOKEN_semicolon) {
             return;
@@ -329,7 +328,7 @@ void Parser::parseRegWireStatement() {
     auto [_, wireOrRegToken] = nextToken();
     auto [_1, identifierToken] = nextToken();
     if (wireOrRegToken.first == TOKEN_wire) {
-        auto *wire = new CircuitSymbolWire(identifierToken.second);
+        auto wire = std::make_shared<CircuitSymbolWire>(identifierToken.second);
         hardwareModule.circuitSymbols.push_back(wire);
         auto [_2, equalOrSemicolonToken] = nextToken();
         if (equalOrSemicolonToken.first == TOKEN_single_eq) {
@@ -417,7 +416,7 @@ HDLExpressionAST *Parser::parseHDLPrimary() {
     if (!lookAheadReady) {
         errorParsing("Unexpected EOF");
     }
-    decltype(parseHDLPrimary()) primaryAST;
+    decltype(parseHDLPrimary()) primaryAST = nullptr;
     if (lookAheadTokenData.first == TOKEN_const_number) {
         nextToken();
         auto ast = new HDLPrimaryAST(std::stoi(lookAheadTokenData.second));
