@@ -3,8 +3,11 @@
 //
 
 #include "HardwareModel.h"
+#include "CombLogics.h"
 #include <iostream>
 #include <stdexcept>
+
+int CircuitSymbolConstant::counter = 0;
 
 std::string CircuitConnection::getDestIdentifier() const {
     return destIdentifier;
@@ -37,10 +40,11 @@ CircuitSymbol::~CircuitSymbol() {
 }
 
 std::size_t CircuitSymbol::registerInput(CircuitSymbol *symbol) {
-    auto currentPos = propagateTargets.size();
+    int currentPos = static_cast<int>(inputDataVec.size());
     if (currentPos >= getMaxInputs()) {
         throw std::runtime_error("Cannot bind more input ports!");
     }
+    inputDataVec.emplace_back(*symbol->slicing);
     symbol->propagateTargets.emplace_back(currentPos, this);
     return currentPos;
 }
@@ -49,7 +53,7 @@ void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = data;
     /* TODO: 检查这个计数方法正确不正确 */
     readyInputs++;
-    if (readyInputs == inputDataVec.size()) {
+    if (readyInputs == static_cast<int>(inputDataVec.size())) {
         readyInputs = 0;
         auto outputData = calculateOutput();
         for (auto [nextPos, nextSymbol]: propagateTargets) {
@@ -99,7 +103,7 @@ void ModuleIOPort::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = data;
     /* TODO: 检查这个计数方法正确不正确 */
     readyInputs++;
-    if (readyInputs == inputDataVec.size()) {
+    if (readyInputs == static_cast<int>(inputDataVec.size())) {
         readyInputs = 0;
         auto outputData = calculateOutput();
         std::cout << identifier << " compute finished" << std::endl;
@@ -120,15 +124,15 @@ void HardwareModule::addCircuitConnection(CircuitConnection &&connection) {
     circuitConnections.push_back(connection);
 }
 
-CircuitSymbol *HardwareModule::getPortOrSymbolById(const std::string& id) {
-    for(auto & ioPort : ioPorts) {
-        if(ioPort.getIdentifier() == id) {
+CircuitSymbol *HardwareModule::getPortOrSymbolById(const std::string &id) {
+    for (auto &ioPort: ioPorts) {
+        if (ioPort.getIdentifier() == id) {
             return &ioPort;
         }
     }
 
-    for(auto *symbol : circuitSymbols) {
-        if(symbol->getIdentifier() == id) {
+    for (auto *symbol: circuitSymbols) {
+        if (symbol->getIdentifier() == id) {
             return symbol;
         }
     }
@@ -137,14 +141,30 @@ CircuitSymbol *HardwareModule::getPortOrSymbolById(const std::string& id) {
     return nullptr;
 }
 
-void HardwareModule::traverseHDLExprAST(HDLExpressionAST *ast) {
-
+CircuitSymbol *HardwareModule::genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast) {
+    if (ast->nodeType == "const_number") {
+        return new CircuitSymbolConstant(dynamic_cast<HDLPrimaryAST *>(ast));
+    } else if (ast->nodeType == "identifier") {
+        return getPortOrSymbolById(dynamic_cast<HDLPrimaryAST *>(ast)->getIdentifier());
+    } else {
+        if (!ast->isOperator()) {
+            throw std::runtime_error("AST is not an operator");
+        }
+        auto *combLogic = CombLogicFactory::create(ast->_operator);
+        for (auto *child: ast->children) {
+            auto *circuitSymbol = genCircuitSymbolByHDLExprAST(dynamic_cast<HDLExpressionAST *>(child));
+            combLogic->registerInput(circuitSymbol);
+        }
+        circuitSymbols.push_back(combLogic);
+        return combLogic;
+    }
 }
 
 void HardwareModule::buildCircuit() {
-    for(auto &conn : circuitConnections) {
+    for (auto &conn: circuitConnections) {
         auto *destSymbol = getPortOrSymbolById(conn.getDestIdentifier());
         auto *ast = conn.getHDLExpressionAST();
-
+        auto symbol = genCircuitSymbolByHDLExprAST(ast);
+        destSymbol->registerInput(symbol);
     }
 }

@@ -6,6 +6,7 @@
 #define VERIPYTHON_HARDWAREMODEL_H
 
 #include "AST.h"
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -80,7 +81,7 @@ protected:
 public:
     explicit CircuitSymbolConstant(HDLPrimaryAST *ast) : CircuitSymbol("__hwconst_" + std::to_string(counter++)),
                                                          value(ast->value), width(ast->width) {
-        if (ast->getIsIdentifier()) {
+        if (ast->isIdentifier()) {
             throw std::runtime_error("The ast can't be an identifier");
         }
         if (width == 0) {
@@ -140,7 +141,7 @@ class HardwareModule {
 
     CircuitSymbol *getPortOrSymbolById(const std::string &id);
 
-    void traverseHDLExprAST(HDLExpressionAST *ast);
+    CircuitSymbol *genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast);
 
 public:
     std::vector<ModuleIOPort> ioPorts;
