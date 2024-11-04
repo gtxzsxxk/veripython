@@ -150,7 +150,7 @@ void Parser::parseModulePort() {
             auto [_, identifierToken] = nextToken();
             hardwareModule.ioPorts.emplace_back(new ModuleIOPort{direction, identifierToken.second});
         } else if (idOrPortSlicing.first == TOKEN_lbracket) {
-            auto *slicing = parsePortSlicing();
+            auto slicing = parsePortSlicing();
             auto [_, identifierToken] = nextToken();
             hardwareModule.ioPorts.emplace_back(new ModuleIOPort{direction, slicing, identifierToken.second});
         } else {
@@ -163,24 +163,24 @@ void Parser::parseModulePort() {
  * portSlicing ::= "[" constantExpr "]"
  *             ||= "[" constantExpr ":" constantExpr "]"
  * */
-PortSlicingAST *Parser::parsePortSlicing() {
+PortSlicingAST Parser::parsePortSlicing() {
     VERIFY_NEXT_TOKEN(lbracket);
-    auto *firstValAST = parseConstantExpr();
+    auto firstValAST = parseConstantExpr();
     auto [lookAheadReady, lookAheadToken] = nextToken();
     if (!lookAheadReady) {
         errorParsing("Unexpected EOF");
     }
 
-    PortSlicingAST *portSlicing;
+    PortSlicingAST portSlicing{0};
     if (lookAheadToken.first == TOKEN_rbracket) {
-        portSlicing = new PortSlicingAST(firstValAST->eval());
+        portSlicing = PortSlicingAST{firstValAST->eval()};
     } else {
         VERIFY_NEXT_TOKEN(colon);
-        auto *secondValAST = parseConstantExpr();
+        auto secondValAST = parseConstantExpr();
         VERIFY_NEXT_TOKEN(rbracket);
-        portSlicing = new PortSlicingAST(firstValAST->eval(), secondValAST->eval());
-        /* TODO: delete the two AST which are no longer used */
+        portSlicing = PortSlicingAST{firstValAST->eval(), secondValAST->eval()};
     }
+
     return portSlicing;
 }
 
@@ -455,8 +455,7 @@ HDLExpressionAST *Parser::parseHDLPrimary() {
 
     auto [_, isLBracket] = lookAhead();
     if (isLBracket.first == TOKEN_lbracket) {
-        auto *slicing = parsePortSlicing();
-        primaryAST->setSlicing(slicing);
+        primaryAST->setSlicing(parsePortSlicing());
     }
 
     return primaryAST;
