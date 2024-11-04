@@ -135,32 +135,32 @@ public:
                                                                 static bool apply(std::size_t a, std::size_t b) {
 #define GEN_COMPARE_OP_DEF_END(camel)                           } \
                                                             }; \
-                                                            using CombLogic##camel = CombNormalBinary<combOperator##camel>;
+                                                            using CombLogic##camel = CombCompareBinary<combOperator##camel>;
 
 
-GEN_LOGICAL_OP_DEF_BEGIN(CompareEqual, cond_eq)
+GEN_COMPARE_OP_DEF_BEGIN(CompareEqual, cond_eq)
         return a == b;
-GEN_LOGICAL_OP_DEF_END(CompareEqual)
+GEN_COMPARE_OP_DEF_END(CompareEqual)
 
-GEN_LOGICAL_OP_DEF_BEGIN(CompareNonEqual, cond_ne)
+GEN_COMPARE_OP_DEF_BEGIN(CompareNonEqual, cond_ne)
         return a != b;
-GEN_LOGICAL_OP_DEF_END(CompareNonEqual)
+GEN_COMPARE_OP_DEF_END(CompareNonEqual)
 
-GEN_LOGICAL_OP_DEF_BEGIN(CompareLessThan, cond_lt)
+GEN_COMPARE_OP_DEF_BEGIN(CompareLessThan, cond_lt)
         return a < b;
-GEN_LOGICAL_OP_DEF_END(CompareLessThan)
+GEN_COMPARE_OP_DEF_END(CompareLessThan)
 
-GEN_LOGICAL_OP_DEF_BEGIN(CompareLessEqual, cond_le)
+GEN_COMPARE_OP_DEF_BEGIN(CompareLessEqual, cond_le)
         return a <= b;
-GEN_LOGICAL_OP_DEF_END(CompareLessEqual)
+GEN_COMPARE_OP_DEF_END(CompareLessEqual)
 
-GEN_LOGICAL_OP_DEF_BEGIN(CompareGreatThan, cond_gt)
+GEN_COMPARE_OP_DEF_BEGIN(CompareGreatThan, cond_gt)
         return a > b;
-GEN_LOGICAL_OP_DEF_END(CompareGreatThan)
+GEN_COMPARE_OP_DEF_END(CompareGreatThan)
 
-GEN_LOGICAL_OP_DEF_BEGIN(CompareGreatEqual, cond_ge)
+GEN_COMPARE_OP_DEF_BEGIN(CompareGreatEqual, cond_ge)
         return a >= b;
-GEN_LOGICAL_OP_DEF_END(CompareGreatEqual)
+GEN_COMPARE_OP_DEF_END(CompareGreatEqual)
 
 /*
  * Left Shift
@@ -302,25 +302,32 @@ public:
     CombArithmeticBinary() : CombLogic(Op::token) {}
 };
 
-GEN_LOGICAL_OP_DEF_BEGIN(ArithAdd, op_add)
+#define GEN_ARITH_OP_DEF_BEGIN(camel, underline)          struct combOperator##camel { \
+                                                                static constexpr auto token = TOKEN_##underline; \
+                                                                static std::size_t apply(std::size_t a, std::size_t b) {
+#define GEN_ARITH_OP_DEF_END(camel)                } \
+                                                            }; \
+                                                            using CombLogic##camel = CombArithmeticBinary<combOperator##camel>;
+
+GEN_ARITH_OP_DEF_BEGIN(ArithAdd, op_add)
         return a + b;
-GEN_LOGICAL_OP_DEF_END(ArithAdd)
+GEN_ARITH_OP_DEF_END(ArithAdd)
 
-GEN_LOGICAL_OP_DEF_BEGIN(ArithSub, op_sub)
+GEN_ARITH_OP_DEF_BEGIN(ArithSub, op_sub)
         return a - b;
-GEN_LOGICAL_OP_DEF_END(ArithSub)
+GEN_ARITH_OP_DEF_END(ArithSub)
 
-GEN_LOGICAL_OP_DEF_BEGIN(ArithMod, op_mod)
+GEN_ARITH_OP_DEF_BEGIN(ArithMod, op_mod)
         return a % b;
-GEN_LOGICAL_OP_DEF_END(ArithMod)
+GEN_ARITH_OP_DEF_END(ArithMod)
 
-GEN_LOGICAL_OP_DEF_BEGIN(ArithMul, op_mul)
+GEN_ARITH_OP_DEF_BEGIN(ArithMul, op_mul)
         return a * b;
-GEN_LOGICAL_OP_DEF_END(ArithMul)
+GEN_ARITH_OP_DEF_END(ArithMul)
 
-GEN_LOGICAL_OP_DEF_BEGIN(ArithDiv, op_div)
+GEN_ARITH_OP_DEF_BEGIN(ArithDiv, op_div)
         return a / b;
-GEN_LOGICAL_OP_DEF_END(ArithDiv)
+GEN_ARITH_OP_DEF_END(ArithDiv)
 
 /*
  * Unary Operators
