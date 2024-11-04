@@ -3,6 +3,7 @@
 //
 
 #include "HardwareModel.h"
+#include "CombLogics.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -34,7 +35,7 @@ const PortSlicingAST &CircuitSymbol::getSlicing() const {
     return slicing;
 }
 
-std::size_t CircuitSymbol::registerInput(CircuitSymbol *symbol) {
+std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol) {
     int currentPos = static_cast<int>(inputDataVec.size());
     if (currentPos >= getMaxInputs()) {
         throw std::runtime_error("Cannot bind more input ports!");
@@ -158,7 +159,7 @@ std::shared_ptr<CircuitSymbol> HardwareModule::genCircuitSymbolByHDLExprAST(HDLE
 
 void HardwareModule::buildCircuit() {
     for (auto &conn: circuitConnections) {
-        auto *destSymbol = getPortOrSymbolById(conn.getDestIdentifier());
+        auto destSymbol = getPortOrSymbolById(conn.getDestIdentifier());
         auto *ast = conn.getHDLExpressionAST();
         auto symbol = genCircuitSymbolByHDLExprAST(ast);
         destSymbol->registerInput(symbol);

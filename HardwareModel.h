@@ -6,7 +6,6 @@
 #define VERIPYTHON_HARDWAREMODEL_H
 
 #include "AST.h"
-#include "CombLogics.h"
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -61,7 +60,7 @@ public:
 
     [[nodiscard]] const PortSlicingAST &getSlicing() const;
 
-    std::size_t registerInput(CircuitSymbol *symbol);
+    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol);
 
     virtual void propagate(std::size_t pos, const CircuitData &data);
 
@@ -69,8 +68,6 @@ public:
 
     virtual ~CircuitSymbol() = default;
 };
-
-class CombLogic : public CircuitSymbol;
 
 class CircuitSymbolConstant : public CircuitSymbol {
     static int counter;
