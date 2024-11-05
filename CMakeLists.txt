@@ -45,6 +45,8 @@ add_executable(veripython
         CircuitSymbol.h
         RtlVisualizer.cpp
         RtlVisualizer.h
+        RtlSimulator.cpp
+        RtlSimulator.h
 )
 
 target_link_libraries(veripython lexer -lfl)
@@ -65,6 +67,8 @@ add_executable(ParserTests
         CombLogics.h
         RtlVisualizer.cpp
         RtlVisualizer.h
+        RtlSimulator.cpp
+        RtlSimulator.h
 )
 target_link_libraries(ParserTests GTest::gtest_main)
 target_link_libraries(ParserTests lexer -lfl)
