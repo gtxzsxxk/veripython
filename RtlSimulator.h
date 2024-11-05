@@ -18,6 +18,7 @@ public:
 
 class RtlSimulator {
     const RtlModule &rtlModule;
+    std::vector<std::shared_ptr<CircuitSymbol>> constantSymbols;
     std::vector<std::shared_ptr<ModuleIOPort>> inputPorts;
     std::vector<std::shared_ptr<RtlSimulatorEndSymbol>> outputSymbols;
 public:

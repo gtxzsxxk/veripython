@@ -39,7 +39,9 @@ std::shared_ptr<CircuitSymbol> RtlModule::getPortOrSymbolById(const std::string 
 
 std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast) {
     if (ast->nodeType == "const_number") {
-        return std::make_shared<CircuitSymbolConstant>(dynamic_cast<HDLPrimaryAST *>(ast));
+        auto constSym = std::make_shared<CircuitSymbolConstant>(dynamic_cast<HDLPrimaryAST *>(ast));
+        circuitSymbols.push_back(constSym);
+        return constSym;
     } else if (ast->nodeType == "identifier") {
         return getPortOrSymbolById(dynamic_cast<HDLPrimaryAST *>(ast)->getIdentifier());
     } else {
