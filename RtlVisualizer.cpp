@@ -17,18 +17,22 @@ void RtlVisualizer::visualize(const RtlModule &hardwareModel, const std::string 
         throw std::runtime_error("Unable to open the file");
     }
 
+    outputStream << "digraph RtlView {\n"
+                 << "  fontname=\"Helvetica,Arial,sans-serif\"\n"
+                 << "  node [fontname=\"Helvetica,Arial,sans-serif\"]\n"
+                 << "  edge [fontname=\"Helvetica,Arial,sans-serif\"]\n";
+
     std::vector<std::shared_ptr<CircuitSymbol>> symbols;
     for (auto &symbol: hardwareModel.ioPorts) {
         symbols.push_back(symbol);
     }
     for (auto &symbol: hardwareModel.circuitSymbols) {
         symbols.push_back(symbol);
+        if (symbol->getIdentifier().starts_with("__comb_")) {
+            outputStream << "  " << symbol->getIdentifier() << " [shape=invtriangle, label=\""
+                         << symbol->getIdentifier().substr(7) << "\"]\n";
+        }
     }
-
-    outputStream << "digraph RtlView {\n"
-                 << "  fontname=\"Helvetica,Arial,sans-serif\"\n"
-                 << "  node [fontname=\"Helvetica,Arial,sans-serif\"]\n"
-                 << "  edge [fontname=\"Helvetica,Arial,sans-serif\"]\n";
 
     for (const auto &circuitSymbol: symbols) {
         for (const auto &[which, nextTarget]: circuitSymbol->getPropagateTargets()) {
