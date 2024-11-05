@@ -129,9 +129,9 @@ public:
         slicing = slicingAST;
     }
 
-    void setPortDirection(PortDirection newDirection);
+    PortDirection getPortDirection() const;
 
-    void propagate(std::size_t pos, const CircuitData &data) override;
+    void setPortDirection(PortDirection newDirection);
 };
 
 //class CircuitSymbolReg : public CircuitSymbol {

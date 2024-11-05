@@ -93,13 +93,6 @@ void ModuleIOPort::setPortDirection(PortDirection newDirection) {
     direction = newDirection;
 }
 
-void ModuleIOPort::propagate(std::size_t pos, const CircuitData &data) {
-    inputDataVec[pos] = data;
-    /* TODO: 检查这个计数方法正确不正确 */
-    readyInputs++;
-    if (readyInputs == static_cast<int>(inputDataVec.size())) {
-        readyInputs = 0;
-        auto outputData = calculateOutput();
-        std::cout << identifier << " compute finished" << std::endl;
-    }
+PortDirection ModuleIOPort::getPortDirection() const {
+    return direction;
 }
