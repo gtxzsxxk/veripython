@@ -328,7 +328,7 @@ void Parser::parseRegWireStatement() {
     auto [_1, identifierOrSlicingToken] = lookAhead();
     decltype(identifierOrSlicingToken) identifierToken;
     PortSlicingAST slicing{0, 0};
-    if(identifierOrSlicingToken.first == TOKEN_lbracket) {
+    if (identifierOrSlicingToken.first == TOKEN_lbracket) {
         slicing = parsePortSlicing();
         identifierToken = std::get<1>(nextToken());
     } else {
@@ -439,7 +439,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
         int width = std::atoi(widthStr);
 
         char *dataStr = strtok(nullptr, "'");
-        int base = dataStr[0] == 'd' ? 10 : 16;
+        int base = dataStr[0] == 'd' ? 10 : (dataStr[0] == 'h' ? 16 : 2);
         std::string realData;
         for (std::size_t i = 1; i < strlen(dataStr); i++) {
             if (dataStr[i] != '_') {
