@@ -2,6 +2,8 @@
 // Created by hanyuan on 2024/11/2.
 //
 #include "../Parser.h"
+#include "../RtlSimulator.h"
+#include "../RtlVisualizer.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <filesystem>
@@ -150,10 +152,32 @@ TEST(ParserTests, SimpleSingleHDLExpressionTest) {
 }
 
 TEST(ParserTests, SimpleSingleModuleVerilogTest) {
+    const std::string filename = "../tests/verilog_srcs/full_adder_with_rubbish.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    RtlVisualizer::visualize(parser.hardwareModule);
+    std::cout << "ok" << std::endl;
+}
+
+TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
     const std::string filename = "../tests/verilog_srcs/full_adder.v";
 
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    std::cout << "ok" << std::endl;
+    RtlVisualizer::visualize(parser.hardwareModule);
+    auto simulator = RtlSimulator{parser.hardwareModule};
+
+    auto aData = CircuitData(PortSlicingAST(0, 0));
+    aData.bits[0] = true;
+    auto bData = CircuitData(PortSlicingAST(0, 0));
+    bData.bits[0] = true;
+    auto ciData = CircuitData(PortSlicingAST(0, 0));
+    ciData.bits[0] = true;
+
+    simulator.poke("a", aData);
+    simulator.poke("b", bData);
+    simulator.poke("carryin", ciData);
 }
