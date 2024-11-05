@@ -71,6 +71,8 @@ public:
 
     [[nodiscard]] std::string getIdentifier() const;
 
+    [[nodiscard]] const decltype(propagateTargets) &getPropagateTargets() const;
+
     virtual ~CircuitSymbol() = default;
 };
 

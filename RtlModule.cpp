@@ -8,7 +8,7 @@
 
 std::shared_ptr<ModuleIOPort> RtlModule::getModuleIOPortByName(const std::string &name) {
     for (auto port: ioPorts) {
-        if (port->getPortName() == name) {
+        if (port->getIdentifier() == name) {
             return port;
         }
     }

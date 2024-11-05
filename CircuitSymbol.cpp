@@ -43,6 +43,10 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol) 
     return currentPos;
 }
 
+const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTargets() const {
+    return propagateTargets;
+}
+
 void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = data;
     /* TODO: 检查这个计数方法正确不正确 */
