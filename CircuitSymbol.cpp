@@ -146,6 +146,7 @@ void ModuleIOPort::registerForInput() {
     if (direction == PortDirection::Input) {
         inputDataVec.clear();
         inputDataVec.emplace_back(slicing);
+        inputReadyVec.push_back(false);
     }
 }
 
