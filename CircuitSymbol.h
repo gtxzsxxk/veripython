@@ -113,6 +113,8 @@ public:
 class ModuleIOPort : public CircuitSymbolWire {
     PortDirection direction = PortDirection::Unspecified;
 
+    void registerForInput();
+
 public:
     explicit ModuleIOPort(std::string identifier) :
             CircuitSymbolWire(std::move(identifier)) {}

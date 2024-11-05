@@ -86,11 +86,19 @@ int CircuitSymbolWire::getMaxInputs() {
     return 1;
 }
 
+void ModuleIOPort::registerForInput() {
+    if (direction == PortDirection::Input) {
+        inputDataVec.clear();
+        inputDataVec.emplace_back(PortSlicingAST{0, 0});
+    }
+}
+
 void ModuleIOPort::setPortDirection(PortDirection newDirection) {
     if (direction != PortDirection::Unspecified) {
         throw std::runtime_error("This port's direction has been specified");
     }
     direction = newDirection;
+    registerForInput();
 }
 
 PortDirection ModuleIOPort::getPortDirection() const {
