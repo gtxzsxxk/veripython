@@ -67,7 +67,7 @@ protected:
 public:
     explicit CircuitSymbol(std::string identifier) :
             identifier(std::move(identifier)),
-            slicing(PortSlicingAST(1)) {}
+            slicing(PortSlicingAST(0, 0)) {}
 
     [[nodiscard]] const PortSlicingAST &getSlicing() const;
 
@@ -113,7 +113,11 @@ protected:
     int getMaxInputs() override;
 
 public:
-    explicit CircuitSymbolWire(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
+    explicit CircuitSymbolWire(std::string identifier,
+                               const PortSlicingAST &slicingAst) :
+                               CircuitSymbol(std::move(identifier)) {
+        slicing = slicingAst;
+    }
 };
 
 class ModuleIOPort : public CircuitSymbolWire {
@@ -123,20 +127,21 @@ class ModuleIOPort : public CircuitSymbolWire {
 
 public:
     explicit ModuleIOPort(std::string identifier) :
-            CircuitSymbolWire(std::move(identifier)) {}
+            CircuitSymbolWire(std::move(identifier), {0,0}) {}
 
     explicit ModuleIOPort(PortDirection direction,
                           std::string identifier) :
-            CircuitSymbolWire(std::move(identifier)),
-            direction(direction) {}
+            CircuitSymbolWire(std::move(identifier), {0,0}),
+            direction(direction) {
         if(direction == PortDirection::Input) {
             inputDataVec.emplace_back(slicing);
             inputReadyVec.push_back(false);
         }
+    }
 
     explicit ModuleIOPort(PortDirection direction, const PortSlicingAST &slicingAST,
                           std::string identifier) :
-            CircuitSymbolWire(std::move(identifier)),
+            CircuitSymbolWire(std::move(identifier), {0,0}),
             direction(direction) {
         slicing = slicingAST;
         if(direction == PortDirection::Input) {
