@@ -20,11 +20,20 @@ enum class PortDirection {
 
 class CircuitConnection {
     std::string destIdentifier;
+    bool destSlicingTrivial = true;
+    PortSlicingAST destSlicing{0, 0};
     std::unique_ptr<HDLExpressionAST> ast;
 public:
     CircuitConnection(std::string dest,
                       std::unique_ptr<HDLExpressionAST> connAST) :
             destIdentifier(std::move(dest)),
+            ast(std::move(connAST)) {}
+
+    CircuitConnection(std::string dest, const PortSlicingAST &destSlicing,
+                      std::unique_ptr<HDLExpressionAST> connAST) :
+            destIdentifier(std::move(dest)),
+            destSlicingTrivial(false),
+            destSlicing(destSlicing),
             ast(std::move(connAST)) {}
 
     CircuitConnection(CircuitConnection &&conn) {

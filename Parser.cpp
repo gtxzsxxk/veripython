@@ -307,16 +307,28 @@ void Parser::parseInputOutputStatement() {
 }
 
 /*
- * assign_stmt ::= "assign" id "=" HDLExpression ";"
+ * assign_stmt ::= "assign" id slicing? "=" HDLExpression ";"
  * */
 void Parser::parseAssignStatement() {
     VERIFY_NEXT_TOKEN(assign);
     auto [_, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
-    VERIFY_NEXT_TOKEN(single_eq);
+    auto [_1, slicingOrEqualToken] = lookAhead();
+    PortSlicingAST slicingAst{0, 0};
+    bool trivialSlicing = true;
+    if (slicingOrEqualToken.first == TOKEN_lbracket) {
+        slicingAst = parsePortSlicing();
+        trivialSlicing = false;
+    }else {
+        VERIFY_NEXT_TOKEN(single_eq);
+    }
     auto hdlExpr = parseHDLExpression();
     VERIFY_NEXT_TOKEN(semicolon);
 
-    hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
+    if(trivialSlicing) {
+        hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
+    } else {
+        hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, slicingAst, std::move(hdlExpr)});
+    }
 }
 
 /*
