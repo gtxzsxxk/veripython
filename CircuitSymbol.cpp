@@ -48,6 +48,7 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol) 
         throw std::runtime_error("Cannot bind more input ports!");
     }
     inputDataVec.emplace_back(symbol->slicing);
+    inputReadyVec.push_back(false);
     symbol->propagateTargets.emplace_back(currentPos, this);
     return currentPos;
 }
@@ -58,10 +59,9 @@ const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTarg
 
 void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = data;
-    /* TODO: 检查这个计数方法正确不正确 */
-    readyInputs++;
-    if (readyInputs == static_cast<int>(inputDataVec.size())) {
-        readyInputs = 0;
+    inputReadyVec[pos] = true;
+    if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
+        resetReadyInputs();
         auto outputData = calculateOutput();
         for (auto [nextPos, nextSymbol]: propagateTargets) {
             nextSymbol->propagate(nextPos, outputData);
@@ -71,6 +71,22 @@ void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
 
 std::string CircuitSymbol::getIdentifier() const {
     return identifier;
+}
+
+int CircuitSymbol::getReadyInputs() const {
+    int counter = 0;
+    for (const auto ready: inputReadyVec) {
+        if (ready) {
+            counter++;
+        }
+    }
+    return counter;
+}
+
+void CircuitSymbol::resetReadyInputs() {
+    for (std::size_t i = 0; i < inputReadyVec.size(); i++) {
+        inputReadyVec[i] = false;
+    }
 }
 
 CircuitData CircuitSymbolConstant::calculateOutput() {
@@ -98,7 +114,7 @@ int CircuitSymbolWire::getMaxInputs() {
 void ModuleIOPort::registerForInput() {
     if (direction == PortDirection::Input) {
         inputDataVec.clear();
-        inputDataVec.emplace_back(PortSlicingAST{0, 0});
+        inputDataVec.emplace_back(slicing);
     }
 }
 

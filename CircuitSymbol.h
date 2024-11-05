@@ -52,13 +52,17 @@ class CircuitSymbol {
 protected:
     std::string identifier;
     PortSlicingAST slicing;
-    int readyInputs = 0;
     std::vector<CircuitData> inputDataVec;
+    std::vector<bool> inputReadyVec;
     std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
 
     virtual CircuitData calculateOutput() = 0;
 
     virtual int getMaxInputs() = 0;
+
+    [[nodiscard]] int getReadyInputs() const;
+
+    void resetReadyInputs();
 
 public:
     explicit CircuitSymbol(std::string identifier) :
@@ -125,12 +129,20 @@ public:
                           std::string identifier) :
             CircuitSymbolWire(std::move(identifier)),
             direction(direction) {}
+        if(direction == PortDirection::Input) {
+            inputDataVec.emplace_back(slicing);
+            inputReadyVec.push_back(false);
+        }
 
     explicit ModuleIOPort(PortDirection direction, const PortSlicingAST &slicingAST,
                           std::string identifier) :
             CircuitSymbolWire(std::move(identifier)),
             direction(direction) {
         slicing = slicingAST;
+        if(direction == PortDirection::Input) {
+            inputDataVec.emplace_back(slicing);
+            inputReadyVec.push_back(false);
+        }
     }
 
     PortDirection getPortDirection() const;
