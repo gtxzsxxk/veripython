@@ -320,14 +320,23 @@ void Parser::parseAssignStatement() {
 }
 
 /*
- * reg_wire_stmt ::= "wire" identifier "=" HDLExpression ";"
- *               ||= "reg" identifier ";"
+ * reg_wire_stmt ::= "wire" slicing identifier "=" HDLExpression ";"
+ *               ||= "reg" slicing identifier ";"
  * */
 void Parser::parseRegWireStatement() {
     auto [_, wireOrRegToken] = nextToken();
-    auto [_1, identifierToken] = nextToken();
+    auto [_1, identifierOrSlicingToken] = lookAhead();
+    decltype(identifierOrSlicingToken) identifierToken;
+    PortSlicingAST slicing{0, 0};
+    if(identifierOrSlicingToken.first == TOKEN_lbracket) {
+        slicing = parsePortSlicing();
+        identifierToken = std::get<1>(nextToken());
+    } else {
+        identifierToken = identifierOrSlicingToken;
+        nextToken();
+    }
     if (wireOrRegToken.first == TOKEN_wire) {
-        auto wire = std::make_shared<CircuitSymbolWire>(identifierToken.second);
+        auto wire = std::make_shared<CircuitSymbolWire>(identifierToken.second, slicing);
         hardwareModule.circuitSymbols.push_back(wire);
         auto [_2, equalOrSemicolonToken] = nextToken();
         if (equalOrSemicolonToken.first == TOKEN_single_eq) {
