@@ -44,6 +44,8 @@ public:
     explicit CircuitData(const PortSlicingAST &slicingData);
 
     [[nodiscard]] std::size_t getBitWidth() const;
+
+    [[nodiscard]] std::string toString() const;
 };
 
 class CircuitSymbol {

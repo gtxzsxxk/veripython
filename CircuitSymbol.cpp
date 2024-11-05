@@ -29,6 +29,15 @@ std::size_t CircuitData::getBitWidth() const {
     return bits.size();
 }
 
+std::string CircuitData::toString() const {
+    std::string ret;
+    for (auto i = (long int) (bits.size() - 1); i >= 0; i--) {
+        ret += (bits[i] ? "1" : "0");
+        ret += " ";
+    }
+    return ret;
+}
+
 const PortSlicingAST &CircuitSymbol::getSlicing() const {
     return slicing;
 }
