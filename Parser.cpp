@@ -320,8 +320,8 @@ void Parser::parseAssignStatement() {
 }
 
 /*
- * reg_wire_stmt ::= "wire" slicing identifier "=" HDLExpression ";"
- *               ||= "reg" slicing identifier ";"
+ * reg_wire_stmt ::= "wire" slicing? identifier "=" HDLExpression ";"
+ *               ||= "reg" slicing? identifier ";"
  * */
 void Parser::parseRegWireStatement() {
     auto [_, wireOrRegToken] = nextToken();

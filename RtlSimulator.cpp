@@ -18,7 +18,7 @@ void RtlSimulatorEndSymbol::propagate(std::size_t pos, const CircuitInnerData &d
 }
 
 RtlSimulatorEndSymbol::RtlSimulatorEndSymbol(std::shared_ptr<ModuleIOPort> port) :
-        CircuitSymbolWire(port->getIdentifier(), {0, 0}) {
+        CircuitSymbolWire(port->getIdentifier(), port->getSlicing()) {
 
 }
 
