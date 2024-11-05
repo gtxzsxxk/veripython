@@ -9,7 +9,7 @@
 
 class RtlVisualizer {
 public:
-    static void visualize(const RtlModule &hardwareModel);
+    static void visualize(const RtlModule &hardwareModel, const std::string &filename = "rtl_view");
 };
 
 
