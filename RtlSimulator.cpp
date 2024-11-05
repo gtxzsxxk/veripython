@@ -9,10 +9,11 @@
 void RtlSimulatorEndSymbol::propagate(std::size_t pos, const CircuitInnerData &data) {
     inputDataVec[pos] = data;
     inputReadyVec[pos] = true;
+    outputDataValid = false;
     if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
         resetReadyInputs();
-        auto outputData = calculateOutput();
-        std::cout << identifier << " output: " << outputData.toString() << std::endl;
+        outputDataValid = true;
+        outputData = calculateOutput();
     }
 }
 
@@ -31,8 +32,8 @@ RtlSimulator::RtlSimulator(const RtlModule &module) : rtlModule(module) {
             outputSymbols.push_back(endSym);
         }
     }
-    for(auto &sym: module.circuitSymbols) {
-        if(sym->getIdentifier().starts_with("__hwconst_")) {
+    for (auto &sym: module.circuitSymbols) {
+        if (sym->getIdentifier().starts_with("__hwconst_")) {
             constantSymbols.push_back(sym);
         }
     }
@@ -59,10 +60,10 @@ void RtlSimulator::poke(std::string idName, const CircuitInnerData &data) {
 }
 
 void RtlSimulator::doSimulation() {
-    for(auto &constSym: constantSymbols) {
+    for (auto &constSym: constantSymbols) {
         constSym->propagate(0, CircuitInnerData{PortSlicingAST{0, 0}});
     }
-    for(auto &outputSym: outputSymbols) {
+    for (auto &outputSym: outputSymbols) {
         auto outputData = outputSym->getOutputData();
         std::cout << outputSym->getIdentifier() << " output: " << outputData.toString() << std::endl;
     }

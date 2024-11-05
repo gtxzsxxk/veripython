@@ -91,9 +91,11 @@ const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTarg
 void CircuitSymbol::propagate(std::size_t pos, const CircuitInnerData &data) {
     inputDataVec[pos] = data;
     inputReadyVec[pos] = true;
+    outputDataValid = false;
     if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
         resetReadyInputs();
-        auto outputData = calculateOutput();
+        outputData = calculateOutput();
+        outputDataValid = true;
         for (auto [nextPos, nextSymbol]: propagateTargets) {
             nextSymbol->propagate(nextPos, outputData);
         }
@@ -120,8 +122,16 @@ void CircuitSymbol::resetReadyInputs() {
     }
 }
 
-CircuitData CircuitSymbolConstant::calculateOutput() {
-    CircuitData data{slicing};
+CircuitSimOutputData CircuitSymbol::getOutputData() {
+    if (outputDataValid) {
+        return CircuitSimOutputData{outputData};
+    } else {
+        return CircuitSimOutputData{slicing};
+    }
+}
+
+CircuitInnerData CircuitSymbolConstant::calculateOutput() {
+    CircuitInnerData data{slicing};
     int tmpValue = value;
     for (int i = 0; i < width; i++) {
         data.bits[i] = (tmpValue & 0x01UL) == 1;
