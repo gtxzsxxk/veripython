@@ -15,7 +15,8 @@ HDLExpressionAST *CircuitConnection::getHDLExpressionAST() const {
     return ast.get();
 }
 
-CircuitData::CircuitData(const PortSlicingAST &slicingData) {
+CircuitInnerData::CircuitInnerData(const PortSlicingAST &slicingData) {
+    slicing = slicingData;
     if (slicingData.isDownTo) {
         for (int i = slicingData.downToLow; i <= slicingData.downToHigh; i++) {
             bits.push_back(false);
@@ -25,14 +26,44 @@ CircuitData::CircuitData(const PortSlicingAST &slicingData) {
     }
 }
 
-std::size_t CircuitData::getBitWidth() const {
+std::size_t CircuitInnerData::getBitWidth() const {
     return bits.size();
 }
 
-std::string CircuitData::toString() const {
+std::string CircuitInnerData::toString() const {
     std::string ret;
     for (auto i = (long int) (bits.size() - 1); i >= 0; i--) {
         ret += (bits[i] ? "1" : "0");
+        ret += " ";
+    }
+    return ret;
+}
+
+CircuitSimOutputData::CircuitSimOutputData(const PortSlicingAST &slicingData) : CircuitInnerData(slicingData) {
+    if (slicingData.isDownTo) {
+        for (int i = slicingData.downToLow; i <= slicingData.downToHigh; i++) {
+            bits.push_back(-1);
+        }
+    } else {
+        bits.push_back(-1);
+    }
+}
+
+CircuitSimOutputData::CircuitSimOutputData(const CircuitInnerData &circuitInnerData) : CircuitInnerData(
+        circuitInnerData.slicing) {
+    for (auto b: circuitInnerData.bits) {
+        if (b) {
+            bits.push_back(1);
+        } else {
+            bits.push_back(0);
+        }
+    }
+}
+
+std::string CircuitSimOutputData::toString() const {
+    std::string ret;
+    for (auto i = (long int) (bits.size() - 1); i >= 0; i--) {
+        ret += ((bits[i] == 1) ? "1" : (bits[i] == 0 ? "0" : "X"));
         ret += " ";
     }
     return ret;
@@ -57,7 +88,7 @@ const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTarg
     return propagateTargets;
 }
 
-void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
+void CircuitSymbol::propagate(std::size_t pos, const CircuitInnerData &data) {
     inputDataVec[pos] = data;
     inputReadyVec[pos] = true;
     if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
@@ -103,7 +134,7 @@ int CircuitSymbolConstant::getMaxInputs() {
     return 0;
 }
 
-CircuitData CircuitSymbolWire::calculateOutput() {
+CircuitInnerData CircuitSymbolWire::calculateOutput() {
     return inputDataVec[0];
 }
 

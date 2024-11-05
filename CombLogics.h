@@ -14,13 +14,13 @@
 class CombLogic : public CircuitSymbol {
     static int counter;
 protected:
-    CircuitData calculateOutput() override = 0;
+    CircuitInnerData calculateOutput() override = 0;
 
     int getMaxInputs() override = 0;
 
-    static void checkInputDataSlicing(CircuitData *s1, CircuitData *s2);
+    static void checkInputDataSlicing(CircuitInnerData *s1, CircuitInnerData *s2);
 
-    static std::size_t generateUnsignedIntegerFromData(CircuitData *data);
+    static std::size_t generateUnsignedIntegerFromData(CircuitInnerData *data);
 
 public:
     explicit CombLogic(VeriPythonTokens _operator) : CircuitSymbol("") {
@@ -47,7 +47,7 @@ concept isNormalBinOp = requires {
 template<class Op> requires isNormalBinOp<Op>
 class CombNormalBinary : public CombLogic {
 protected:
-    CircuitData calculateOutput() override {
+    CircuitInnerData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
         checkInputDataSlicing(&data0, &data1);
@@ -58,7 +58,7 @@ protected:
         }
         auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(width - 1, 0);
-        auto circuitData = CircuitData(slicing);
+        auto circuitData = CircuitInnerData(slicing);
         for (decltype(width) i = 0; i < width; i++) {
             circuitData.bits[i] = Op::apply(data0.bits[i], data1.bits[i]);
         }
@@ -113,12 +113,12 @@ concept isCompareBinOp = requires {
 template<class Op> requires isCompareBinOp<Op>
 class CombCompareBinary : public CombLogic {
 protected:
-    CircuitData calculateOutput() override {
+    CircuitInnerData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
         checkInputDataSlicing(&data0, &data1);
         auto slicing = PortSlicingAST(0, 0);
-        auto circuitData = CircuitData(slicing);
+        auto circuitData = CircuitInnerData(slicing);
         auto cmp1 = generateUnsignedIntegerFromData(&data0);
         auto cmp2 = generateUnsignedIntegerFromData(&data1);
         circuitData.bits[0] = Op::apply(cmp1, cmp2);
@@ -172,7 +172,7 @@ GEN_COMPARE_OP_DEF_END(CompareGreatEqual)
 template<class Op> requires requires { std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>; }
 class CombShiftLeft : public CombLogic {
 protected:
-    CircuitData calculateOutput() override {
+    CircuitInnerData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
 
@@ -180,7 +180,7 @@ protected:
 
         auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(width + shiftAmount - 1, 0);
-        auto circuitData = CircuitData(slicing);
+        auto circuitData = CircuitInnerData(slicing);
 
         for (long int i = (long int) circuitData.bits.size() - 1;
              i >= static_cast<long int>(circuitData.bits.size() - width); i--) {
@@ -218,7 +218,7 @@ using CombLogicShiftLeftLogical = CombShiftLeft<combOperatorShiftLeftLogical>;
 template<class Op> requires requires { std::same_as<decltype(TOKEN_logical_or), decltype(Op::token)>; }
 class CombShiftRight : public CombLogic {
 protected:
-    CircuitData calculateOutput() override {
+    CircuitInnerData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
 
@@ -226,7 +226,7 @@ protected:
 
         auto width = data0.getBitWidth();
         auto slicing = PortSlicingAST(width - 1, 0);
-        auto circuitData = CircuitData(slicing);
+        auto circuitData = CircuitInnerData(slicing);
 
         bool signExtending = false;
         if constexpr (Op::token == TOKEN_arith_rshift) {
@@ -268,7 +268,7 @@ using CombLogicShiftRightLogical = CombShiftRight<combOperatorShiftRightLogical>
 template<class Op> requires isCompareBinOp<Op>
 class CombArithmeticBinary : public CombLogic {
 protected:
-    CircuitData calculateOutput() override {
+    CircuitInnerData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto data1 = inputDataVec[1];
 
@@ -284,7 +284,7 @@ protected:
         }
 
         auto slicing = PortSlicingAST(width - 1, 0);
-        auto circuitData = CircuitData(slicing);
+        auto circuitData = CircuitInnerData(slicing);
 
         auto operand1 = generateUnsignedIntegerFromData(&data0);
         auto operand2 = generateUnsignedIntegerFromData(&data1);
@@ -345,7 +345,7 @@ concept isUnaryOp = requires {
 template<class Op> requires isUnaryOp<Op>
 class CombUnary : public CombLogic {
 protected:
-    CircuitData calculateOutput() override {
+    CircuitInnerData calculateOutput() override {
         auto data0 = inputDataVec[0];
         auto width = data0.getBitWidth();
 
@@ -356,7 +356,7 @@ protected:
         }
 
         auto slicing = PortSlicingAST(width - 1, 0);
-        auto circuitData = CircuitData(slicing);
+        auto circuitData = CircuitInnerData(slicing);
 
         for (decltype(width) i = 0; i < width; i++) {
             circuitData.bits[i] = Op::apply(data0.bits[i]);

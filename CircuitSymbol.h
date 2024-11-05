@@ -37,13 +37,25 @@ public:
     [[nodiscard]] HDLExpressionAST *getHDLExpressionAST() const;
 };
 
-class CircuitData {
+class CircuitInnerData {
 public:
     std::vector<bool> bits;
+    PortSlicingAST slicing{0, 0};
 
-    explicit CircuitData(const PortSlicingAST &slicingData);
+    explicit CircuitInnerData(const PortSlicingAST &slicingData);
 
     [[nodiscard]] std::size_t getBitWidth() const;
+
+    [[nodiscard]] std::string toString() const;
+};
+
+class CircuitSimOutputData : public CircuitInnerData {
+public:
+    std::vector<char> bits;
+
+    explicit CircuitSimOutputData(const PortSlicingAST &slicingData);
+
+    explicit CircuitSimOutputData(const CircuitInnerData &circuitInnerData);
 
     [[nodiscard]] std::string toString() const;
 };
@@ -52,11 +64,13 @@ class CircuitSymbol {
 protected:
     std::string identifier;
     PortSlicingAST slicing;
-    std::vector<CircuitData> inputDataVec;
+    std::vector<CircuitInnerData> inputDataVec;
     std::vector<bool> inputReadyVec;
     std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
+    CircuitInnerData outputData{PortSlicingAST{0, 0}};
+    bool outputDataValid = false;
 
-    virtual CircuitData calculateOutput() = 0;
+    virtual CircuitInnerData calculateOutput() = 0;
 
     virtual int getMaxInputs() = 0;
 
@@ -73,7 +87,9 @@ public:
 
     std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol);
 
-    virtual void propagate(std::size_t pos, const CircuitData &data);
+    virtual void propagate(std::size_t pos, const CircuitInnerData &data);
+
+    CircuitSimOutputData getOutputData();
 
     [[nodiscard]] std::string getIdentifier() const;
 
@@ -108,14 +124,14 @@ public:
 
 class CircuitSymbolWire : public CircuitSymbol {
 protected:
-    CircuitData calculateOutput() override;
+    CircuitInnerData calculateOutput() override;
 
     int getMaxInputs() override;
 
 public:
     explicit CircuitSymbolWire(std::string identifier,
                                const PortSlicingAST &slicingAst) :
-                               CircuitSymbol(std::move(identifier)) {
+            CircuitSymbol(std::move(identifier)) {
         slicing = slicingAst;
     }
 };
@@ -127,13 +143,13 @@ class ModuleIOPort : public CircuitSymbolWire {
 
 public:
     explicit ModuleIOPort(std::string identifier) :
-            CircuitSymbolWire(std::move(identifier), {0,0}) {}
+            CircuitSymbolWire(std::move(identifier), {0, 0}) {}
 
     explicit ModuleIOPort(PortDirection direction,
                           std::string identifier) :
-            CircuitSymbolWire(std::move(identifier), {0,0}),
+            CircuitSymbolWire(std::move(identifier), {0, 0}),
             direction(direction) {
-        if(direction == PortDirection::Input) {
+        if (direction == PortDirection::Input) {
             inputDataVec.emplace_back(slicing);
             inputReadyVec.push_back(false);
         }
@@ -141,10 +157,10 @@ public:
 
     explicit ModuleIOPort(PortDirection direction, const PortSlicingAST &slicingAST,
                           std::string identifier) :
-            CircuitSymbolWire(std::move(identifier), {0,0}),
+            CircuitSymbolWire(std::move(identifier), {0, 0}),
             direction(direction) {
         slicing = slicingAST;
-        if(direction == PortDirection::Input) {
+        if (direction == PortDirection::Input) {
             inputDataVec.emplace_back(slicing);
             inputReadyVec.push_back(false);
         }

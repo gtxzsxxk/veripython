@@ -7,7 +7,7 @@
 
 int CombLogic::counter = 0;
 
-void CombLogic::checkInputDataSlicing(CircuitData *s1, CircuitData *s2) {
+void CombLogic::checkInputDataSlicing(CircuitInnerData *s1, CircuitInnerData *s2) {
     auto slicing1 = s1->getBitWidth();
     auto slicing2 = s2->getBitWidth();
     if (slicing1 != slicing2) {
@@ -15,7 +15,7 @@ void CombLogic::checkInputDataSlicing(CircuitData *s1, CircuitData *s2) {
     }
 }
 
-std::size_t CombLogic::generateUnsignedIntegerFromData(CircuitData *data) {
+std::size_t CombLogic::generateUnsignedIntegerFromData(CircuitInnerData *data) {
     std::size_t answer = 0;
     for (long int i = (long int) data->getBitWidth() - 1; i >= 0; i--) {
         auto bit = data->bits[i];

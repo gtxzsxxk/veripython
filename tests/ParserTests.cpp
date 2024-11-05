@@ -170,9 +170,10 @@ TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
     RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
-    auto aData = CircuitData(PortSlicingAST(0, 0));
+    auto aData = CircuitInnerData(PortSlicingAST(1, 0));
     aData.bits[0] = true;
     auto bData = CircuitData(PortSlicingAST(0, 0));
+    auto bData = CircuitInnerData(PortSlicingAST(2, 0));
     bData.bits[0] = true;
     auto ciData = CircuitData(PortSlicingAST(0, 0));
     ciData.bits[0] = true;
