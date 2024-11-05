@@ -127,8 +127,6 @@ public:
         slicing = slicingAST;
     }
 
-    [[nodiscard]] const std::string &getPortName() const;
-
     void setPortDirection(PortDirection newDirection);
 
     void propagate(std::size_t pos, const CircuitData &data) override;

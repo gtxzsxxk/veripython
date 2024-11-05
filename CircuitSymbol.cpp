@@ -82,10 +82,6 @@ int CircuitSymbolWire::getMaxInputs() {
     return 1;
 }
 
-const std::string &ModuleIOPort::getPortName() const {
-    return identifier;
-}
-
 void ModuleIOPort::setPortDirection(PortDirection newDirection) {
     if (direction != PortDirection::Unspecified) {
         throw std::runtime_error("This port's direction has been specified");
