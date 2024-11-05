@@ -22,7 +22,9 @@ std::size_t CombLogic::generateUnsignedIntegerFromData(CircuitData *data) {
         if (bit) {
             answer |= 1;
         }
-        answer <<= 1;
+        if(i) {
+            answer <<= 1;
+        }
     }
     return answer;
 }
