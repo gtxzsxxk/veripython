@@ -170,13 +170,36 @@ TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
     RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
+    auto aData = CircuitInnerData(PortSlicingAST(0, 0));
+    aData.bits[0] = true;
+    auto bData = CircuitInnerData(PortSlicingAST(0, 0));
+    bData.bits[0] = true;
+    auto ciData = CircuitInnerData(PortSlicingAST(0, 0));
+    ciData.bits[0] = true;
+
+    simulator.poke("a", aData);
+    simulator.poke("b", bData);
+    simulator.poke("carryin", ciData);
+    simulator.doSimulation();
+}
+
+TEST(ParserTests, SimpleSlicingSimTest) {
+    const std::string filename = "../tests/verilog_srcs/slicing_test.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    RtlVisualizer::visualize(parser.hardwareModule);
+    auto simulator = RtlSimulator{parser.hardwareModule};
+
     auto aData = CircuitInnerData(PortSlicingAST(1, 0));
     aData.bits[0] = true;
-    auto bData = CircuitData(PortSlicingAST(0, 0));
+    aData.bits[1] = false;
+    aData.bits[2] = true;
     auto bData = CircuitInnerData(PortSlicingAST(2, 0));
     bData.bits[0] = true;
-    auto ciData = CircuitData(PortSlicingAST(0, 0));
-    ciData.bits[0] = true;
+    bData.bits[1] = false;
+    bData.bits[2] = true;
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);

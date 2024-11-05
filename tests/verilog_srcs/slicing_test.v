@@ -1,10 +1,11 @@
 module slicing_test(
-    input [1:0] a,
+    input [2:0] a,
     input [2:0] b,
-    output [4:0] c
+    output [5:0] c
 );
 
-    wire [4:0] d = 4'd5;
-    assign c = a + b + d;
+    wire [3:0] d = 3'd3;
+    wire [2:0] f = 3'd2;
+    assign c[5:2] = a[1:0] + b + d + f[1];
 
 endmodule
