@@ -180,5 +180,5 @@ TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
-    simulator.poke("carryin", ciData);
+    simulator.doSimulation();
 }

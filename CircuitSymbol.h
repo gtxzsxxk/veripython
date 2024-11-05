@@ -98,30 +98,6 @@ public:
     virtual ~CircuitSymbol() = default;
 };
 
-class CircuitSymbolConstant : public CircuitSymbol {
-    static int counter;
-    int value;
-    int width;
-protected:
-
-    CircuitData calculateOutput() override;
-
-    int getMaxInputs() override;
-
-public:
-    explicit CircuitSymbolConstant(HDLPrimaryAST *ast) : CircuitSymbol("__hwconst_" + std::to_string(counter++)),
-                                                         value(ast->value), width(ast->width) {
-        if (ast->isIdentifier()) {
-            throw std::runtime_error("The ast can't be an identifier");
-        }
-        if (width == 0) {
-            throw std::runtime_error("Bad width");
-        } else if (width > 1) {
-            slicing = PortSlicingAST{width - 1, 0};
-        }
-    }
-};
-
 class CircuitSymbolWire : public CircuitSymbol {
 protected:
     CircuitInnerData calculateOutput() override;
@@ -133,6 +109,33 @@ public:
                                const PortSlicingAST &slicingAst) :
             CircuitSymbol(std::move(identifier)) {
         slicing = slicingAst;
+    }
+};
+
+class CircuitSymbolConstant : public CircuitSymbolWire {
+    static int counter;
+    int value;
+    int width;
+protected:
+
+    CircuitInnerData calculateOutput() override;
+
+    int getMaxInputs() override;
+
+public:
+    explicit CircuitSymbolConstant(HDLPrimaryAST *ast) :
+            CircuitSymbolWire("__hwconst_" + std::to_string(counter++), PortSlicingAST{ast->width - 1, 0}),
+            value(ast->value), width(ast->width) {
+        if (ast->isIdentifier()) {
+            throw std::runtime_error("The ast can't be an identifier");
+        }
+        if (width == 0) {
+            throw std::runtime_error("Bad width");
+        } else if (width > 1) {
+            slicing = PortSlicingAST{width - 1, 0};
+        }
+        inputDataVec.emplace_back(slicing);
+        inputReadyVec.push_back(false);
     }
 };
 

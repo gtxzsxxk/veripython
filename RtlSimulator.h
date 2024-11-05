@@ -11,9 +11,9 @@
 
 class RtlSimulatorEndSymbol : public CircuitSymbolWire {
 public:
-    RtlSimulatorEndSymbol(std::shared_ptr<ModuleIOPort> port);
+    explicit RtlSimulatorEndSymbol(std::shared_ptr<ModuleIOPort> port);
 
-    void propagate(std::size_t pos, const CircuitData &data) override;
+    void propagate(std::size_t pos, const CircuitInnerData &data) override;
 };
 
 class RtlSimulator {
@@ -26,7 +26,9 @@ public:
 
     [[nodiscard]] const decltype(inputPorts) &getInputPorts() const;
 
-    void poke(std::string idName, const CircuitData &data);
+    void poke(std::string idName, const CircuitInnerData &data);
+
+    void doSimulation();
 };
 
 #endif //VERIPYTHON_RTLSIMULATOR_H
