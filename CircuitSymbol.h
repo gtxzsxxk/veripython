@@ -38,6 +38,8 @@ public:
 
     CircuitConnection(CircuitConnection &&conn) {
         destIdentifier = conn.destIdentifier;
+        destSlicingTrivial = conn.destSlicingTrivial;
+        destSlicing = conn.destSlicing;
         ast = std::move(conn.ast);
     }
 
@@ -170,7 +172,7 @@ public:
 
     explicit ModuleIOPort(PortDirection direction, const PortSlicingAST &slicingAST,
                           std::string identifier) :
-            CircuitSymbolWire(std::move(identifier), {0, 0}),
+            CircuitSymbolWire(std::move(identifier), slicingAST),
             direction(direction) {
         slicing = slicingAST;
         if (direction == PortDirection::Input) {
@@ -179,7 +181,7 @@ public:
         }
     }
 
-    PortDirection getPortDirection() const;
+    [[nodiscard]] PortDirection getPortDirection() const;
 
     void setPortDirection(PortDirection newDirection);
 };
