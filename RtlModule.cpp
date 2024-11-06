@@ -64,6 +64,10 @@ void RtlModule::buildCircuit() {
         auto destSymbol = getPortOrSymbolById(conn.getDestIdentifier());
         auto *ast = conn.getHDLExpressionAST();
         auto symbol = genCircuitSymbolByHDLExprAST(ast);
-        destSymbol->registerInput(symbol);
+        if (conn.isDestSlicingTrivial()) {
+            destSymbol->registerInput(symbol);
+        } else {
+            destSymbol->registerInput(symbol, conn.getDestSlicing());
+        }
     }
 }

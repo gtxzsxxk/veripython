@@ -41,6 +41,10 @@ public:
         ast = std::move(conn.ast);
     }
 
+    [[nodiscard]] bool isDestSlicingTrivial() const;
+
+    [[nodiscard]] PortSlicingAST getDestSlicing() const;
+
     [[nodiscard]] std::string getDestIdentifier() const;
 
     [[nodiscard]] HDLExpressionAST *getHDLExpressionAST() const;
@@ -62,7 +66,7 @@ class CircuitSymbol {
 protected:
     std::string identifier;
     PortSlicingAST slicing;
-    std::vector<CircuitInnerData> inputDataVec;
+    std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
     std::vector<bool> inputReadyVec;
     std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
     CircuitData outputData{PortSlicingAST{0, 0}};
@@ -86,7 +90,8 @@ public:
 
     std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol);
 
-    virtual void propagate(std::size_t pos, const CircuitInnerData &data);
+    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
+                              const PortSlicingAST &destSlicing);
 
     virtual void propagate(std::size_t pos, const CircuitData &data);
 

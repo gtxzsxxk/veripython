@@ -8,6 +8,10 @@
 
 int CircuitSymbolConstant::counter = 0;
 
+bool CircuitConnection::isDestSlicingTrivial() const {
+    return destSlicingTrivial;
+}
+
 std::string CircuitConnection::getDestIdentifier() const {
     return destIdentifier;
 }
