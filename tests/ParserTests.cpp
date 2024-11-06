@@ -205,3 +205,30 @@ TEST(ParserTests, SimpleSlicingSimTest) {
     simulator.poke("b", bData);
     simulator.doSimulation();
 }
+
+TEST(ParserTests, SimpleMuxSimTest) {
+    const std::string filename = "../tests/verilog_srcs/mux_test.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    RtlVisualizer::visualize(parser.hardwareModule);
+    auto simulator = RtlSimulator{parser.hardwareModule};
+
+    auto aData = CircuitData(PortSlicingAST(2, 0));
+    aData.bits[0] = true;
+    aData.bits[1] = false;
+    aData.bits[2] = true;
+    auto bData = CircuitData(PortSlicingAST(3, 0));
+    bData.bits[0] = true;
+    bData.bits[1] = false;
+    bData.bits[2] = true;
+    bData.bits[2] = true;
+    auto selData = CircuitData(PortSlicingAST(0, 0));
+    bData.bits[0] = true;
+
+    simulator.poke("a", aData);
+    simulator.poke("b", bData);
+    simulator.poke("sel", selData);
+    simulator.doSimulation();
+}
