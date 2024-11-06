@@ -70,8 +70,12 @@ PortSlicingAST &PortSlicingAST::operator=(const PortSlicingAST &slicingAST) {
     return *this;
 }
 
-void HDLExpressionAST::setSlicing(const PortSlicingAST &slicingAst) {
-    slicing = slicingAst;
+bool PortSlicingAST::isTrivial() const {
+    return isDownTo && downToHigh == -1 && downToLow == -1;
+}
+
+void HDLExpressionAST::setExprSlicing(const PortSlicingAST &slicingAst) {
+    exprSlicing = slicingAst;
 }
 
 std::string HDLExpressionAST::toString() {
@@ -79,10 +83,10 @@ std::string HDLExpressionAST::toString() {
     if (Parser::operatorName.count(_operator) > 0) {
         nodeName = Parser::operatorName[_operator];
     }
-    if (slicing.isDownTo) {
-        nodeName += "__" + std::to_string(slicing.downToHigh) + "_" + std::to_string(slicing.downToLow);
+    if (exprSlicing.isDownTo) {
+        nodeName += "__" + std::to_string(exprSlicing.downToHigh) + "_" + std::to_string(exprSlicing.downToLow);
     } else {
-        nodeName += "__" + std::to_string(slicing.onlyWhich);
+        nodeName += "__" + std::to_string(exprSlicing.onlyWhich);
     }
     std::string xmlOutput = "<" + nodeName + ">\n";
     for (const auto &ast: children) {
@@ -115,10 +119,10 @@ std::string HDLPrimaryAST::toString() {
             output = std::to_string(width) + "'h" + std::string{buffer};
         }
     }
-    if (slicing.isDownTo) {
-        nodeName += "__" + std::to_string(slicing.downToHigh) + "_" + std::to_string(slicing.downToLow);
+    if (exprSlicing.isDownTo) {
+        nodeName += "__" + std::to_string(exprSlicing.downToHigh) + "_" + std::to_string(exprSlicing.downToLow);
     } else {
-        nodeName += "__" + std::to_string(slicing.onlyWhich);
+        nodeName += "__" + std::to_string(exprSlicing.onlyWhich);
     }
     return "<" + nodeName + ">\n    " + output + "\n</" + nodeName + ">\n";
 }

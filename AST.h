@@ -52,6 +52,11 @@ public:
 
 class PortSlicingAST : public AST {
 public:
+    bool isDownTo = false;
+    int downToHigh = 0;
+    int downToLow = 0;
+    int onlyWhich = 0;
+
     PortSlicingAST(int high, int low) :
             AST("PortSlicing"), isDownTo(true),
             downToHigh(high), downToLow(low) {}
@@ -65,22 +70,18 @@ public:
 
     PortSlicingAST &operator=(const PortSlicingAST &slicingAST);
 
-    bool isDownTo = false;
-    int downToHigh = 0;
-    int downToLow = 0;
-    int onlyWhich = 0;
+    [[nodiscard]] bool isTrivial() const;
 };
 
 class HDLExpressionAST : public AST {
-protected:
-    PortSlicingAST slicing{0};
 public:
+    PortSlicingAST exprSlicing{-1, -1};
+    VeriPythonTokens _operator;
+
     explicit HDLExpressionAST(VeriPythonTokens _operator) :
             AST("hdlExpression"), _operator(_operator) {}
 
-    VeriPythonTokens _operator;
-
-    void setSlicing(const PortSlicingAST &slicingAst);
+    void setExprSlicing(const PortSlicingAST &slicingAst);
 
     std::string toString() override;
 
