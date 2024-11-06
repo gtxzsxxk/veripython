@@ -318,9 +318,8 @@ void Parser::parseAssignStatement() {
     if (slicingOrEqualToken.first == TOKEN_lbracket) {
         slicingAst = parsePortSlicing();
         trivialSlicing = false;
-    }else {
-        VERIFY_NEXT_TOKEN(single_eq);
     }
+    VERIFY_NEXT_TOKEN(single_eq);
     auto hdlExpr = parseHDLExpression();
     VERIFY_NEXT_TOKEN(semicolon);
 
