@@ -57,7 +57,7 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol) 
     if (currentPos >= getMaxInputs()) {
         throw std::runtime_error("Cannot bind more input ports!");
     }
-    inputDataVec.emplace_back(CircuitData{symbol->slicing}, slicing);
+    inputDataVec.emplace_back(CircuitData{slicing}, slicing);
     inputReadyVec.push_back(false);
     symbol->propagateTargets.emplace_back(currentPos, this);
     return currentPos;
