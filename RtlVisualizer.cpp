@@ -35,7 +35,7 @@ void RtlVisualizer::visualize(const RtlModule &hardwareModel, const std::string 
     }
 
     for (const auto &circuitSymbol: symbols) {
-        for (const auto &[which, nextTarget]: circuitSymbol->getPropagateTargets()) {
+        for (const auto &[which, nextTarget, _]: circuitSymbol->getPropagateTargets()) {
             outputStream << "  " << circuitSymbol->getIdentifier() << " -> " << nextTarget->getIdentifier()
                          << std::endl;
         }

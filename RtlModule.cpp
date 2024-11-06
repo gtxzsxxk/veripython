@@ -50,8 +50,13 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
         }
         auto combLogic = CombLogicFactory::create(ast->_operator);
         for (const auto &child: ast->children) {
-            auto circuitSymbol = genCircuitSymbolByHDLExprAST(dynamic_cast<HDLExpressionAST *>(child.get()));
-            combLogic->registerInput(circuitSymbol);
+            auto hdlExprAST = dynamic_cast<HDLExpressionAST *>(child.get());
+            auto circuitSymbol = genCircuitSymbolByHDLExprAST(hdlExprAST);
+            if (hdlExprAST->exprSlicing.isTrivial()) {
+                combLogic->registerInput(circuitSymbol);
+            } else {
+                combLogic->registerInput(circuitSymbol, hdlExprAST->exprSlicing);
+            }
         }
         std::shared_ptr<CombLogic> sharedCombLogic = std::move(combLogic);
         circuitSymbols.push_back(sharedCombLogic);
@@ -65,11 +70,19 @@ void RtlModule::buildCircuit() {
         auto *ast = conn.getHDLExpressionAST();
         auto symbol = genCircuitSymbolByHDLExprAST(ast);
         if (conn.isDestSlicingTrivial()) {
-            destSymbol->registerInput(symbol);
+            if (ast->exprSlicing.isTrivial()) {
+                destSymbol->registerInput(symbol);
+            } else {
+                destSymbol->registerInput(symbol, ast->exprSlicing);
+            }
         } else {
             auto destWireSymbol = std::static_pointer_cast<CircuitSymbolWire>(destSymbol);
-            if(destWireSymbol) {
-                destWireSymbol->registerInput(symbol, conn.getDestSlicing());
+            if (destWireSymbol) {
+                if (ast->exprSlicing.isTrivial()) {
+                    destWireSymbol->registerInput(symbol, conn.getDestSlicing());
+                } else {
+                    destWireSymbol->registerInput(symbol, conn.getDestSlicing(), ast->exprSlicing);
+                }
             } else {
                 throw std::runtime_error("Cannot set slicing");
             }
