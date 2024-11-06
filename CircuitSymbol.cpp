@@ -170,7 +170,8 @@ void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
     auto destSlicing = inputDataVec[pos].second;
     auto inputData = inputDataVec[pos].first;
     if (destSlicing.isDownTo) {
-        for (auto i = destSlicing.downToLow; i <= destSlicing.downToHigh; i++) {
+        for (auto i = destSlicing.downToLow;
+             i <= destSlicing.downToHigh && i - destSlicing.downToLow <= data.slicing.downToHigh; i++) {
             inputData.bits[i] = data.bits[i - destSlicing.downToLow];
         }
     } else {
