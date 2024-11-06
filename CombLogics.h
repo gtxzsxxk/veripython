@@ -199,7 +199,7 @@ protected:
         } else {
             auto slicing = PortSlicingAST(width - 1, 0);
             auto circuitData = CircuitData(slicing);
-            for(auto i = 0; i < width; i++) {
+            for(unsigned long i = 0; i < width; i++) {
                 circuitData.bits[i] = -1;
             }
             return circuitData;
@@ -258,7 +258,7 @@ protected:
         } else {
             auto slicing = PortSlicingAST(width - 1, 0);
             auto circuitData = CircuitData(slicing);
-            for(auto i = 0; i < width; i++) {
+            for(unsigned long i = 0; i < width; i++) {
                 circuitData.bits[i] = -1;
             }
             return circuitData;
