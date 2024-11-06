@@ -28,10 +28,10 @@ CircuitData::CircuitData(const PortSlicingAST &slicingData) {
     slicing = slicingData;
     if (slicingData.isDownTo) {
         for (int i = slicingData.downToLow; i <= slicingData.downToHigh; i++) {
-            bits.push_back(0);
+            bits.push_back(-1);
         }
     } else {
-        bits.push_back(0);
+        bits.push_back(-1);
     }
 }
 
