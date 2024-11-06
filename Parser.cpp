@@ -19,7 +19,8 @@ extern FILE *yyin;
 union LEXER_VALUE yylval;
 
 std::unordered_map<VeriPythonTokens, int> Parser::operatorPrecedence = {
-        {TOKEN_logical_or,     10},
+        {TOKEN_colon,          5},
+        {TOKEN_question,       5},
         {TOKEN_logical_and,    20},
         {TOKEN_bitwise_or,     30},
         {TOKEN_bitwise_xor,    40},
@@ -323,7 +324,7 @@ void Parser::parseAssignStatement() {
     auto hdlExpr = parseHDLExpression();
     VERIFY_NEXT_TOKEN(semicolon);
 
-    if(trivialSlicing) {
+    if (trivialSlicing) {
         hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
     } else {
         hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, slicingAst, std::move(hdlExpr)});
@@ -396,6 +397,14 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
                     if (currentOperator == TOKEN_logical_not || currentOperator == TOKEN_bitwise_not) {
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                         astStack.pop_back();
+                    } else if (currentOperator == TOKEN_colon) {
+                        merge_ast = std::make_unique<HDLMuxAST>(std::move(astStack[astStack.size() - 3]));
+                        merge_ast->children.push_back(std::move(astStack[astStack.size() - 2]));
+                        merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
+                        astStack.pop_back();
+                        astStack.pop_back();
+                        astStack.pop_back();
+                        operatorStack.pop_back();
                     } else {
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 2]));
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));

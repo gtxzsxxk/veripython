@@ -127,4 +127,18 @@ public:
     [[nodiscard]] std::string getIdentifier() const;
 };
 
+class HDLMuxAST : public HDLExpressionAST {
+    static int muxCounter;
+    std::string identifier;
+    std::unique_ptr<HDLExpressionAST> conditionExpr;
+public:
+
+    explicit HDLMuxAST(std::unique_ptr<HDLExpressionAST> conditionExpr) :
+            HDLExpressionAST(TOKEN_question),
+            identifier("__hw_mux__" + std::to_string(muxCounter++)),
+            conditionExpr(std::move(conditionExpr)) {
+        nodeType = "identifier";
+    }
+};
+
 #endif //VERIPYTHON_AST_H

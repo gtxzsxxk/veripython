@@ -134,3 +134,5 @@ bool HDLPrimaryAST::isIdentifier() const {
 std::string HDLPrimaryAST::getIdentifier() const {
     return identifier;
 }
+
+int HDLMuxAST::muxCounter = 0;
