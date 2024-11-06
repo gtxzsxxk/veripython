@@ -70,7 +70,7 @@ protected:
     PortSlicingAST slicing;
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
     std::vector<bool> inputReadyVec;
-    std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
+    std::vector<std::tuple<std::size_t, CircuitSymbol *, std::pair<bool, PortSlicingAST>>> propagateTargets;
     CircuitData outputData{PortSlicingAST{0, 0}};
 
     virtual CircuitData calculateOutput() = 0;
@@ -92,7 +92,8 @@ public:
 
     [[nodiscard]] const PortSlicingAST &getSlicing() const;
 
-    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol);
+    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
+                              const PortSlicingAST &inputSlicing = {-1, -1});
 
     virtual void propagate(std::size_t pos, const CircuitData &data);
 
@@ -119,7 +120,8 @@ public:
     }
 
     std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
-                              const PortSlicingAST &destSlicing);
+                              const PortSlicingAST &destSlicing,
+                              const PortSlicingAST &inputSlicing = {-1, -1});
 
     void propagate(std::size_t pos, const CircuitData &data) override;
 };
