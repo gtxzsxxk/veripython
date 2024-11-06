@@ -46,25 +46,14 @@ public:
     [[nodiscard]] HDLExpressionAST *getHDLExpressionAST() const;
 };
 
-class CircuitInnerData {
-public:
-    std::vector<bool> bits;
-    PortSlicingAST slicing{0, 0};
-
-    explicit CircuitInnerData(const PortSlicingAST &slicingData);
-
-    [[nodiscard]] std::size_t getBitWidth() const;
-
-    [[nodiscard]] std::string toString() const;
-};
-
-class CircuitSimOutputData : public CircuitInnerData {
+class CircuitData {
 public:
     std::vector<char> bits;
+    PortSlicingAST slicing{0, 0};
 
-    explicit CircuitSimOutputData(const PortSlicingAST &slicingData);
+    explicit CircuitData(const PortSlicingAST &slicingData);
 
-    explicit CircuitSimOutputData(const CircuitInnerData &circuitInnerData);
+    [[nodiscard]] std::size_t getBitWidth() const;
 
     [[nodiscard]] std::string toString() const;
 };
@@ -76,14 +65,15 @@ protected:
     std::vector<CircuitInnerData> inputDataVec;
     std::vector<bool> inputReadyVec;
     std::vector<std::pair<std::size_t, CircuitSymbol *>> propagateTargets;
-    CircuitInnerData outputData{PortSlicingAST{0, 0}};
-    bool outputDataValid = false;
+    CircuitData outputData{PortSlicingAST{0, 0}};
 
-    virtual CircuitInnerData calculateOutput() = 0;
+    virtual CircuitData calculateOutput() = 0;
 
     virtual int getMaxInputs() = 0;
 
     [[nodiscard]] int getReadyInputs() const;
+
+    CircuitData getInputCircuitData(std::size_t which);
 
     void resetReadyInputs();
 
@@ -98,7 +88,9 @@ public:
 
     virtual void propagate(std::size_t pos, const CircuitInnerData &data);
 
-    CircuitSimOutputData getOutputData();
+    virtual void propagate(std::size_t pos, const CircuitData &data);
+
+    CircuitData getOutputData();
 
     [[nodiscard]] std::string getIdentifier() const;
 
@@ -109,7 +101,7 @@ public:
 
 class CircuitSymbolWire : public CircuitSymbol {
 protected:
-    CircuitInnerData calculateOutput() override;
+    CircuitData calculateOutput() override;
 
     int getMaxInputs() override;
 
@@ -127,7 +119,7 @@ class CircuitSymbolConstant : public CircuitSymbolWire {
     int width;
 protected:
 
-    CircuitInnerData calculateOutput() override;
+    CircuitData calculateOutput() override;
 
     int getMaxInputs() override;
 
@@ -143,7 +135,7 @@ public:
         } else if (width > 1) {
             slicing = PortSlicingAST{width - 1, 0};
         }
-        inputDataVec.emplace_back(slicing);
+        inputDataVec.emplace_back(CircuitData{slicing}, slicing);
         inputReadyVec.push_back(false);
     }
 };
@@ -162,7 +154,7 @@ public:
             CircuitSymbolWire(std::move(identifier), {0, 0}),
             direction(direction) {
         if (direction == PortDirection::Input) {
-            inputDataVec.emplace_back(slicing);
+            inputDataVec.emplace_back(CircuitData{slicing}, slicing);
             inputReadyVec.push_back(false);
         }
     }
@@ -173,7 +165,7 @@ public:
             direction(direction) {
         slicing = slicingAST;
         if (direction == PortDirection::Input) {
-            inputDataVec.emplace_back(slicing);
+            inputDataVec.emplace_back(CircuitData{slicing}, slicing);
             inputReadyVec.push_back(false);
         }
     }

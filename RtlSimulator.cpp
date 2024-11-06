@@ -6,13 +6,11 @@
 #include <iostream>
 #include <stdexcept>
 
-void RtlSimulatorEndSymbol::propagate(std::size_t pos, const CircuitInnerData &data) {
-    inputDataVec[pos] = data;
+void RtlSimulatorEndSymbol::propagate(std::size_t pos, const CircuitData &data) {
+    inputDataVec[pos] = std::make_pair(data, inputDataVec[pos].second);
     inputReadyVec[pos] = true;
-    outputDataValid = false;
     if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
         resetReadyInputs();
-        outputDataValid = true;
         outputData = calculateOutput();
     }
 }
@@ -43,7 +41,7 @@ const decltype(RtlSimulator::inputPorts) &RtlSimulator::getInputPorts() const {
     return inputPorts;
 }
 
-void RtlSimulator::poke(std::string idName, const CircuitInnerData &data) {
+void RtlSimulator::poke(std::string idName, const CircuitData &data) {
     std::shared_ptr<ModuleIOPort> port = nullptr;
     for (auto &inPort: inputPorts) {
         if (inPort->getIdentifier() == idName) {
@@ -61,7 +59,7 @@ void RtlSimulator::poke(std::string idName, const CircuitInnerData &data) {
 
 void RtlSimulator::doSimulation() {
     for (auto &constSym: constantSymbols) {
-        constSym->propagate(0, CircuitInnerData{PortSlicingAST{0, 0}});
+        constSym->propagate(0, CircuitData{PortSlicingAST{0, 0}});
     }
     for (auto &outputSym: outputSymbols) {
         auto outputData = outputSym->getOutputData();

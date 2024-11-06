@@ -4,6 +4,7 @@
 
 #include "CircuitSymbol.h"
 #include <iostream>
+#include <utility>
 
 int CircuitSymbolConstant::counter = 0;
 
@@ -15,52 +16,26 @@ HDLExpressionAST *CircuitConnection::getHDLExpressionAST() const {
     return ast.get();
 }
 
-CircuitInnerData::CircuitInnerData(const PortSlicingAST &slicingData) {
+PortSlicingAST CircuitConnection::getDestSlicing() const {
+    return destSlicing;
+}
+
+CircuitData::CircuitData(const PortSlicingAST &slicingData) {
     slicing = slicingData;
     if (slicingData.isDownTo) {
         for (int i = slicingData.downToLow; i <= slicingData.downToHigh; i++) {
-            bits.push_back(false);
+            bits.push_back(0);
         }
     } else {
-        bits.push_back(false);
+        bits.push_back(0);
     }
 }
 
-std::size_t CircuitInnerData::getBitWidth() const {
+std::size_t CircuitData::getBitWidth() const {
     return bits.size();
 }
 
-std::string CircuitInnerData::toString() const {
-    std::string ret;
-    for (auto i = (long int) (bits.size() - 1); i >= 0; i--) {
-        ret += (bits[i] ? "1" : "0");
-        ret += " ";
-    }
-    return ret;
-}
-
-CircuitSimOutputData::CircuitSimOutputData(const PortSlicingAST &slicingData) : CircuitInnerData(slicingData) {
-    if (slicingData.isDownTo) {
-        for (int i = slicingData.downToLow; i <= slicingData.downToHigh; i++) {
-            bits.push_back(-1);
-        }
-    } else {
-        bits.push_back(-1);
-    }
-}
-
-CircuitSimOutputData::CircuitSimOutputData(const CircuitInnerData &circuitInnerData) : CircuitInnerData(
-        circuitInnerData.slicing) {
-    for (auto b: circuitInnerData.bits) {
-        if (b) {
-            bits.push_back(1);
-        } else {
-            bits.push_back(0);
-        }
-    }
-}
-
-std::string CircuitSimOutputData::toString() const {
+std::string CircuitData::toString() const {
     std::string ret;
     for (auto i = (long int) (bits.size() - 1); i >= 0; i--) {
         ret += ((bits[i] == 1) ? "1" : (bits[i] == 0 ? "0" : "X"));
@@ -78,7 +53,18 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol) 
     if (currentPos >= getMaxInputs()) {
         throw std::runtime_error("Cannot bind more input ports!");
     }
-    inputDataVec.emplace_back(symbol->slicing);
+    inputDataVec.emplace_back(CircuitData{symbol->slicing}, slicing);
+    inputReadyVec.push_back(false);
+    symbol->propagateTargets.emplace_back(currentPos, this);
+    return currentPos;
+}
+
+std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol, const PortSlicingAST &destSlicing) {
+    int currentPos = static_cast<int>(inputDataVec.size());
+    if (currentPos >= getMaxInputs()) {
+        throw std::runtime_error("Cannot bind more input ports!");
+    }
+    inputDataVec.emplace_back(CircuitData{symbol->slicing}, destSlicing);
     inputReadyVec.push_back(false);
     symbol->propagateTargets.emplace_back(currentPos, this);
     return currentPos;
@@ -88,14 +74,12 @@ const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTarg
     return propagateTargets;
 }
 
-void CircuitSymbol::propagate(std::size_t pos, const CircuitInnerData &data) {
-    inputDataVec[pos] = data;
+void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
+    inputDataVec[pos] = std::make_pair(data, inputDataVec[pos].second);
     inputReadyVec[pos] = true;
-    outputDataValid = false;
     if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
         resetReadyInputs();
         outputData = calculateOutput();
-        outputDataValid = true;
         for (auto [nextPos, nextSymbol]: propagateTargets) {
             nextSymbol->propagate(nextPos, outputData);
         }
@@ -122,19 +106,19 @@ void CircuitSymbol::resetReadyInputs() {
     }
 }
 
-CircuitSimOutputData CircuitSymbol::getOutputData() {
-    if (outputDataValid) {
-        return CircuitSimOutputData{outputData};
-    } else {
-        return CircuitSimOutputData{slicing};
-    }
+CircuitData CircuitSymbol::getOutputData() {
+    return outputData;
 }
 
-CircuitInnerData CircuitSymbolConstant::calculateOutput() {
-    CircuitInnerData data{slicing};
+CircuitData CircuitSymbol::getInputCircuitData(std::size_t which) {
+    return inputDataVec[which].first;
+}
+
+CircuitData CircuitSymbolConstant::calculateOutput() {
+    CircuitData data{slicing};
     int tmpValue = value;
     for (int i = 0; i < width; i++) {
-        data.bits[i] = (tmpValue & 0x01UL) == 1;
+        data.bits[i] = (char) (tmpValue & 0x01UL);
         tmpValue >>= 1;
     }
     return data;
@@ -144,8 +128,8 @@ int CircuitSymbolConstant::getMaxInputs() {
     return 0;
 }
 
-CircuitInnerData CircuitSymbolWire::calculateOutput() {
-    return inputDataVec[0];
+CircuitData CircuitSymbolWire::calculateOutput() {
+    return getInputCircuitData(0);
 }
 
 int CircuitSymbolWire::getMaxInputs() {
@@ -155,7 +139,7 @@ int CircuitSymbolWire::getMaxInputs() {
 void ModuleIOPort::registerForInput() {
     if (direction == PortDirection::Input) {
         inputDataVec.clear();
-        inputDataVec.emplace_back(slicing);
+        inputDataVec.emplace_back(CircuitData{slicing}, slicing);
         inputReadyVec.push_back(false);
     }
 }
