@@ -20,6 +20,7 @@ enum VeriPythonTokens {
     TOKEN_comma,
     TOKEN_semicolon,
     TOKEN_colon,
+    TOKEN_question,
     TOKEN_identifier,
     TOKEN_const_number,
     TOKEN_sized_number,
