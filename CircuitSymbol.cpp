@@ -168,7 +168,7 @@ std::size_t CircuitSymbolWire::registerInput(std::shared_ptr<CircuitSymbol> symb
 
 void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
     auto destSlicing = inputDataVec[pos].second;
-    auto inputData = inputDataVec[pos].first;
+    auto inputData = inputDataVec[0].first;
     if (destSlicing.isDownTo) {
         for (auto i = destSlicing.downToLow;
              i <= destSlicing.downToHigh && i - destSlicing.downToLow <= data.slicing.downToHigh; i++) {
@@ -177,7 +177,7 @@ void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
     } else {
         inputData.bits[destSlicing.onlyWhich] = data.bits[0];
     }
-    inputDataVec[pos] = std::make_pair(inputData, destSlicing);
+    inputDataVec[0] = std::make_pair(inputData, destSlicing);
     outputData = calculateOutput();
     for (auto [nextPos, nextSymbol]: propagateTargets) {
         nextSymbol->propagate(nextPos, outputData);
