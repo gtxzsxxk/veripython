@@ -474,7 +474,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
 
     auto [_, isLBracket] = lookAhead();
     if (isLBracket.first == TOKEN_lbracket) {
-        primaryAST->setSlicing(parsePortSlicing());
+        primaryAST->setExprSlicing(parsePortSlicing());
     }
 
     return primaryAST;
