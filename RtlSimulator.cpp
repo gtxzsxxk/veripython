@@ -26,7 +26,7 @@ RtlSimulator::RtlSimulator(const RtlModule &module) : rtlModule(module) {
             inputPorts.push_back(port);
         } else if (port->getPortDirection() == PortDirection::Output) {
             auto endSym = std::make_shared<RtlSimulatorEndSymbol>(port);
-            endSym->registerInput(port);
+            endSym->registerInput(port, port->getSlicing());
             outputSymbols.push_back(endSym);
         }
     }

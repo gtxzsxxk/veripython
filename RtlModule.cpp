@@ -67,7 +67,12 @@ void RtlModule::buildCircuit() {
         if (conn.isDestSlicingTrivial()) {
             destSymbol->registerInput(symbol);
         } else {
-            destSymbol->registerInput(symbol, conn.getDestSlicing());
+            auto destWireSymbol = std::static_pointer_cast<CircuitSymbolWire>(destSymbol);
+            if(destWireSymbol) {
+                destWireSymbol->registerInput(symbol, conn.getDestSlicing());
+            } else {
+                throw std::runtime_error("Cannot set slicing");
+            }
         }
     }
 }

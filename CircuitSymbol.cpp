@@ -63,17 +63,6 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol) 
     return currentPos;
 }
 
-std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol, const PortSlicingAST &destSlicing) {
-    int currentPos = static_cast<int>(inputDataVec.size());
-    if (currentPos >= getMaxInputs()) {
-        throw std::runtime_error("Cannot bind more input ports!");
-    }
-    inputDataVec.emplace_back(CircuitData{symbol->slicing}, destSlicing);
-    inputReadyVec.push_back(false);
-    symbol->propagateTargets.emplace_back(currentPos, this);
-    return currentPos;
-}
-
 const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTargets() const {
     return propagateTargets;
 }
@@ -138,6 +127,60 @@ CircuitData CircuitSymbolWire::calculateOutput() {
 
 int CircuitSymbolWire::getMaxInputs() {
     return 1;
+}
+
+std::size_t CircuitSymbolWire::registerInput(std::shared_ptr<CircuitSymbol> symbol, const PortSlicingAST &destSlicing) {
+    int currentPos = static_cast<int>(inputDataVec.size());
+    for (auto [_, existSlicing]: inputDataVec) {
+        for (int i = 0; i <= slicing.downToHigh; i++) {
+            if (existSlicing.isDownTo) {
+                if (existSlicing.isDownTo) {
+                    if (i >= existSlicing.downToLow && i <= existSlicing.downToHigh &&
+                        i >= destSlicing.downToLow && i <= destSlicing.downToHigh) {
+                        throw std::runtime_error("Assignment overlapping");
+                    }
+                } else {
+                    if (i >= existSlicing.downToLow && i <= existSlicing.downToHigh &&
+                        i == destSlicing.onlyWhich) {
+                        throw std::runtime_error("Assignment overlapping");
+                    }
+                }
+            } else {
+                if (destSlicing.isDownTo) {
+                    if (i == existSlicing.onlyWhich &&
+                        i >= destSlicing.downToLow && i <= destSlicing.downToHigh) {
+                        throw std::runtime_error("Assignment overlapping");
+                    }
+                } else {
+                    if (i == existSlicing.onlyWhich &&
+                        i == destSlicing.onlyWhich) {
+                        throw std::runtime_error("Assignment overlapping");
+                    }
+                }
+            }
+        }
+    }
+    inputDataVec.emplace_back(CircuitData{slicing}, destSlicing);
+    inputReadyVec.push_back(false);
+    symbol->propagateTargets.emplace_back(currentPos, this);
+    return currentPos;
+}
+
+void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
+    auto destSlicing = inputDataVec[pos].second;
+    auto inputData = inputDataVec[pos].first;
+    if (destSlicing.isDownTo) {
+        for (auto i = destSlicing.downToLow; i <= destSlicing.downToHigh; i++) {
+            inputData.bits[i] = data.bits[i - destSlicing.downToLow];
+        }
+    } else {
+        inputData.bits[destSlicing.onlyWhich] = data.bits[0];
+    }
+    inputDataVec[pos] = std::make_pair(inputData, destSlicing);
+    outputData = calculateOutput();
+    for (auto [nextPos, nextSymbol]: propagateTargets) {
+        nextSymbol->propagate(nextPos, outputData);
+    }
 }
 
 void ModuleIOPort::registerForInput() {

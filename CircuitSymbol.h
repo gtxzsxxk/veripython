@@ -81,6 +81,8 @@ protected:
 
     void resetReadyInputs();
 
+    friend class CircuitSymbolWire;
+
 public:
     explicit CircuitSymbol(std::string identifier) :
             identifier(std::move(identifier)),
@@ -89,9 +91,6 @@ public:
     [[nodiscard]] const PortSlicingAST &getSlicing() const;
 
     std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol);
-
-    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
-                              const PortSlicingAST &destSlicing);
 
     virtual void propagate(std::size_t pos, const CircuitData &data);
 
@@ -116,6 +115,11 @@ public:
             CircuitSymbol(std::move(identifier)) {
         slicing = slicingAst;
     }
+
+    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
+                              const PortSlicingAST &destSlicing);
+
+    void propagate(std::size_t pos, const CircuitData &data) override;
 };
 
 class CircuitSymbolConstant : public CircuitSymbolWire {
