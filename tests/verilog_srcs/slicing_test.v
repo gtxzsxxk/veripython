@@ -4,8 +4,8 @@ module slicing_test(
     output [5:0] c
 );
 
-    wire [3:0] d = 3'd3;
-    wire [2:0] f = 3'd2;
-    assign c[5:2] = a[1:0] + b + d + f[1];
+    wire [3:0] d = 4'd3;
+    wire [2:0] f = 3'd1;
+    assign c[4:2] = a[1:0] + b + d + f[1];
 
 endmodule
