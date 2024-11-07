@@ -170,12 +170,12 @@ TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
     RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
-    auto aData = CircuitData(PortSlicingAST(0, 0));
+    auto aData = CircuitInnerData(PortSlicingAST(0, 0));
     aData.bits[0] = true;
-    auto bData = CircuitData(PortSlicingAST(0, 0));
+    auto bData = CircuitInnerData(PortSlicingAST(0, 0));
     bData.bits[0] = true;
-    auto ciData = CircuitData(PortSlicingAST(0, 0));
-    ciData.bits[0] = false;
+    auto ciData = CircuitInnerData(PortSlicingAST(0, 0));
+    ciData.bits[0] = true;
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
@@ -231,5 +231,33 @@ TEST(ParserTests, SimpleMuxSimTest) {
     simulator.poke("a", aData);
     simulator.poke("b", bData);
     simulator.poke("sel", selData);
+    simulator.doSimulation();
+}
+
+TEST(ParserTests, SimpleConcatSimTest) {
+    const std::string filename = "../tests/verilog_srcs/concat.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    RtlVisualizer::visualize(parser.hardwareModule);
+    auto simulator = RtlSimulator{parser.hardwareModule};
+
+    auto aData = CircuitData(PortSlicingAST(3, 0));
+    aData.bits[0] = true;
+    aData.bits[1] = true;
+    aData.bits[2] = true;
+    aData.bits[3] = false;
+    auto bData = CircuitData(PortSlicingAST(3, 0));
+    bData.bits[0] = true;
+    bData.bits[1] = false;
+    bData.bits[2] = false;
+    bData.bits[3] = false;
+    auto singleBit = CircuitData(PortSlicingAST(0, 0));
+    singleBit.bits[0] = false;
+
+    simulator.poke("a", aData);
+    simulator.poke("b", bData);
+    simulator.poke("single_bit", singleBit);
     simulator.doSimulation();
 }
