@@ -79,6 +79,8 @@ std::unique_ptr<CombLogic> CombLogicFactory::create(VeriPythonTokens token) {
             return std::make_unique<CombLogicLogicalNot>();
         case TOKEN_bitwise_not:
             return std::make_unique<CombLogicBitwiseNot>();
+        case TOKEN_question:
+            return std::make_unique<CombLogicMultiplexer>();
         default:
             throw std::runtime_error("Unknown operator");
     }

@@ -83,23 +83,23 @@ public:
 
 
 GEN_LOGICAL_OP_DEF_BEGIN(LogicalOr, logical_or)
-        return (char)((a == -1 || b == -1) ? -1 : (a || b));
+        return (char) ((a == -1 || b == -1) ? -1 : (a || b));
 GEN_LOGICAL_OP_DEF_END(LogicalOr)
 
 GEN_LOGICAL_OP_DEF_BEGIN(LogicalAnd, logical_and)
-        return (char)((a == -1 || b == -1) ? -1 : (a && b));
+        return (char) ((a == -1 || b == -1) ? -1 : (a && b));
 GEN_LOGICAL_OP_DEF_END(LogicalAnd)
 
 GEN_LOGICAL_OP_DEF_BEGIN(BitwiseOr, bitwise_or)
-        return (char)((a == -1 || b == -1) ? -1 : (a || b));
+        return (char) ((a == -1 || b == -1) ? -1 : (a || b));
 GEN_LOGICAL_OP_DEF_END(BitwiseOr)
 
 GEN_LOGICAL_OP_DEF_BEGIN(BitwiseXor, bitwise_xor)
-        return (char)((a == -1 || b == -1) ? -1 : (a ^ b));
+        return (char) ((a == -1 || b == -1) ? -1 : (a ^ b));
 GEN_LOGICAL_OP_DEF_END(BitwiseXor)
 
 GEN_LOGICAL_OP_DEF_BEGIN(BitwiseAnd, bitwise_and)
-        return (char)((a == -1 || b == -1) ? -1 : (a && b));
+        return (char) ((a == -1 || b == -1) ? -1 : (a && b));
 GEN_LOGICAL_OP_DEF_END(BitwiseAnd)
 
 /*
@@ -122,7 +122,7 @@ protected:
         auto circuitData = CircuitData(slicing);
         auto [avail1, cmp1] = generateUnsignedIntegerFromData(&data0);
         auto [avail2, cmp2] = generateUnsignedIntegerFromData(&data1);
-        if(avail1 && avail2) {
+        if (avail1 && avail2) {
             circuitData.bits[0] = Op::apply(cmp1, cmp2);
         } else {
             circuitData.bits[0] = -1;
@@ -184,7 +184,7 @@ protected:
         auto [avail, shiftAmount] = generateUnsignedIntegerFromData(&data1);
 
         auto width = data0.getBitWidth();
-        if(avail) {
+        if (avail) {
             auto slicing = PortSlicingAST(width + shiftAmount - 1, 0);
             auto circuitData = CircuitData(slicing);
 
@@ -199,7 +199,7 @@ protected:
         } else {
             auto slicing = PortSlicingAST(width - 1, 0);
             auto circuitData = CircuitData(slicing);
-            for(unsigned long i = 0; i < width; i++) {
+            for (unsigned long i = 0; i < width; i++) {
                 circuitData.bits[i] = -1;
             }
             return circuitData;
@@ -239,7 +239,7 @@ protected:
         auto [avail, shiftAmount] = generateUnsignedIntegerFromData(&data1);
 
         auto width = data0.getBitWidth();
-        if(avail) {
+        if (avail) {
             auto slicing = PortSlicingAST(width - 1, 0);
             auto circuitData = CircuitData(slicing);
 
@@ -258,7 +258,7 @@ protected:
         } else {
             auto slicing = PortSlicingAST(width - 1, 0);
             auto circuitData = CircuitData(slicing);
-            for(unsigned long i = 0; i < width; i++) {
+            for (unsigned long i = 0; i < width; i++) {
                 circuitData.bits[i] = -1;
             }
             return circuitData;
@@ -312,7 +312,7 @@ protected:
         auto [avail1, operand1] = generateUnsignedIntegerFromData(&data0);
         auto [avail2, operand2] = generateUnsignedIntegerFromData(&data1);
 
-        if(avail1 && avail2) {
+        if (avail1 && avail2) {
             std::size_t ans = Op::apply(operand1, operand2);
 
             for (decltype(width) i = 0; i < width; i++) {
@@ -405,7 +405,7 @@ struct combUnaryLogicalNot {
     static constexpr auto token = TOKEN_logical_not;
 
     static char apply(char a) {
-        return (char)(a == -1 ? -1 : !a);
+        return (char) (a == -1 ? -1 : !a);
     }
 };
 
@@ -415,11 +415,69 @@ struct combUnaryBitwiseNot {
     static constexpr auto token = TOKEN_bitwise_not;
 
     static char apply(char a) {
-        return (char)(a == -1 ? -1 : !a);
+        return (char) (a == -1 ? -1 : !a);
     }
 };
 
 using CombLogicBitwiseNot = CombUnary<combUnaryBitwiseNot>;
+
+class CombLogicMultiplexer : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        auto selData = getInputCircuitData(0);
+        auto data0 = getInputCircuitData(1);
+        auto data1 = getInputCircuitData(2);
+
+        bool unknownState = false;
+        bool selData0 = false;
+        for (const auto &bit: selData.bits) {
+            if (bit == -1) {
+                unknownState = true;
+                break;
+            } else {
+                if (bit == 1) {
+                    selData0 = true;
+                    break;
+                }
+            }
+        }
+
+        decltype(data0.getBitWidth()) width;
+
+        if (selData0) {
+            width = data0.getBitWidth();
+        } else {
+            width = data1.getBitWidth();
+        }
+
+        auto slicing = PortSlicingAST((int) width - 1, 0);
+        auto circuitData = CircuitData(slicing);
+
+        if (unknownState) {
+            for (decltype(width) i = 0; i < width; i++) {
+                circuitData.bits[i] = -1;
+            }
+        } else {
+            if (selData0) {
+                for (decltype(width) i = 0; i < width; i++) {
+                    circuitData.bits[i] = data0.bits[i];
+                }
+            } else {
+                for (decltype(width) i = 0; i < width; i++) {
+                    circuitData.bits[i] = data1.bits[i];
+                }
+            }
+        }
+        return circuitData;
+    }
+
+    int getMaxInputs() override {
+        return 3;
+    }
+
+public:
+    CombLogicMultiplexer() : CombLogic(TOKEN_question) {}
+};
 
 class CombLogicFactory {
 public:
