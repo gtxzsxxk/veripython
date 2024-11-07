@@ -217,15 +217,15 @@ TEST(ParserTests, SimpleMuxSimTest) {
 
     auto aData = CircuitData(PortSlicingAST(2, 0));
     aData.bits[0] = true;
-    aData.bits[1] = false;
+    aData.bits[1] = true;
     aData.bits[2] = true;
     auto bData = CircuitData(PortSlicingAST(3, 0));
     bData.bits[0] = true;
     bData.bits[1] = false;
     bData.bits[2] = true;
-    bData.bits[2] = true;
+    bData.bits[3] = false;
     auto selData = CircuitData(PortSlicingAST(0, 0));
-    bData.bits[0] = true;
+    selData.bits[0] = false;
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
