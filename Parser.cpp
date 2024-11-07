@@ -203,7 +203,7 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
 
             /* 继续前瞻，根据后一个 operator 决定是否要对当前栈上元素进行合并 */
             auto [nextOpReady, nextOperator] = lookAhead();
-            int nextPrecedence = getOperatorPrecedence(nextOperator);
+            int nextPrecedence = getConstantOperatorPrecedence(nextOperator);
             /* 如果下一个token不是operator，说明已经到达了结尾，直接当作 -1 处理就行 */
             /* 合并栈上元素，保证左结合性 */
             if (currentPrecedence >= nextPrecedence) {
@@ -223,7 +223,7 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
                 }
             }
         } else {
-            int precedence = getOperatorPrecedence(lookAheadToken);
+            int precedence = getConstantOperatorPrecedence(lookAheadToken);
             if (precedence == -1) {
                 goto out;
             }
@@ -387,7 +387,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
 
             /* 继续前瞻，根据后一个 operator 决定是否要对当前栈上元素进行合并 */
             auto [nextOpReady, nextOperator] = lookAhead();
-            int nextPrecedence = getOperatorPrecedence(nextOperator);
+            int nextPrecedence = getHDLOperatorPrecedence(nextOperator);
             /* 如果下一个token不是operator，说明已经到达了结尾，直接当作 -1 处理就行 */
             /* 合并栈上元素，保证左结合性 */
             if (currentPrecedence >= nextPrecedence) {
@@ -405,22 +405,23 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
                         astStack.pop_back();
                         astStack.pop_back();
                         operatorStack.pop_back();
-                    } else {
+                    } else if (currentOperator != TOKEN_question) {
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 2]));
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                         astStack.pop_back();
                         astStack.pop_back();
                     }
-                    operatorStack.pop_back();
-                    astStack.push_back(std::move(merge_ast));
-
+                    if (currentOperator != TOKEN_question) {
+                        operatorStack.pop_back();
+                        astStack.push_back(std::move(merge_ast));
+                    }
                     if (currentPrecedence == nextPrecedence) {
                         break;
                     }
                 }
             }
         } else {
-            int precedence = getOperatorPrecedence(lookAheadToken);
+            int precedence = getHDLOperatorPrecedence(lookAheadToken);
             if (precedence == -1) {
                 goto out;
             }
@@ -550,7 +551,15 @@ void Parser::errorParsing(const std::string &message, const std::string &expectT
     throw std::runtime_error("Code syntax error");
 }
 
-int Parser::getOperatorPrecedence(LexTokenType &token) {
+int Parser::getConstantOperatorPrecedence(LexTokenType &token) {
+    if (operatorPrecedence.count(token.first) == 0) {
+        return -1;
+    }
+    auto pred = operatorPrecedence[token.first];
+    return pred >= 10 ? pred : -1;
+}
+
+int Parser::getHDLOperatorPrecedence(LexTokenType &token) {
     if (operatorPrecedence.count(token.first) == 0) {
         return -1;
     }

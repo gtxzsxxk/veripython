@@ -21,7 +21,9 @@ class Parser {
     std::queue<LexTokenType> tokenBuffer;
     std::queue<LexTokenType> tokenFetched;
 
-    static int getOperatorPrecedence(LexTokenType &token);
+    static int getConstantOperatorPrecedence(LexTokenType &token);
+
+    static int getHDLOperatorPrecedence(LexTokenType &token);
 
     std::tuple<bool, LexTokenType> lookAhead();
 
