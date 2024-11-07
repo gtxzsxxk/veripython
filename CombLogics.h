@@ -25,7 +25,7 @@ protected:
 
 public:
     explicit CombLogic(VeriPythonTokens _operator) : CircuitSymbol("") {
-        if (Parser::operatorName.count(_operator) > 0) {
+        if (HDLExpressionAST::canParseToCombLogics(_operator)) {
             identifier = "__comb_" + Parser::operatorName[_operator] + "__" + std::to_string(counter++);
         } else {
             throw std::runtime_error("Unsupported operator type");
@@ -477,6 +477,38 @@ protected:
 
 public:
     CombLogicMultiplexer() : CombLogic(TOKEN_question) {}
+};
+
+class CombLogicConcat : public CombLogic {
+protected:
+    CircuitData calculateOutput() override {
+        decltype(getInputCircuitData(0).getBitWidth()) width = 0;
+        int counter = 0;
+        for (auto &[data, _]: inputDataVec) {
+            width += data.getBitWidth();
+            counter++;
+        }
+
+        auto slicing = PortSlicingAST((int) width - 1, 0);
+        auto circuitData = CircuitData(slicing);
+
+        std::size_t nextConcatIndex = 0;
+        for (auto i = 0; i < counter; i++) {
+            auto data = getInputCircuitData(i);
+            for (auto j = nextConcatIndex; j < nextConcatIndex + data.getBitWidth(); j++) {
+                circuitData.bits[j] = data.bits[j - nextConcatIndex];
+            }
+            nextConcatIndex += data.getBitWidth();
+        }
+        return circuitData;
+    }
+
+    int getMaxInputs() override {
+        return 1024;
+    }
+
+public:
+    CombLogicConcat() : CombLogic(TOKEN_lbrace) {}
 };
 
 class CombLogicFactory {
