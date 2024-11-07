@@ -101,8 +101,8 @@ std::string HDLExpressionAST::toString() {
     return xmlOutput;
 }
 
-bool HDLExpressionAST::isOperator() const {
-    return Parser::operatorPrecedence.count(_operator) > 0;
+bool HDLExpressionAST::canParseToCombLogics(VeriPythonTokens _operator) {
+    return _operator == TOKEN_lbrace || Parser::operatorPrecedence.count(_operator) > 0;
 }
 
 std::string HDLPrimaryAST::toString() {

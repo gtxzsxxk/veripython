@@ -45,7 +45,7 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
     } else if (ast->nodeType == "identifier") {
         return getPortOrSymbolById(dynamic_cast<HDLPrimaryAST *>(ast)->getIdentifier());
     } else {
-        if (!ast->isOperator()) {
+        if (!HDLExpressionAST::canParseToCombLogics(ast->_operator)) {
             throw std::runtime_error("AST is not an operator");
         }
         auto combLogic = CombLogicFactory::create(ast->_operator);

@@ -85,7 +85,7 @@ public:
 
     std::string toString() override;
 
-    [[nodiscard]] bool isOperator() const;
+    static bool canParseToCombLogics(VeriPythonTokens _operator);
 };
 
 class HDLPrimaryAST : public HDLExpressionAST {

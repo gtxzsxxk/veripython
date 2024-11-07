@@ -45,6 +45,7 @@ std::unordered_map<VeriPythonTokens, int> Parser::operatorPrecedence = {
 };
 
 std::unordered_map<VeriPythonTokens, std::string> Parser::operatorName = {
+        {TOKEN_lbrace,         "concat"},
         {TOKEN_question,       "multiplexer"},
         {TOKEN_logical_or,     "logical_or"},
         {TOKEN_logical_and,    "logical_and"},
