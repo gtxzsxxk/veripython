@@ -136,3 +136,4 @@ std::string HDLPrimaryAST::getIdentifier() const {
 }
 
 int HDLMuxAST::muxCounter = 0;
+int HDLConcatAST::muxCounter = 0;

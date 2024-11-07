@@ -140,4 +140,16 @@ public:
     }
 };
 
+class HDLConcatAST : public HDLExpressionAST {
+    static int muxCounter;
+    std::string identifier;
+public:
+
+    explicit HDLConcatAST() :
+            HDLExpressionAST(TOKEN_lbrace),
+            identifier("__hw_cat__" + std::to_string(muxCounter++)) {
+        nodeType = "concatenation";
+    }
+};
+
 #endif //VERIPYTHON_AST_H

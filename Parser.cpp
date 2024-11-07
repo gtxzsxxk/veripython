@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <exception>
 #include <vector>
+#include <algorithm>
 
 #define VERIFY_NEXT_TOKEN(name)         nextToken(TOKEN_##name, #name)
 
@@ -311,6 +312,7 @@ void Parser::parseInputOutputStatement() {
 
 /*
  * assign_stmt ::= "assign" id slicing? "=" HDLExpression ";"
+ *             ||= "assign" "{" id slicing? "," + "}" "=" HDLExpression ";"
  * */
 void Parser::parseAssignStatement() {
     VERIFY_NEXT_TOKEN(assign);
@@ -383,7 +385,8 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
             goto out;
         }
         if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_sized_number ||
-            lookAheadToken.first == TOKEN_identifier || lookAheadToken.first == TOKEN_lparen) {
+            lookAheadToken.first == TOKEN_identifier || lookAheadToken.first == TOKEN_lparen ||
+            lookAheadToken.first == TOKEN_lbrace) {
             auto ast = parseHDLPrimary();
             astStack.push_back(std::move(ast));
 
@@ -440,7 +443,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
 }
 
 /*
- * hdlPrimary ::= (const_number | sized_number | identifier | "(" hdlExpression ")") portSlicing?
+ * hdlPrimary ::= (const_number | sized_number | identifier | "(" hdlExpression ")" | "{" hdlExpression "," + "}") portSlicing?
  * */
 std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
@@ -482,6 +485,21 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
         nextToken();
         primaryAST = parseHDLExpression();
         VERIFY_NEXT_TOKEN(rparen);
+    } else if (lookAheadTokenData.first == TOKEN_lbrace) {
+        nextToken();
+        auto ast = std::make_unique<HDLConcatAST>();
+        while (true) {
+            auto hdlExpr = parseHDLExpression();
+            ast->children.push_back(std::move(hdlExpr));
+            auto [_, commaOrRbraceToken] = nextToken();
+            if (commaOrRbraceToken.first == TOKEN_rbrace) {
+                break;
+            } else if (commaOrRbraceToken.first != TOKEN_comma) {
+                errorParsing("Expecting comma");
+            }
+        }
+        std::reverse(ast->children.begin(), ast->children.end());
+        primaryAST = std::move(ast);
     }
 
     auto [_, isLBracket] = lookAhead();
