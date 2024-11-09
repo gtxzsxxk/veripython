@@ -249,12 +249,12 @@ TEST(ParserTests, SimpleConcatSimTest) {
     aData.bits[2] = true;
     aData.bits[3] = false;
     auto bData = CircuitData(PortSlicingAST(3, 0));
-    bData.bits[0] = true;
-    bData.bits[1] = false;
-    bData.bits[2] = false;
-    bData.bits[3] = false;
+    bData.bits[0] = false;
+    bData.bits[1] = true;
+    bData.bits[2] = true;
+    bData.bits[3] = true;
     auto singleBit = CircuitData(PortSlicingAST(0, 0));
-    singleBit.bits[0] = false;
+    singleBit.bits[0] = true;
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
