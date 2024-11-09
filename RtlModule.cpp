@@ -66,25 +66,29 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
 
 void RtlModule::buildCircuit() {
     for (auto &conn: circuitConnections) {
-        auto destSymbol = getPortOrSymbolById(conn.getDestIdentifier());
         auto *ast = conn.getHDLExpressionAST();
         auto symbol = genCircuitSymbolByHDLExprAST(ast);
-        if (conn.isDestSlicingTrivial()) {
-            if (ast->exprSlicing.isTrivial()) {
-                destSymbol->registerInput(symbol);
-            } else {
-                destSymbol->registerInput(symbol, ast->exprSlicing);
+        int inputSlicingNextStart = 0;
+        for (auto &[destIdentifier, destSlicing]: conn.getDestIdentifiers()) {
+            auto destSymbol = getPortOrSymbolById(destIdentifier);
+            auto destWidth = destSlicing.isDownTo ? destSlicing.downToHigh - destSlicing.downToLow + 1 : 1;
+            if (destSlicing.isTrivial()) {
+                destWidth = destSymbol->getSlicing().downToHigh - destSymbol->getSlicing().downToLow + 1;
             }
-        } else {
-            auto destWireSymbol = std::static_pointer_cast<CircuitSymbolWire>(destSymbol);
-            if (destWireSymbol) {
-                if (ast->exprSlicing.isTrivial()) {
-                    destWireSymbol->registerInput(symbol, conn.getDestSlicing());
-                } else {
-                    destWireSymbol->registerInput(symbol, conn.getDestSlicing(), ast->exprSlicing);
-                }
+            PortSlicingAST inputSlicingInTotal = {destWidth - 1, 0};
+            inputSlicingInTotal.downToHigh += inputSlicingNextStart;
+            inputSlicingInTotal.downToLow += inputSlicingNextStart;
+            inputSlicingNextStart += destWidth;
+
+            if (destSlicing.isTrivial()) {
+                destSymbol->registerInput(symbol, inputSlicingInTotal);
             } else {
-                throw std::runtime_error("Cannot set slicing");
+                auto destWireSymbol = std::static_pointer_cast<CircuitSymbolWire>(destSymbol);
+                if (destWireSymbol) {
+                    destWireSymbol->registerInput(symbol, destSlicing, inputSlicingInTotal);
+                } else {
+                    throw std::runtime_error("Cannot set slicing");
+                }
             }
         }
     }
