@@ -76,11 +76,12 @@ void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
                 CircuitData slicedData{propagateSlicingData};
                 if (propagateSlicingData.isDownTo) {
                     for (auto i = propagateSlicingData.downToLow;
-                         i <= propagateSlicingData.downToHigh; i++) {
-                        slicedData.bits[i - propagateSlicingData.downToLow] = data.bits[i];
+                         i <= propagateSlicingData.downToHigh;
+                         i++) {
+                        slicedData.bits[i - propagateSlicingData.downToLow] = outputData.bits[i];
                     }
                 } else {
-                    slicedData.bits[0] = data.bits[propagateSlicingData.onlyWhich];
+                    slicedData.bits[0] = outputData.bits[propagateSlicingData.onlyWhich];
                 }
                 nextSymbol->propagate(nextPos, slicedData);
             } else {
@@ -202,11 +203,12 @@ void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
             CircuitData slicedData{propagateSlicingData};
             if (propagateSlicingData.isDownTo) {
                 for (auto i = propagateSlicingData.downToLow;
-                     i <= propagateSlicingData.downToHigh; i++) {
-                    slicedData.bits[i - propagateSlicingData.downToLow] = data.bits[i];
+                     i <= propagateSlicingData.downToHigh;
+                     i++) {
+                    slicedData.bits[i - propagateSlicingData.downToLow] = outputData.bits[i];
                 }
             } else {
-                slicedData.bits[0] = data.bits[propagateSlicingData.onlyWhich];
+                slicedData.bits[0] = outputData.bits[propagateSlicingData.onlyWhich];
             }
             nextSymbol->propagate(nextPos, slicedData);
         } else {
