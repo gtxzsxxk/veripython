@@ -316,22 +316,59 @@ void Parser::parseInputOutputStatement() {
  * */
 void Parser::parseAssignStatement() {
     VERIFY_NEXT_TOKEN(assign);
-    auto [_, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
-    auto [_1, slicingOrEqualToken] = lookAhead();
-    PortSlicingAST slicingAst{0, 0};
-    bool trivialSlicing = true;
-    if (slicingOrEqualToken.first == TOKEN_lbracket) {
-        slicingAst = parsePortSlicing();
-        trivialSlicing = false;
-    }
-    VERIFY_NEXT_TOKEN(single_eq);
-    auto hdlExpr = parseHDLExpression();
-    VERIFY_NEXT_TOKEN(semicolon);
+    auto [_, identifierOrLbraceToken] = nextToken();
+    if (identifierOrLbraceToken.first == TOKEN_identifier) {
+        auto identifierToken = identifierOrLbraceToken;
+        auto [_1, slicingOrEqualToken] = lookAhead();
+        PortSlicingAST slicingAst{-1, -1};
+        if (slicingOrEqualToken.first == TOKEN_lbracket) {
+            slicingAst = parsePortSlicing();
+        }
+        VERIFY_NEXT_TOKEN(single_eq);
+        auto hdlExpr = parseHDLExpression();
+        VERIFY_NEXT_TOKEN(semicolon);
 
-    if (trivialSlicing) {
-        hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
-    } else {
-        hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, slicingAst, std::move(hdlExpr)});
+        if (slicingAst.isTrivial()) {
+            hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
+        } else {
+            hardwareModule.addCircuitConnection(
+                    CircuitConnection{identifierToken.second, slicingAst, std::move(hdlExpr)});
+        }
+    } else if (identifierOrLbraceToken.first == TOKEN_lbrace) {
+        std::vector<std::pair<std::string, PortSlicingAST>> lhsIdentifiers;
+        while (true) {
+            auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+            auto [_2, slicingOrCommaOrRbraceToken] = lookAhead();
+            PortSlicingAST slicingAst{-1, -1};
+            if (slicingOrCommaOrRbraceToken.first == TOKEN_lbracket) {
+                slicingAst = parsePortSlicing();
+                auto [_3, commaOrRbraceToken] = nextToken();
+                if (commaOrRbraceToken.first == TOKEN_rbrace) {
+                    break;
+                } else if (commaOrRbraceToken.first != TOKEN_comma) {
+                    errorParsing("Unexpected token");
+                }
+            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_comma) {
+                nextToken();
+            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_rbrace) {
+                nextToken();
+                lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+                break;
+            } else {
+                errorParsing("Unexpected token");
+            }
+            lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+        }
+        VERIFY_NEXT_TOKEN(single_eq);
+        auto hdlExpr = parseHDLExpression();
+        VERIFY_NEXT_TOKEN(semicolon);
+
+        std::reverse(lhsIdentifiers.begin(), lhsIdentifiers.end());
+
+        hardwareModule.addCircuitConnection(
+                CircuitConnection{std::move(lhsIdentifiers),
+                                  std::move(hdlExpr)}
+        );
     }
 }
 
