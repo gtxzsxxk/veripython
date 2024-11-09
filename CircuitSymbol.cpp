@@ -8,20 +8,12 @@
 
 int CircuitSymbolConstant::counter = 0;
 
-bool CircuitConnection::isDestSlicingTrivial() const {
-    return destSlicingTrivial;
-}
-
-std::string CircuitConnection::getDestIdentifier() const {
-    return destIdentifier;
+std::vector<std::pair<std::string, PortSlicingAST>> &CircuitConnection::getDestIdentifiers() {
+    return destIdentifiers;
 }
 
 HDLExpressionAST *CircuitConnection::getHDLExpressionAST() const {
     return ast.get();
-}
-
-PortSlicingAST CircuitConnection::getDestSlicing() const {
-    return destSlicing;
 }
 
 CircuitData::CircuitData(const PortSlicingAST &slicingData) {

@@ -19,35 +19,33 @@ enum class PortDirection {
 };
 
 class CircuitConnection {
-    std::string destIdentifier;
-    bool destSlicingTrivial = true;
-    PortSlicingAST destSlicing{0, 0};
+    std::vector<std::pair<std::string, PortSlicingAST>> destIdentifiers;
     std::unique_ptr<HDLExpressionAST> ast;
 public:
     CircuitConnection(std::string dest,
                       std::unique_ptr<HDLExpressionAST> connAST) :
-            destIdentifier(std::move(dest)),
-            ast(std::move(connAST)) {}
+            ast(std::move(connAST)) {
+        destIdentifiers.emplace_back(dest, PortSlicingAST{-1, -1});
+    }
 
     CircuitConnection(std::string dest, const PortSlicingAST &destSlicing,
                       std::unique_ptr<HDLExpressionAST> connAST) :
-            destIdentifier(std::move(dest)),
-            destSlicingTrivial(false),
-            destSlicing(destSlicing),
-            ast(std::move(connAST)) {}
+            ast(std::move(connAST)) {
+        destIdentifiers.emplace_back(dest, destSlicing);
+    }
+
+    CircuitConnection(decltype(destIdentifiers) &&lhsData,
+                      std::unique_ptr<HDLExpressionAST> connAST) :
+            ast(std::move(connAST)) {
+        destIdentifiers = lhsData;
+    }
 
     CircuitConnection(CircuitConnection &&conn) {
-        destIdentifier = conn.destIdentifier;
-        destSlicingTrivial = conn.destSlicingTrivial;
-        destSlicing = conn.destSlicing;
+        destIdentifiers = conn.destIdentifiers;
         ast = std::move(conn.ast);
     }
 
-    [[nodiscard]] bool isDestSlicingTrivial() const;
-
-    [[nodiscard]] PortSlicingAST getDestSlicing() const;
-
-    [[nodiscard]] std::string getDestIdentifier() const;
+    std::vector<std::pair<std::string, PortSlicingAST>> &getDestIdentifiers();
 
     [[nodiscard]] HDLExpressionAST *getHDLExpressionAST() const;
 };
