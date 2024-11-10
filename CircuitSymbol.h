@@ -124,6 +124,18 @@ public:
     void propagate(std::size_t pos, const CircuitData &data) override;
 };
 
+class CircuitSymbolReg : public CircuitSymbolWire {
+    CircuitData lastOutputData;
+protected:
+    CircuitData calculateOutput() override;
+
+public:
+    explicit CircuitSymbolReg(std::string identifier,
+                              const PortSlicingAST &slicingAst) :
+            CircuitSymbolWire(std::move(identifier), slicingAst),
+            lastOutputData(slicingAst) {}
+};
+
 class CircuitSymbolConstant : public CircuitSymbolWire {
     static int counter;
     int value;

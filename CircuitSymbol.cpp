@@ -217,6 +217,12 @@ void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
     }
 }
 
+CircuitData CircuitSymbolReg::calculateOutput() {
+    auto ret = lastOutputData;
+    lastOutputData = CircuitSymbolWire::calculateOutput();
+    return ret;
+}
+
 void ModuleIOPort::registerForInput() {
     if (direction == PortDirection::Input) {
         inputDataVec.clear();
