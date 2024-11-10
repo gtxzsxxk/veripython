@@ -547,6 +547,28 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
     return primaryAST;
 }
 
+/*
+ * always_block ::= "always" "@" "(" sensitive_list ")" "begin" always_body "end"
+ * */
+void Parser::parseAlwaysBlock() {
+    VERIFY_NEXT_TOKEN(always);
+    VERIFY_NEXT_TOKEN(at);
+    VERIFY_NEXT_TOKEN(lparen);
+    parseSensitiveList();
+    VERIFY_NEXT_TOKEN(rparen);
+    VERIFY_NEXT_TOKEN(begin);
+    parseAlwaysBlockBody();
+    VERIFY_NEXT_TOKEN(end);
+}
+
+void Parser::parseSensitiveList() {
+
+}
+
+void Parser::parseAlwaysBlockBody() {
+
+}
+
 Parser::~Parser() {
     fclose(yyin);
 }

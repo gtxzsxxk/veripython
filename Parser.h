@@ -48,6 +48,12 @@ class Parser {
 
     void parseRegWireStatement();
 
+    void parseAlwaysBlock();
+
+    void parseSensitiveList();
+
+    void parseAlwaysBlockBody();
+
     std::unique_ptr<HDLExpressionAST> parseHDLPrimary();
 
     PortSlicingAST parsePortSlicing();
