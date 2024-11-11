@@ -587,6 +587,7 @@ std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList(
         lists.emplace_back(triggerType, identifierToken.second);
         auto [_2, lookAheadToken] = lookAhead();
         if (lookAheadToken.first == TOKEN_senslist_or) {
+            nextToken();
             continue;
         } else if (lookAheadToken.first == TOKEN_rparen) {
             break;
@@ -604,11 +605,11 @@ std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList(
 std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBody() {
     auto ast = std::make_unique<AlwaysBlockBodyAST>(nullptr);
     while (true) {
-        auto [_, lookAheadToken] = nextToken();
+        auto [_, lookAheadToken] = lookAhead();
         if (lookAheadToken.first == TOKEN_end) {
             break;
         } else {
-            ast->children.push_back(parseAlwaysBlockBody());
+            ast->children.push_back(parseAlwaysBlockBodyStatement());
         }
     }
 
@@ -619,7 +620,7 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBody() {
  * always_stmt ::= ifBlock | caseBlock | nonBlockingAssign
  * */
 std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBodyStatement() {
-    auto [_, lookAheadToken] = nextToken();
+    auto [_, lookAheadToken] = lookAhead();
     if (lookAheadToken.first == TOKEN_if) {
         return parseIfBlock();
     }
@@ -646,11 +647,11 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
         if (beginOrOtherToken.first == TOKEN_if) {
             ast->children.push_back(parseIfBlock());
         } else {
-            ast->children.push_back(parseAlwaysBlockBody());
+            ast->children.push_back(parseAlwaysBlockBodyStatement());
         }
     } else {
         nextToken();
-        ast->children.push_back(parseAlwaysBlockBodyStatement());
+        ast->children.push_back(parseAlwaysBlockBody());
         VERIFY_NEXT_TOKEN(end);
     }
     auto [_2, elseOrOtherToken] = lookAhead();
@@ -659,12 +660,14 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
         auto [_3, beginOrOtherTokenElse] = lookAhead();
         if (beginOrOtherTokenElse.first == TOKEN_begin) {
             nextToken();
-            ast->children.push_back(parseAlwaysBlockBodyStatement());
+            ast->children.push_back(parseAlwaysBlockBody());
             VERIFY_NEXT_TOKEN(end);
         } else {
-            ast->children.push_back(parseAlwaysBlockBody());
+            ast->children.push_back(parseAlwaysBlockBodyStatement());
         }
     }
+
+    return ast;
 }
 
 void Parser::parseCaseBlock() {
