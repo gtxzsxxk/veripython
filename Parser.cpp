@@ -684,7 +684,7 @@ CircuitConnection Parser::parseNonBlockingAssignment() {
         if (slicingOrEqualToken.first == TOKEN_lbracket) {
             slicingAst = parsePortSlicing();
         }
-        VERIFY_NEXT_TOKEN(single_eq);
+        VERIFY_NEXT_TOKEN(cond_le);
         auto hdlExpr = parseHDLExpression();
         VERIFY_NEXT_TOKEN(semicolon);
 
@@ -718,7 +718,7 @@ CircuitConnection Parser::parseNonBlockingAssignment() {
             }
             lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
         }
-        VERIFY_NEXT_TOKEN(single_eq);
+        VERIFY_NEXT_TOKEN(cond_le);
         auto hdlExpr = parseHDLExpression();
         VERIFY_NEXT_TOKEN(semicolon);
 
