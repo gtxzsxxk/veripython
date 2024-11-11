@@ -286,8 +286,7 @@ void Parser::parseModuleBody() {
     } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
         parseRegWireStatement();
     } else if(lookAheadTokenData.first == TOKEN_always) {
-        auto ast = parseAlwaysBlock();
-        std::cout << ast->nodeType << std::endl;
+        hardwareModule.addAlwaysBlock(parseAlwaysBlock());
     } else {
         if (lookAheadTokenData.first == TOKEN_endmodule) {
             return;

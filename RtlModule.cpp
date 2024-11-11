@@ -20,6 +20,10 @@ void RtlModule::addCircuitConnection(CircuitConnection &&connection) {
     circuitConnections.push_back(std::move(connection));
 }
 
+void RtlModule::addAlwaysBlock(std::unique_ptr<AlwaysBlockAST> &&alwaysBlock) {
+    alwaysBlocks.push_back(std::move(alwaysBlock));
+}
+
 std::shared_ptr<CircuitSymbol> RtlModule::getPortOrSymbolById(const std::string &id) {
     for (auto &ioPort: ioPorts) {
         if (ioPort->getIdentifier() == id) {

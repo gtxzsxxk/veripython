@@ -14,6 +14,8 @@
 class RtlModule {
     std::vector<CircuitConnection> circuitConnections;
 
+    std::vector<std::unique_ptr<AlwaysBlockAST>> alwaysBlocks;
+
     std::shared_ptr<CircuitSymbol> getPortOrSymbolById(const std::string &id);
 
     std::shared_ptr<CircuitSymbol> genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast);
@@ -26,6 +28,8 @@ public:
     std::shared_ptr<ModuleIOPort> getModuleIOPortByName(const std::string &name);
 
     void addCircuitConnection(CircuitConnection &&connection);
+
+    void addAlwaysBlock(std::unique_ptr<AlwaysBlockAST> &&alwaysBlock);
 
     void buildCircuit();
 };
