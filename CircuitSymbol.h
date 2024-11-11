@@ -55,7 +55,9 @@ public:
     CircuitConnection connection;
 
     explicit NonBlockingAssignAST(CircuitConnection &&conn) :
-            AlwaysBlockBodyAST(nullptr), connection(std::move(conn)) {}
+            AlwaysBlockBodyAST(nullptr), connection(std::move(conn)) {
+        nodeType = "__hw_non_blk_assign__";
+    }
 };
 
 class CircuitData {

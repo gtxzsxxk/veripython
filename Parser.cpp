@@ -640,6 +640,7 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
     VERIFY_NEXT_TOKEN(rparen);
 
     auto ast = std::make_unique<AlwaysBlockBodyAST>(std::move(condition));
+    ast->nodeType = "__hw_always_block_body_if_block__";
 
     auto [_1, beginOrOtherToken] = lookAhead();
     if (beginOrOtherToken.first != TOKEN_begin) {
