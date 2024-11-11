@@ -132,8 +132,8 @@ void Parser::parseModulePortList() {
 
 /*
  * modulePort ::= id
- *            ||= "input"|"output" portSlicing id
- *            ||= "input"|"output" id
+ *            ||= "input"|"output" ("wire"|"reg")? portSlicing id
+ *            ||= "input"|"output" ("wire"|"reg") id
  * */
 void Parser::parseModulePort() {
     auto [tokenReady, idOrInOut] = lookAhead();
@@ -145,9 +145,17 @@ void Parser::parseModulePort() {
         hardwareModule.ioPorts.emplace_back(new ModuleIOPort{identifierToken.second});
     } else if (idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
         nextToken();
-        auto [lookAheadTokenReady, idOrPortSlicing] = lookAhead();
-        if (!lookAheadTokenReady) {
-            errorParsing("Unexpected EOF");
+        auto [_, wireOrRegOrOther] = lookAhead();
+        decltype(wireOrRegOrOther) idOrPortSlicing;
+        if(wireOrRegOrOther.first == TOKEN_wire) {
+            nextToken();
+            idOrPortSlicing = std::get<1>(lookAhead());
+        } else if (wireOrRegOrOther.first == TOKEN_reg) {
+            nextToken();
+            idOrPortSlicing = std::get<1>(lookAhead());
+            errorParsing("Not supported");
+        } else {
+            idOrPortSlicing = wireOrRegOrOther;
         }
         auto direction = idOrInOut.first == TOKEN_input ? PortDirection::Input : PortDirection::Output;
         if (idOrPortSlicing.first == TOKEN_identifier) {
