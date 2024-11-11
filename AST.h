@@ -6,6 +6,7 @@
 #define VERIPYTHON_AST_H
 
 #include "Lexer.h"
+#include "SequentialLogics.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -149,6 +150,24 @@ public:
             HDLExpressionAST(TOKEN_lbrace),
             identifier("__hw_cat__" + std::to_string(muxCounter++)) {
         nodeType = "concatenation";
+    }
+};
+
+class AlwaysBlockBodyAST : public AST {
+    std::unique_ptr<HDLExpressionAST> condition;
+public:
+    explicit AlwaysBlockBodyAST(decltype(condition) cond) : AST("__hw_always_block_body__"),
+                                                            condition(std::move(cond)) {}
+};
+
+class AlwaysBlockAST : public AST {
+    std::vector<std::pair<TriggerEdgeType, std::string>> sensitiveList;
+public:
+    AlwaysBlockAST(const decltype(sensitiveList) &sensList, std::unique_ptr<AlwaysBlockBodyAST> bodyAST) :
+            AST("__hw_always_block__"), sensitiveList(sensList) {
+        auto *ptr = static_cast<AST *>(bodyAST.get());
+        auto uniPtr = std::unique_ptr<AST>(ptr);
+        children.push_back(std::move(uniPtr));
     }
 };
 
