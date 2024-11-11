@@ -26,7 +26,7 @@
 "else"                                  RET_TOKEN(else)
 "posedge"                               RET_TOKEN(posedge)
 "negedge"                               RET_TOKEN(negedge)
-"or"                                    RET_TOKEN(or)
+"or"                                    RET_TOKEN(senslist_or)
 "reg"                                   RET_TOKEN(reg)
 ","                                     RET_TOKEN(comma)
 ";"                                     RET_TOKEN(semicolon)
