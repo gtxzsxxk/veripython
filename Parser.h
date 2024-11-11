@@ -51,6 +51,12 @@ class Parser {
 
     void parseAlwaysBlock();
 
+    void parseIfBlock();
+
+    void parseCaseBlock();
+
+    void parseNonBlockingAssignment();
+
     std::vector<std::pair<TriggerEdgeType, std::string>> parseSensitiveList();
 
     void parseAlwaysBlockBody();

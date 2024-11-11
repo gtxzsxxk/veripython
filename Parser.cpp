@@ -586,7 +586,33 @@ std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList(
     return lists;
 }
 
+/*
+ * alwaysBlockBody ::= ifBlock | caseBlock | nonBlockingAssign
+ * */
 void Parser::parseAlwaysBlockBody() {
+    while (true) {
+        auto [_, lookAheadToken] = nextToken();
+        if (lookAheadToken.first == TOKEN_if) {
+            parseIfBlock();
+        } else if (lookAheadToken.first == TOKEN_case) {
+            parseCaseBlock();
+        } else if (lookAheadToken.first == TOKEN_end) {
+            break;
+        } else {
+            parseNonBlockingAssignment();
+        }
+    }
+}
+
+void Parser::parseIfBlock() {
+
+}
+
+void Parser::parseCaseBlock() {
+
+}
+
+void Parser::parseNonBlockingAssignment() {
 
 }
 
