@@ -261,3 +261,12 @@ TEST(ParserTests, SimpleConcatSimTest) {
     simulator.poke("single_bit", singleBit);
     simulator.doSimulation();
 }
+
+TEST(ParserTests, SimpleRegSimTest) {
+    const std::string filename = "../tests/verilog_srcs/reg_simple_test0.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    RtlVisualizer::visualize(parser.hardwareModule);
+}
