@@ -50,6 +50,14 @@ public:
     [[nodiscard]] HDLExpressionAST *getHDLExpressionAST() const;
 };
 
+class NonBlockingAssignAST : public AlwaysBlockBodyAST {
+public:
+    CircuitConnection connection;
+
+    explicit NonBlockingAssignAST(CircuitConnection &&conn) :
+            AlwaysBlockBodyAST(nullptr), connection(std::move(conn)) {}
+};
+
 class CircuitData {
 public:
     std::vector<char> bits;
