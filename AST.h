@@ -163,9 +163,9 @@ public:
 class AlwaysBlockAST : public AST {
     std::vector<std::pair<TriggerEdgeType, std::string>> sensitiveList;
 public:
-    AlwaysBlockAST(const decltype(sensitiveList) &sensList, std::unique_ptr<AlwaysBlockBodyAST> bodyAST) :
+    AlwaysBlockAST(const decltype(sensitiveList) &sensList, std::unique_ptr<AlwaysBlockBodyAST> &&bodyAST) :
             AST("__hw_always_block__"), sensitiveList(sensList) {
-        auto *ptr = static_cast<AST *>(bodyAST.get());
+        auto *ptr = static_cast<AST *>(bodyAST.release());
         auto uniPtr = std::unique_ptr<AST>(ptr);
         children.push_back(std::move(uniPtr));
     }
