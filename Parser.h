@@ -45,7 +45,7 @@ class Parser {
 
     void parseInputOutputStatement();
 
-    void parseAssignStatement();
+    void parseCombAssignStatement();
 
     void parseRegWireStatement();
 

@@ -274,7 +274,7 @@ void Parser::parseModuleBody() {
     if (lookAheadTokenData.first == TOKEN_input || lookAheadTokenData.first == TOKEN_output) {
         parseInputOutputStatement();
     } else if (lookAheadTokenData.first == TOKEN_assign) {
-        parseAssignStatement();
+        parseCombAssignStatement();
     } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
         parseRegWireStatement();
     } else {
@@ -314,7 +314,7 @@ void Parser::parseInputOutputStatement() {
  * assign_stmt ::= "assign" id slicing? "=" HDLExpression ";"
  *             ||= "assign" "{" id slicing? "," + "}" "=" HDLExpression ";"
  * */
-void Parser::parseAssignStatement() {
+void Parser::parseCombAssignStatement() {
     VERIFY_NEXT_TOKEN(assign);
     auto [_, identifierOrLbraceToken] = nextToken();
     if (identifierOrLbraceToken.first == TOKEN_identifier) {
