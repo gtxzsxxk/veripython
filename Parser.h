@@ -8,6 +8,7 @@
 #include "Lexer.h"
 #include "AST.h"
 #include "RtlModule.h"
+#include "SequentialLogics.h"
 #include <memory>
 #include <string>
 #include <tuple>
@@ -50,7 +51,7 @@ class Parser {
 
     void parseAlwaysBlock();
 
-    void parseSensitiveList();
+    std::vector<std::pair<TriggerEdgeType, std::string>> parseSensitiveList();
 
     void parseAlwaysBlockBody();
 

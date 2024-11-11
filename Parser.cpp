@@ -397,13 +397,11 @@ void Parser::parseRegWireStatement() {
             hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
             VERIFY_NEXT_TOKEN(semicolon);
         }
-    }
-    else if (wireOrRegToken.first == TOKEN_reg) {
+    } else if (wireOrRegToken.first == TOKEN_reg) {
         auto reg = std::make_shared<CircuitSymbolReg>(identifierToken.second, slicing);
         hardwareModule.circuitSymbols.push_back(reg);
         VERIFY_NEXT_TOKEN(semicolon);
-    }
-    else {
+    } else {
         errorParsing("Expecting wire or reg");
     }
 }
@@ -554,15 +552,38 @@ void Parser::parseAlwaysBlock() {
     VERIFY_NEXT_TOKEN(always);
     VERIFY_NEXT_TOKEN(at);
     VERIFY_NEXT_TOKEN(lparen);
-    parseSensitiveList();
+    auto sensList = parseSensitiveList();
     VERIFY_NEXT_TOKEN(rparen);
     VERIFY_NEXT_TOKEN(begin);
     parseAlwaysBlockBody();
     VERIFY_NEXT_TOKEN(end);
 }
 
-void Parser::parseSensitiveList() {
+std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList() {
+    std::vector<std::pair<TriggerEdgeType, std::string>> lists;
+    while (true) {
+        auto [_, posedgeOrNegedgeOrStarToken] = nextToken();
+        auto triggerType = TriggerEdgeType::NOT_SPECIFIED;
+        if (posedgeOrNegedgeOrStarToken.first == TOKEN_posedge) {
+            triggerType = TriggerEdgeType::POSITIVE_EDGE;
+        } else if (posedgeOrNegedgeOrStarToken.first == TOKEN_negedge) {
+            triggerType = TriggerEdgeType::NEGATIVE_EDGE;
+        } else if (posedgeOrNegedgeOrStarToken.first != TOKEN_op_mul) {
+            errorParsing("Expecting posedge or negedge or *");
+        }
+        auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+        lists.emplace_back(triggerType, identifierToken.second);
+        auto [_2, lookAheadToken] = lookAhead();
+        if (lookAheadToken.first == TOKEN_senslist_or) {
+            continue;
+        } else if (lookAheadToken.first == TOKEN_rparen) {
+            break;
+        } else {
+            errorParsing("Expecting 'or' or ')'");
+        }
+    }
 
+    return lists;
 }
 
 void Parser::parseAlwaysBlockBody() {

@@ -49,6 +49,8 @@ add_executable(veripython
         RtlVisualizer.h
         RtlSimulator.cpp
         RtlSimulator.h
+        SequentialLogics.cpp
+        SequentialLogics.h
 )
 
 target_link_libraries(veripython lexer -lfl)
@@ -71,6 +73,8 @@ add_executable(ParserTests
         RtlVisualizer.h
         RtlSimulator.cpp
         RtlSimulator.h
+        SequentialLogics.cpp
+        SequentialLogics.h
 )
 target_link_libraries(ParserTests GTest::gtest_main)
 target_link_libraries(ParserTests lexer -lfl)
