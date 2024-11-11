@@ -277,6 +277,9 @@ void Parser::parseModuleBody() {
         parseCombAssignStatement();
     } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
         parseRegWireStatement();
+    } else if(lookAheadTokenData.first == TOKEN_always) {
+        auto ast = parseAlwaysBlock();
+        std::cout << ast->nodeType << std::endl;
     } else {
         if (lookAheadTokenData.first == TOKEN_endmodule) {
             return;
@@ -548,15 +551,16 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
 /*
  * always_block ::= "always" "@" "(" sensitive_list ")" "begin" always_body "end"
  * */
-void Parser::parseAlwaysBlock() {
+std::unique_ptr<AlwaysBlockAST> Parser::parseAlwaysBlock() {
     VERIFY_NEXT_TOKEN(always);
     VERIFY_NEXT_TOKEN(at);
     VERIFY_NEXT_TOKEN(lparen);
     auto sensList = parseSensitiveList();
     VERIFY_NEXT_TOKEN(rparen);
     VERIFY_NEXT_TOKEN(begin);
-    parseAlwaysBlockBody();
+    auto block = parseAlwaysBlockBody();
     VERIFY_NEXT_TOKEN(end);
+    return std::make_unique<AlwaysBlockAST>(sensList, std::move(block));
 }
 
 std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList() {
@@ -587,33 +591,135 @@ std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList(
 }
 
 /*
- * alwaysBlockBody ::= ifBlock | caseBlock | nonBlockingAssign
+ * alwaysBlockBody ::= always_stmt*
  * */
-void Parser::parseAlwaysBlockBody() {
+std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBody() {
+    auto ast = std::make_unique<AlwaysBlockBodyAST>(nullptr);
     while (true) {
         auto [_, lookAheadToken] = nextToken();
-        if (lookAheadToken.first == TOKEN_if) {
-            parseIfBlock();
-        } else if (lookAheadToken.first == TOKEN_case) {
-            parseCaseBlock();
-        } else if (lookAheadToken.first == TOKEN_end) {
+        if (lookAheadToken.first == TOKEN_end) {
             break;
         } else {
-            parseNonBlockingAssignment();
+            ast->children.push_back(parseAlwaysBlockBody());
         }
+    }
+
+    return ast;
+}
+
+/*
+ * always_stmt ::= ifBlock | caseBlock | nonBlockingAssign
+ * */
+std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBodyStatement() {
+    auto [_, lookAheadToken] = nextToken();
+    if (lookAheadToken.first == TOKEN_if) {
+        return parseIfBlock();
+    }
+//    else if (lookAheadToken.first == TOKEN_case) {
+//        parseCaseBlock();
+//    }
+    else {
+        auto ptr = static_cast<AlwaysBlockBodyAST*>(new NonBlockingAssignAST{parseNonBlockingAssignment()});
+        return std::unique_ptr<AlwaysBlockBodyAST>(ptr);
     }
 }
 
-void Parser::parseIfBlock() {
+std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
+    auto [_, ifToken] = VERIFY_NEXT_TOKEN(if);
+    VERIFY_NEXT_TOKEN(lparen);
+    auto condition = parseHDLExpression();
+    VERIFY_NEXT_TOKEN(rparen);
 
+    auto ast = std::make_unique<AlwaysBlockBodyAST>(std::move(condition));
+
+    auto [_1, beginOrOtherToken] = lookAhead();
+    if (beginOrOtherToken.first != TOKEN_begin) {
+        /* 只能有一个表达式 */
+        if (beginOrOtherToken.first == TOKEN_if) {
+            ast->children.push_back(parseIfBlock());
+        } else {
+            ast->children.push_back(parseAlwaysBlockBody());
+        }
+    } else {
+        nextToken();
+        ast->children.push_back(parseAlwaysBlockBodyStatement());
+        VERIFY_NEXT_TOKEN(end);
+    }
+    auto [_2, elseOrOtherToken] = lookAhead();
+    if (elseOrOtherToken.first == TOKEN_else) {
+        nextToken();
+        auto [_3, beginOrOtherTokenElse] = lookAhead();
+        if (beginOrOtherTokenElse.first == TOKEN_begin) {
+            nextToken();
+            ast->children.push_back(parseAlwaysBlockBodyStatement());
+            VERIFY_NEXT_TOKEN(end);
+        } else {
+            ast->children.push_back(parseAlwaysBlockBody());
+        }
+    }
 }
 
 void Parser::parseCaseBlock() {
 
 }
 
-void Parser::parseNonBlockingAssignment() {
+/*
+ * non_blk_stmt ::= id slicing? "<=" HDLExpression ";"
+ *             ||= "{" id slicing? "," + "}" "<=" HDLExpression ";"
+ * */
+CircuitConnection Parser::parseNonBlockingAssignment() {
+    auto [_, identifierOrLbraceToken] = nextToken();
+    if (identifierOrLbraceToken.first == TOKEN_identifier) {
+        auto identifierToken = identifierOrLbraceToken;
+        auto [_1, slicingOrEqualToken] = lookAhead();
+        PortSlicingAST slicingAst{-1, -1};
+        if (slicingOrEqualToken.first == TOKEN_lbracket) {
+            slicingAst = parsePortSlicing();
+        }
+        VERIFY_NEXT_TOKEN(single_eq);
+        auto hdlExpr = parseHDLExpression();
+        VERIFY_NEXT_TOKEN(semicolon);
 
+        if (slicingAst.isTrivial()) {
+            return {identifierToken.second, std::move(hdlExpr)};
+        } else {
+            return {identifierToken.second, slicingAst, std::move(hdlExpr)};
+        }
+    } else if (identifierOrLbraceToken.first == TOKEN_lbrace) {
+        std::vector<std::pair<std::string, PortSlicingAST>> lhsIdentifiers;
+        while (true) {
+            auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+            auto [_2, slicingOrCommaOrRbraceToken] = lookAhead();
+            PortSlicingAST slicingAst{-1, -1};
+            if (slicingOrCommaOrRbraceToken.first == TOKEN_lbracket) {
+                slicingAst = parsePortSlicing();
+                auto [_3, commaOrRbraceToken] = nextToken();
+                if (commaOrRbraceToken.first == TOKEN_rbrace) {
+                    break;
+                } else if (commaOrRbraceToken.first != TOKEN_comma) {
+                    errorParsing("Unexpected token");
+                }
+            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_comma) {
+                nextToken();
+            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_rbrace) {
+                nextToken();
+                lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+                break;
+            } else {
+                errorParsing("Unexpected token");
+            }
+            lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+        }
+        VERIFY_NEXT_TOKEN(single_eq);
+        auto hdlExpr = parseHDLExpression();
+        VERIFY_NEXT_TOKEN(semicolon);
+
+        std::reverse(lhsIdentifiers.begin(), lhsIdentifiers.end());
+
+        return {std::move(lhsIdentifiers), std::move(hdlExpr)};
+    }
+    errorParsing("Unexpected token");
+    return {"error", std::make_unique<HDLExpressionAST>(TOKEN_lbrace)};
 }
 
 Parser::~Parser() {

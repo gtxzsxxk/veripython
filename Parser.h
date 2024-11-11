@@ -8,7 +8,6 @@
 #include "Lexer.h"
 #include "AST.h"
 #include "RtlModule.h"
-#include "SequentialLogics.h"
 #include <memory>
 #include <string>
 #include <tuple>
@@ -49,17 +48,19 @@ class Parser {
 
     void parseRegWireStatement();
 
-    void parseAlwaysBlock();
+    std::unique_ptr<AlwaysBlockAST> parseAlwaysBlock();
 
-    void parseIfBlock();
+    std::unique_ptr<AlwaysBlockBodyAST> parseAlwaysBlockBody();
+
+    std::unique_ptr<AlwaysBlockBodyAST> parseAlwaysBlockBodyStatement();
+
+    std::unique_ptr<AlwaysBlockBodyAST> parseIfBlock();
 
     void parseCaseBlock();
 
-    void parseNonBlockingAssignment();
+    CircuitConnection parseNonBlockingAssignment();
 
     std::vector<std::pair<TriggerEdgeType, std::string>> parseSensitiveList();
-
-    void parseAlwaysBlockBody();
 
     std::unique_ptr<HDLExpressionAST> parseHDLPrimary();
 
