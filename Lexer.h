@@ -19,6 +19,7 @@ enum VeriPythonTokens {
     TOKEN_casex,
     TOKEN_endcase,
     TOKEN_if,
+    TOKEN_else,
     TOKEN_reg,
     TOKEN_comma,
     TOKEN_semicolon,

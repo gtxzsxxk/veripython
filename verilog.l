@@ -23,6 +23,7 @@
 "case"                                  RET_TOKEN(case)
 "endcase"                               RET_TOKEN(endcase)
 "if"                                    RET_TOKEN(if)
+"else"                                  RET_TOKEN(else)
 "posedge"                               RET_TOKEN(posedge)
 "negedge"                               RET_TOKEN(negedge)
 "or"                                    RET_TOKEN(or)
