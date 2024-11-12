@@ -53,6 +53,18 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
             throw std::runtime_error("AST is not an operator");
         }
         auto combLogic = CombLogicFactory::create(ast->_operator);
+        if(ast->nodeType.starts_with("multiplexer")) {
+            auto muxAST = dynamic_cast<HDLMuxAST *>(ast);
+            if(muxAST->identifier.starts_with("__hw_mux_fake__")) {
+                auto hdlExprAST = dynamic_cast<HDLExpressionAST *>(ast->condition.get());
+                auto circuitSymbol = genCircuitSymbolByHDLExprAST(hdlExprAST);
+                if (hdlExprAST->exprSlicing.isTrivial()) {
+                    combLogic->registerInput(circuitSymbol);
+                } else {
+                    combLogic->registerInput(circuitSymbol, hdlExprAST->exprSlicing);
+                }
+            }
+        }
         for (const auto &child: ast->children) {
             auto hdlExprAST = dynamic_cast<HDLExpressionAST *>(child.get());
             auto circuitSymbol = genCircuitSymbolByHDLExprAST(hdlExprAST);
