@@ -20,8 +20,10 @@ enum class PortDirection {
 
 class CircuitConnection {
     std::vector<std::pair<std::string, PortSlicingAST>> destIdentifiers;
-    std::unique_ptr<HDLExpressionAST> ast;
 public:
+    std::unique_ptr<HDLExpressionAST> ast;
+    std::unique_ptr<HDLExpressionAST> conditionAST = nullptr; /* for build always block */
+
     CircuitConnection(std::string dest,
                       std::unique_ptr<HDLExpressionAST> connAST) :
             ast(std::move(connAST)) {
@@ -43,6 +45,12 @@ public:
     CircuitConnection(CircuitConnection &&conn) {
         destIdentifiers = conn.destIdentifiers;
         ast = std::move(conn.ast);
+    }
+
+    CircuitConnection &operator=(CircuitConnection &&conn) {
+        destIdentifiers = conn.destIdentifiers;
+        ast = std::move(conn.ast);
+        return *this;
     }
 
     std::vector<std::pair<std::string, PortSlicingAST>> &getDestIdentifiers();
