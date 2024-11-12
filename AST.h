@@ -141,6 +141,12 @@ public:
         nodeType = "multiplexer";
         children.push_back(std::move(conditionExpr));
     }
+
+    HDLMuxAST() :
+            HDLExpressionAST(TOKEN_question),
+            identifier("__hw_mux_fake__" + std::to_string(muxCounter++)) {
+        nodeType = "multiplexer";
+    }
 };
 
 class HDLConcatAST : public HDLExpressionAST {
