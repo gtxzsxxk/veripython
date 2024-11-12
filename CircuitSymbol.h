@@ -22,7 +22,6 @@ class CircuitConnection {
     std::vector<std::pair<std::string, PortSlicingAST>> destIdentifiers;
 public:
     std::unique_ptr<HDLExpressionAST> ast;
-    std::unique_ptr<HDLExpressionAST> conditionAST = nullptr; /* for build always block */
 
     CircuitConnection(std::string dest,
                       std::unique_ptr<HDLExpressionAST> connAST) :

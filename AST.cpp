@@ -149,6 +149,6 @@ const decltype(AlwaysBlockAST::sensitiveList) &AlwaysBlockAST::getSensitiveList(
     return sensitiveList;
 }
 
-std::unique_ptr<HDLExpressionAST> &&AlwaysBlockBodyAST::getCondition() {
-    return std::move(condition);
+std::shared_ptr<HDLExpressionAST> &AlwaysBlockBodyAST::getCondition() {
+    return condition;
 }

@@ -13,10 +13,13 @@
 #include <vector>
 #include <cstring>
 
+class HDLExpressionAST;
+
 class AST {
 public:
     std::string nodeType;
     std::vector<std::unique_ptr<AST>> children;
+    std::shared_ptr<HDLExpressionAST> condition = nullptr;
 
     explicit AST(std::string nodeType) : nodeType(std::move(nodeType)) {}
 
@@ -132,19 +135,12 @@ public:
 
 class HDLMuxAST : public HDLExpressionAST {
     static int muxCounter;
-    std::string identifier;
 public:
+    std::string identifier;
 
-    explicit HDLMuxAST(std::unique_ptr<HDLExpressionAST> conditionExpr) :
+    explicit HDLMuxAST(bool isFake = false) :
             HDLExpressionAST(TOKEN_question),
-            identifier("__hw_mux__" + std::to_string(muxCounter++)) {
-        nodeType = "multiplexer";
-        children.push_back(std::move(conditionExpr));
-    }
-
-    HDLMuxAST() :
-            HDLExpressionAST(TOKEN_question),
-            identifier("__hw_mux_fake__" + std::to_string(muxCounter++)) {
+            identifier((isFake ? "__hw_mux_fake__" : "__hw_mux__") + std::to_string(muxCounter++)) {
         nodeType = "multiplexer";
     }
 };
@@ -162,25 +158,25 @@ public:
 };
 
 class AlwaysBlockBodyAST : public AST {
-    std::unique_ptr<HDLExpressionAST> condition;
 public:
-    explicit AlwaysBlockBodyAST(decltype(condition) cond) : AST("__hw_always_block_body__"),
-                                                            condition(std::move(cond)) {}
+    explicit AlwaysBlockBodyAST(std::shared_ptr<HDLExpressionAST> cond) : AST("__hw_always_block_body__") {
+        condition = std::move(cond);
+    }
 
-    std::unique_ptr<HDLExpressionAST> &&getCondition();
+    std::shared_ptr<HDLExpressionAST> &getCondition();
 };
 
 class AlwaysBlockAST : public AST {
     std::vector<std::pair<TriggerEdgeType, std::string>> sensitiveList;
 public:
-    AlwaysBlockAST(const decltype(sensitiveList) &sensList, std::unique_ptr<AlwaysBlockBodyAST> &&bodyAST) :
-            AST("__hw_always_block__"), sensitiveList(sensList) {
+    AlwaysBlockAST(decltype(sensitiveList) sensList, std::unique_ptr<AlwaysBlockBodyAST> &&bodyAST) :
+            AST("__hw_always_block__"), sensitiveList(std::move(sensList)) {
         auto *ptr = static_cast<AST *>(bodyAST.release());
         auto uniPtr = std::unique_ptr<AST>(ptr);
         children.push_back(std::move(uniPtr));
     }
 
-    const decltype(sensitiveList) &getSensitiveList() const;
+    [[nodiscard]] const decltype(sensitiveList) &getSensitiveList() const;
 };
 
 #endif //VERIPYTHON_AST_H
