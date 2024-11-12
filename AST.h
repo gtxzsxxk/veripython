@@ -160,6 +160,8 @@ class AlwaysBlockBodyAST : public AST {
 public:
     explicit AlwaysBlockBodyAST(decltype(condition) cond) : AST("__hw_always_block_body__"),
                                                             condition(std::move(cond)) {}
+
+    std::unique_ptr<HDLExpressionAST> &&getCondition();
 };
 
 class AlwaysBlockAST : public AST {
@@ -171,6 +173,8 @@ public:
         auto uniPtr = std::unique_ptr<AST>(ptr);
         children.push_back(std::move(uniPtr));
     }
+
+    const decltype(sensitiveList) &getSensitiveList() const;
 };
 
 #endif //VERIPYTHON_AST_H

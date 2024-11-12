@@ -144,3 +144,11 @@ std::string HDLPrimaryAST::getIdentifier() const {
 
 int HDLMuxAST::muxCounter = 0;
 int HDLConcatAST::muxCounter = 0;
+
+const decltype(AlwaysBlockAST::sensitiveList) &AlwaysBlockAST::getSensitiveList() const {
+    return sensitiveList;
+}
+
+std::unique_ptr<HDLExpressionAST> &&AlwaysBlockBodyAST::getCondition() {
+    return std::move(condition);
+}
