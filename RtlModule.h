@@ -20,6 +20,11 @@ class RtlModule {
 
     std::shared_ptr<CircuitSymbol> genCircuitSymbolByHDLExprAST(HDLExpressionAST *ast);
 
+    std::vector<CircuitConnection> genByAlwaysBlockBody(AlwaysBlockBodyAST *ast);
+
+    void addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &blockBody,
+                                        std::unique_ptr<HDLExpressionAST> &condition);
+
 public:
     std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;
     std::vector<std::shared_ptr<CircuitSymbol>> circuitSymbols;

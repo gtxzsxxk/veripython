@@ -68,7 +68,100 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
     }
 }
 
+std::vector<CircuitConnection> RtlModule::genByAlwaysBlockBody(AlwaysBlockBodyAST *ast) {
+    if (ast->nodeType.starts_with("__hw_always_block_body_if_block__")) {
+        auto condition = ast->getCondition();
+        auto branch1 = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(ast->children[0].get()));
+        addConditionForAlwaysBlockBody(branch1, condition);
+        if (ast->children.size() == 2) {
+            auto branch2 = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(ast->children[1].get()));
+            if (branch1.size() != branch2.size()) {
+                throw std::runtime_error("Latch is inferred");
+            }
+            for (auto &conn: branch2) {
+                for (auto &connBranch1: branch1) {
+                    if (connBranch1.getDestIdentifiers() == conn.getDestIdentifiers()) {
+
+                        connBranch1.ast->children.push_back(std::move(conn.ast));
+                        break;
+                    }
+                }
+            }
+        } else {
+            for (auto &connBranch1: branch1) {
+                connBranch1.ast->children.push_back(nullptr);
+            }
+        }
+
+        return branch1;
+    } else if (ast->nodeType.starts_with("__hw_non_blk_assign__")) {
+        std::vector<CircuitConnection> ret;
+        ret.push_back(std::move(dynamic_cast<NonBlockingAssignAST *>(ast)->connection));
+        return ret;
+    } else if (ast->nodeType.starts_with("__hw_always_block_body__")) {
+        std::vector<CircuitConnection> connections;
+        for (auto &child: ast->children) {
+            auto lastLevelConnections = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(child.get()));
+            if (child->nodeType.starts_with("__hw_always_block_body_if_block__")) {
+                for (auto &lastLevelConn: lastLevelConnections) {
+                    if (lastLevelConn.ast->children[1] == nullptr) {
+                        int index = -1, _idx = 0;
+                        for (auto &alreadyHadConn: connections) {
+                            if (alreadyHadConn.getDestIdentifiers() == lastLevelConn.getDestIdentifiers()) {
+                                index = _idx;
+                                break;
+                            }
+                            _idx++;
+                        }
+                        if (index == -1) {
+                            throw std::runtime_error("Latch inferred");
+                        }
+                        CircuitConnection alreadyHadConn = std::move(connections[index]);
+                        connections.erase(connections.begin() + index);
+                        lastLevelConn.ast->children[1] = std::move(alreadyHadConn.ast);
+                    }
+                }
+                for (auto &lastLevelConn: lastLevelConnections) {
+                    connections.push_back(std::move(lastLevelConn));
+                }
+            } else if (child->nodeType.starts_with("__hw_non_blk_assign__")) {
+                connections.push_back(std::move(lastLevelConnections[0]));
+            }
+        }
+
+        return connections;
+    }
+
+    throw std::runtime_error("Not supported always block body");
+    return {};
+}
+
+void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &blockBody,
+                                               std::unique_ptr<HDLExpressionAST> &condition) {
+    for (auto &conn: blockBody) {
+        std::unique_ptr<HDLMuxAST> merge_ast;
+        if (conn.conditionAST != nullptr) {
+            merge_ast = std::make_unique<HDLMuxAST>(std::move(conn.conditionAST));
+        } else {
+            merge_ast = std::make_unique<HDLMuxAST>();
+        }
+        conn.conditionAST = std::move(condition);
+        merge_ast->children.push_back(std::move(conn.ast));
+        conn.ast = std::move(merge_ast);
+    }
+}
+
 void RtlModule::buildCircuit() {
+    for (auto &blk: alwaysBlocks) {
+        const auto &sensitiveList = blk->getSensitiveList();
+        for (const auto &child: blk->children) {
+            auto body = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(child.get()));
+            for (auto &conn: body) {
+                circuitConnections.push_back(std::move(conn));
+            }
+        }
+    }
+
     for (auto &conn: circuitConnections) {
         auto *ast = conn.getHDLExpressionAST();
         auto symbol = genCircuitSymbolByHDLExprAST(ast);
