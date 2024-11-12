@@ -23,7 +23,7 @@ class RtlModule {
     std::vector<CircuitConnection> genByAlwaysBlockBody(AlwaysBlockBodyAST *ast);
 
     void addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &blockBody,
-                                        std::unique_ptr<HDLExpressionAST> &condition);
+                                        std::shared_ptr<HDLExpressionAST> &condition);
 
 public:
     std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;

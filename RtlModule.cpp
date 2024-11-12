@@ -53,9 +53,9 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
             throw std::runtime_error("AST is not an operator");
         }
         auto combLogic = CombLogicFactory::create(ast->_operator);
-        if(ast->nodeType.starts_with("multiplexer")) {
+        if (ast->nodeType.starts_with("multiplexer")) {
             auto muxAST = dynamic_cast<HDLMuxAST *>(ast);
-            if(muxAST->identifier.starts_with("__hw_mux_fake__")) {
+            if (muxAST->identifier.starts_with("__hw_mux_fake__")) {
                 auto hdlExprAST = dynamic_cast<HDLExpressionAST *>(ast->condition.get());
                 auto circuitSymbol = genCircuitSymbolByHDLExprAST(hdlExprAST);
                 if (hdlExprAST->exprSlicing.isTrivial()) {
@@ -149,18 +149,15 @@ std::vector<CircuitConnection> RtlModule::genByAlwaysBlockBody(AlwaysBlockBodyAS
 }
 
 void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &blockBody,
-                                               std::unique_ptr<HDLExpressionAST> &condition) {
+                                               std::shared_ptr<HDLExpressionAST> &condition) {
     for (auto &conn: blockBody) {
-        std::unique_ptr<HDLMuxAST> merge_ast;
-        if (conn.conditionAST != nullptr) {
-            merge_ast = std::make_unique<HDLMuxAST>(std::move(conn.conditionAST));
-        } else {
-            merge_ast = std::make_unique<HDLMuxAST>();
         auto merge_ast = std::make_unique<HDLMuxAST>(true);
+        if (conn.ast->condition != nullptr) {
+            merge_ast->condition = conn.ast->condition;
         }
-        conn.conditionAST = std::move(condition);
         merge_ast->children.push_back(std::move(conn.ast));
         conn.ast = std::move(merge_ast);
+        conn.ast->condition = condition;
     }
 }
 
