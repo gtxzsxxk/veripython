@@ -19,7 +19,7 @@ always @(*) begin
     end
 end
 
-always @(posedge clk or negedge rst_n) begin
+always @(posedge clk) begin
     if (!rst_n)
         count <= 8'd0;
     else

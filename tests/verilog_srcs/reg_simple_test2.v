@@ -8,7 +8,7 @@ reg [7:0] counter_reg;
 reg [7:0] aux_counter_reg;
 assign count = counter_reg;
 
-always @(posedge clk or negedge rst_n) begin
+always @(posedge clk) begin
     if (!rst_n) begin
         counter_reg <= 8'd0;
         aux_counter_reg <= 8'd0;
