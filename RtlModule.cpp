@@ -144,6 +144,7 @@ void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &b
             merge_ast = std::make_unique<HDLMuxAST>(std::move(conn.conditionAST));
         } else {
             merge_ast = std::make_unique<HDLMuxAST>();
+        auto merge_ast = std::make_unique<HDLMuxAST>(true);
         }
         conn.conditionAST = std::move(condition);
         merge_ast->children.push_back(std::move(conn.ast));

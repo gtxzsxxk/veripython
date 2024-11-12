@@ -147,7 +147,7 @@ void Parser::parseModulePort() {
         nextToken();
         auto [_, wireOrRegOrOther] = lookAhead();
         decltype(wireOrRegOrOther) idOrPortSlicing;
-        if(wireOrRegOrOther.first == TOKEN_wire) {
+        if (wireOrRegOrOther.first == TOKEN_wire) {
             nextToken();
             idOrPortSlicing = std::get<1>(lookAhead());
         } else if (wireOrRegOrOther.first == TOKEN_reg) {
@@ -285,7 +285,7 @@ void Parser::parseModuleBody() {
         parseCombAssignStatement();
     } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
         parseRegWireStatement();
-    } else if(lookAheadTokenData.first == TOKEN_always) {
+    } else if (lookAheadTokenData.first == TOKEN_always) {
         hardwareModule.addAlwaysBlock(parseAlwaysBlock());
     } else {
         if (lookAheadTokenData.first == TOKEN_endmodule) {
@@ -448,7 +448,8 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                         astStack.pop_back();
                     } else if (currentOperator == TOKEN_colon) {
-                        merge_ast = std::make_unique<HDLMuxAST>(std::move(astStack[astStack.size() - 3]));
+                        merge_ast = std::make_unique<HDLMuxAST>();
+                        merge_ast->children.push_back(std::move(astStack[astStack.size() - 3]));
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 2]));
                         merge_ast->children.push_back(std::move(astStack[astStack.size() - 1]));
                         astStack.pop_back();
@@ -627,7 +628,7 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBodyStatement() {
 //        parseCaseBlock();
 //    }
     else {
-        auto ptr = static_cast<AlwaysBlockBodyAST*>(new NonBlockingAssignAST{parseNonBlockingAssignment()});
+        auto ptr = static_cast<AlwaysBlockBodyAST *>(new NonBlockingAssignAST{parseNonBlockingAssignment()});
         return std::unique_ptr<AlwaysBlockBodyAST>(ptr);
     }
 }
