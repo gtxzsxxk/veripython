@@ -3,7 +3,7 @@ project(veripython)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g -Wno-error=missing-requires")
 add_compile_options("-fsanitize=address")
 link_libraries("-fsanitize=address")
 
