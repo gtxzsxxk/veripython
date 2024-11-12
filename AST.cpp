@@ -74,6 +74,13 @@ bool PortSlicingAST::isTrivial() const {
     return isDownTo && downToHigh == -1 && downToLow == -1;
 }
 
+bool PortSlicingAST::operator==(const PortSlicingAST &slicingAST) const {
+    return this->isDownTo == slicingAST.isDownTo &&
+           ((this->isDownTo && this->downToHigh == slicingAST.downToHigh && this->downToLow == slicingAST.downToLow) ||
+            (!this->isDownTo && this->onlyWhich == slicingAST.onlyWhich)
+           );
+}
+
 void HDLExpressionAST::setExprSlicing(const PortSlicingAST &slicingAst) {
     exprSlicing = slicingAst;
 }

@@ -71,6 +71,8 @@ public:
 
     PortSlicingAST &operator=(const PortSlicingAST &slicingAST);
 
+    bool operator==(const PortSlicingAST &slicingAST) const;
+
     [[nodiscard]] bool isTrivial() const;
 };
 
