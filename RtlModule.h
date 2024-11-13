@@ -12,6 +12,8 @@
 #include <vector>
 
 class RtlModule {
+    std::string xmlAstData = "You should build circuit at first!";
+
     std::vector<CircuitConnection> circuitConnections;
 
     std::vector<std::unique_ptr<AlwaysBlockAST>> alwaysBlocks;
@@ -25,6 +27,8 @@ class RtlModule {
     void addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &blockBody,
                                         std::shared_ptr<HDLExpressionAST> &condition);
 
+    void genXmlFormattedAstData();
+
 public:
     std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;
     std::vector<std::shared_ptr<CircuitSymbol>> circuitSymbols;
@@ -37,6 +41,8 @@ public:
     void addAlwaysBlock(std::unique_ptr<AlwaysBlockAST> &&alwaysBlock);
 
     void buildCircuit();
+
+    [[nodiscard]] std::string toString() const;
 };
 
 

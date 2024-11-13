@@ -4,6 +4,7 @@
 
 #include "RtlModule.h"
 #include "CombLogics.h"
+#include <sstream>
 #include <stdexcept>
 
 std::shared_ptr<ModuleIOPort> RtlModule::getModuleIOPortByName(const std::string &name) {
@@ -161,7 +162,13 @@ void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &b
     }
 }
 
+void RtlModule::genXmlFormattedAstData() {
+
+}
+
 void RtlModule::buildCircuit() {
+    genXmlFormattedAstData();
+
     for (auto &blk: alwaysBlocks) {
         const auto &sensitiveList = blk->getSensitiveList();
         for (const auto &child: blk->children) {
@@ -199,4 +206,8 @@ void RtlModule::buildCircuit() {
             }
         }
     }
+}
+
+std::string RtlModule::toString() const {
+    return xmlAstData;
 }
