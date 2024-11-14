@@ -87,7 +87,7 @@ std::string PortSlicingAST::toString() {
     } else {
         if (isDownTo) {
             return "<Slicing>\n  <Low>" + std::to_string(downToLow) + "</Low>\n" +
-                   "  <Low>" + std::to_string(downToHigh) + "</Low>\n" +
+                   "  <High>" + std::to_string(downToHigh) + "</High>\n" +
                    "</Slicing>";
         } else {
             return "<Slicing>\n  <OnlyWhich>" + std::to_string(onlyWhich) + "</OnlyWhich>\n" +
