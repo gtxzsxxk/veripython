@@ -165,6 +165,7 @@ void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &b
 void RtlModule::genXmlFormattedAstData() {
     std::stringstream xml;
     xml << "<RtlModule>" << std::endl;
+    xml << "  <Name>" << moduleName << "</Name>" << std::endl;
     xml << "  <IoPorts>" << std::endl;
     for (const auto &ioPort: ioPorts) {
         xml << "    <Port>" << std::endl;
