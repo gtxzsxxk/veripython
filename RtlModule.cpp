@@ -163,7 +163,53 @@ void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &b
 }
 
 void RtlModule::genXmlFormattedAstData() {
+    std::stringstream xml;
+    xml << "<RtlModule>" << std::endl;
+    xml << "  <IoPorts>" << std::endl;
+    for (const auto &ioPort: ioPorts) {
+        xml << "    <Port>" << std::endl;
+        xml << "      <name>" << ioPort->getIdentifier() << "</name>" << std::endl;
+        xml << "      <direction>" <<
+            ((ioPort->getPortDirection() == PortDirection::Input) ? "input" : ((ioPort->getPortDirection() ==
+                                                                                PortDirection::Output) ? "output"
+                                                                                                       : "not specified"))
+            << "</direction>" << std::endl;
+        auto slicingString = strdup(const_cast<PortSlicingAST &>(ioPort->getSlicing()).toString().c_str());
+        for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+            xml << "      " << line << std::endl;
+        }
+        xml << "    </Port>" << std::endl;
+    }
+    xml << "  </IoPorts>" << std::endl;
 
+    xml << "  <Combinatorial>" << std::endl;
+    for (auto &conn: circuitConnections) {
+        xml << "    <Connection>" << std::endl;
+        xml << "      <Destination>" << std::endl;
+        for (const auto &[name, slicing]: conn.getDestIdentifiers()) {
+            xml << "        <CircuitSymbol>" << std::endl;
+            xml << "          <name>" << name << "</name>" << std::endl;
+            auto slicingString = strdup(const_cast<PortSlicingAST &>(slicing).toString().c_str());
+            for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+                xml << "          " << line << std::endl;
+            }
+            xml << "        </CircuitSymbol>" << std::endl;
+        }
+        xml << "      </Destination>" << std::endl;
+
+        xml << "      <HDLExpression>" << std::endl;
+        auto exprString = strdup(conn.ast->toString().c_str());
+        for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+            xml << "          " << line << std::endl;
+        }
+        xml << "      </HDLExpression>" << std::endl;
+
+        xml << "    </Connection>" << std::endl;
+    }
+    xml << "  </Combinatorial>" << std::endl;
+
+    xml << "</RtlModule>" << std::endl;
+    xmlAstData = xml.str();
 }
 
 void RtlModule::buildCircuit() {
