@@ -178,6 +178,7 @@ void RtlModule::genXmlFormattedAstData() {
         for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
             xml << "      " << line << std::endl;
         }
+        free(slicingString);
         xml << "    </Port>" << std::endl;
     }
     xml << "  </IoPorts>" << std::endl;
@@ -193,6 +194,7 @@ void RtlModule::genXmlFormattedAstData() {
             for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
                 xml << "          " << line << std::endl;
             }
+            free(slicingString);
             xml << "        </CircuitSymbol>" << std::endl;
         }
         xml << "      </Destination>" << std::endl;
@@ -202,6 +204,7 @@ void RtlModule::genXmlFormattedAstData() {
         for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
             xml << "          " << line << std::endl;
         }
+        free(exprString);
         xml << "      </HDLExpression>" << std::endl;
 
         xml << "    </Connection>" << std::endl;
