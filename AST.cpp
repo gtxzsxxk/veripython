@@ -167,3 +167,55 @@ const decltype(AlwaysBlockAST::sensitiveList) &AlwaysBlockAST::getSensitiveList(
 std::shared_ptr<HDLExpressionAST> &AlwaysBlockBodyAST::getCondition() {
     return condition;
 }
+
+std::string AlwaysBlockBodyAST::toString() {
+    if (nodeType == "__hw_always_block_body_if_block__") {
+        std::string xmlOutput = "<IfBlock>\n";
+        xmlOutput += "  <Condition>\n";
+        char *condOutput = strdup(condition->toString().c_str());
+        for (char *line = strtok(condOutput, "\n"); line; line = strtok(nullptr, "\n")) {
+            xmlOutput += "    " + std::string{line} + "\n";
+        }
+        free(condOutput);
+        xmlOutput += "  </Condition>\n";
+        xmlOutput += "  <Branches>\n";
+        for (const auto &ast: children) {
+            std::string tmp = ast->toString();
+            char *childOutput = strdup(tmp.c_str());
+            for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
+                xmlOutput += "    " + std::string{line} + "\n";
+            }
+            free(childOutput);
+        }
+        xmlOutput += "  </Branches>\n";
+        xmlOutput += "</IfBlock>\n";
+        return xmlOutput;
+    } else if (nodeType == "__hw_non_blk_assign__") {
+        std::string xmlOutput = "<NonBlockAssign>\n";
+        xmlOutput += "  <Destination>\n";
+        auto *nonBlkAssignPtr = dynamic_cast<NonBlockingAssignAST *>(this);
+        for (const auto &[name, slicing]: nonBlkAssignPtr->connection.getDestIdentifiers()) {
+            xmlOutput += "    <CircuitSymbol>\n";
+            xmlOutput += "      <name>" + name + "</name>\n";
+            auto slicingString = strdup(const_cast<PortSlicingAST &>(slicing).toString().c_str());
+            for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+                xmlOutput += std::string{"          "} + line + "\n";
+            }
+            free(slicingString);
+            xmlOutput += "        </CircuitSymbol>\n";
+        }
+        xmlOutput += "  </Destination>\n";
+
+        xmlOutput += "  <HDLExpression>\n";
+        auto exprString = strdup(nonBlkAssignPtr->connection.ast->toString().c_str());
+        for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+            xmlOutput += std::string{"    "} + line + "\n";
+        }
+        free(exprString);
+        xmlOutput += "  </HDLExpression>\n";
+
+        xmlOutput += "</NonBlockAssign>\n";
+        return xmlOutput;
+    }
+    return AST::toString();
+}

@@ -166,6 +166,8 @@ public:
     }
 
     std::shared_ptr<HDLExpressionAST> &getCondition();
+
+    std::string toString() override;
 };
 
 class AlwaysBlockAST : public AST {
