@@ -12,7 +12,7 @@ std::string AST::toString() {
         std::string tmp = ast->toString();
         char *childOutput = strdup(tmp.c_str());
         for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
-            xmlOutput += "    " + std::string{line} + "\n";
+            xmlOutput += "  " + std::string{line} + "\n";
         }
         free(childOutput);
     }
@@ -48,7 +48,7 @@ int ConstantExpressionAST::eval() {
 }
 
 std::string ConstantNumberAST::toString() {
-    return "<" + nodeType + ">\n    " + std::to_string(value) + "\n</" + nodeType + ">\n";
+    return "<" + nodeType + ">\n  " + std::to_string(value) + "\n</" + nodeType + ">\n";
 }
 
 int ConstantNumberAST::eval() {
@@ -115,7 +115,7 @@ std::string HDLExpressionAST::toString() {
         std::string tmp = ast->toString();
         char *childOutput = strdup(tmp.c_str());
         for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
-            xmlOutput += "    " + std::string{line} + "\n";
+            xmlOutput += "  " + std::string{line} + "\n";
         }
         free(childOutput);
     }
@@ -146,7 +146,7 @@ std::string HDLPrimaryAST::toString() {
     } else {
         nodeName += "__" + std::to_string(exprSlicing.onlyWhich);
     }
-    return "<" + nodeName + ">\n    " + output + "\n</" + nodeName + ">\n";
+    return "<" + nodeName + ">\n  " + output + "\n</" + nodeName + ">\n";
 }
 
 bool HDLPrimaryAST::isIdentifier() const {
