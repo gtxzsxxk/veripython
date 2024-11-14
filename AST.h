@@ -77,6 +77,8 @@ public:
     bool operator==(const PortSlicingAST &slicingAST) const;
 
     [[nodiscard]] bool isTrivial() const;
+
+    std::string toString() override;
 };
 
 class HDLExpressionAST : public AST {

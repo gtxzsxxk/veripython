@@ -81,6 +81,21 @@ bool PortSlicingAST::operator==(const PortSlicingAST &slicingAST) const {
            );
 }
 
+std::string PortSlicingAST::toString() {
+    if (isTrivial()) {
+        return "<Slicing></Slicing>\n";
+    } else {
+        if (isDownTo) {
+            return "<Slicing>\n  <Low>" + std::to_string(downToLow) + "</Low>\n" +
+                   "  <Low>" + std::to_string(downToHigh) + "</Low>\n" +
+                   "</Slicing>";
+        } else {
+            return "<Slicing>\n  <OnlyWhich>" + std::to_string(onlyWhich) + "</OnlyWhich>\n" +
+                   "</Slicing>";
+        }
+    }
+}
+
 void HDLExpressionAST::setExprSlicing(const PortSlicingAST &slicingAst) {
     exprSlicing = slicingAst;
 }
