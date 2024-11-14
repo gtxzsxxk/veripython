@@ -211,6 +211,29 @@ void RtlModule::genXmlFormattedAstData() {
     }
     xml << "  </Combinatorial>" << std::endl;
 
+    xml << "  <AlwaysBlocks>" << std::endl;
+    for (auto &blk: alwaysBlocks) {
+        xml << "    <AlwaysBlock>" << std::endl;
+        xml << "      <SensitiveList>" << std::endl;
+        for (const auto &[triggerType, identifier]: blk->getSensitiveList()) {
+            auto triggerString = (triggerType == TriggerEdgeType::POSITIVE_EDGE ? "PositiveEdge" : (triggerType ==
+                                                                                                    TriggerEdgeType::NEGATIVE_EDGE
+                                                                                                    ? "NegativeEdge"
+                                                                                                    : "LevelTriggered"));
+            xml << "        <" << triggerString << ">" + identifier + "</" + triggerString + ">" << std::endl;
+        }
+        xml << "      </SensitiveList>" << std::endl;
+        xml << "      <AlwaysBlockAST>" << std::endl;
+        auto exprString = strdup(blk->toString().c_str());
+        for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+            xml << "        " << line << std::endl;
+        }
+        free(exprString);
+        xml << "      </AlwaysBlockAST>" << std::endl;
+        xml << "    </AlwaysBlock>" << std::endl;
+    }
+    xml << "  </AlwaysBlocks>" << std::endl;
+
     xml << "</RtlModule>" << std::endl;
     xmlAstData = xml.str();
 }
