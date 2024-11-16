@@ -46,8 +46,8 @@ jobs:
           cd build
           cmake .. -DRELEASE_CODE_MODE=ON
           make -j
-          cp veripython ${SUBMIT_FOLDER}/exe
           cd ..
+          cp build/veripython ${SUBMIT_FOLDER}/exe
           cp tests/verilog_srcs/full_adder.v ${SUBMIT_FOLDER}/exe
           cp tests/verilog_srcs/reg_simple_test2.v ${SUBMIT_FOLDER}/exe
           cp doc/run_readme.txt ${SUBMIT_FOLDER}/exe/readme.txt
