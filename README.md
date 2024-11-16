@@ -39,6 +39,7 @@ MLIR (LLVM) 生成器与 Arcilator (CIRCT (LLVM)) 中的 Python 后端。
 - `-o`：指定输出文件名
 - `-ast`：将语法分析树以`json`格式进行输出
 - `-vis`：使用`graphviz`生成 HDL 的 RTL 视图到 `rtl_view.png`中
+- `-token`：仅生成 `token` 流
 
 Example:
 ```bash
@@ -160,4 +161,46 @@ a            b
 
 WIP。不在前端作业提交的范围内。
 
+## 运行结果
 
+电路源代码：
+
+```verilog
+module counter (
+    input wire clk,
+    input wire rst_n,
+    output [7:0] count
+);
+
+reg [7:0] counter_reg;
+reg [7:0] aux_counter_reg;
+assign count = counter_reg;
+
+always @(posedge clk) begin
+    if (!rst_n) begin
+        counter_reg <= 8'd0;
+        aux_counter_reg <= 8'd0;
+    end
+    else begin
+        counter_reg <= counter_reg + 8'd1;
+        aux_counter_reg <= aux_counter_reg;
+        if (counter_reg[0] == 1'd1) begin
+            aux_counter_reg <= aux_counter_reg + 1;
+        end
+    end
+end
+
+endmodule
+```
+
+生成的 RTL 视图：
+
+![RTL 级别视图](doc/reg_tst_2_rtl.png)
+
+手动重绘后的视图如下：
+
+![手动重绘后的视图](doc/reg_tst_2_elaborated.png)
+
+可以观察到，我们的前端正常工作，正确解析了 verilog 源代码，并且正确生成了复用器（Multiplexer）、非门、加法器、比较器（全部相等）、
+寄存器、输入输出端口等电路组件，成功生成了 DAG 图。仿真功能我们目前仅支持组合逻辑，时序逻辑由于需要依赖于敏感列表进行寄存器的更新，因此
+仍然在 WIP 中。
