@@ -3,19 +3,25 @@ project(veripython)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g -Wno-error=missing-requires")
-add_compile_options("-fsanitize=address")
-link_libraries("-fsanitize=address")
+option(RELEASE_CODE_MODE "Turn off google tests and use -O2" OFF)
 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://gitee.com/mirrors/googletest.git
-  GIT_TAG v1.14.0
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+if (RELEASE_CODE_MODE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wno-error=missing-requires")
+else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g -Wno-error=missing-requires")
+    add_compile_options("-fsanitize=address")
+    link_libraries("-fsanitize=address")
+
+    include(FetchContent)
+    FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://gitee.com/mirrors/googletest.git
+            GIT_TAG v1.14.0
+    )
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+endif ()
 
 find_package(FLEX REQUIRED)
 set(FLEX_SRC "${CMAKE_SOURCE_DIR}/verilog.l")
@@ -23,9 +29,9 @@ set(FLEX_OUT "${CMAKE_BINARY_DIR}/lex.yy.c")
 set(FLEX_DIR "${CMAKE_BINARY_DIR}")
 
 add_custom_command(
-        OUTPUT  ${FLEX_OUT}
+        OUTPUT ${FLEX_OUT}
         COMMAND cp ${CMAKE_SOURCE_DIR}/Lexer.h ${FLEX_DIR}
-        COMMAND ${FLEX_EXECUTABLE}  ${FLEX_SRC}
+        COMMAND ${FLEX_EXECUTABLE} ${FLEX_SRC}
         MAIN_DEPENDENCY ${FLEX_SRC} ${CMAKE_SOURCE_DIR}/Lexer.h
         COMMENT "Generating lex.yy.c from verilog.l"
 )
@@ -56,28 +62,30 @@ add_executable(veripython
 
 target_link_libraries(veripython lexer -lfl)
 
-enable_testing()
-add_executable(ParserTests
-        tests/ParserTests.cpp
-        Parser.cpp
-        Parser.h
-        Lexer.h
-        AST.h
-        AST.cpp
-        RtlModule.cpp
-        RtlModule.h
-        CircuitSymbol.cpp
-        CircuitSymbol.h
-        CombLogics.cpp
-        CombLogics.h
-        RtlVisualizer.cpp
-        RtlVisualizer.h
-        RtlSimulator.cpp
-        RtlSimulator.h
-        SequentialLogics.cpp
-        SequentialLogics.h
-)
-target_link_libraries(ParserTests GTest::gtest_main)
-target_link_libraries(ParserTests lexer -lfl)
-include(GoogleTest)
-gtest_discover_tests(ParserTests)
+if (NOT RELEASE_CODE_MODE)
+    enable_testing()
+    add_executable(ParserTests
+            tests/ParserTests.cpp
+            Parser.cpp
+            Parser.h
+            Lexer.h
+            AST.h
+            AST.cpp
+            RtlModule.cpp
+            RtlModule.h
+            CircuitSymbol.cpp
+            CircuitSymbol.h
+            CombLogics.cpp
+            CombLogics.h
+            RtlVisualizer.cpp
+            RtlVisualizer.h
+            RtlSimulator.cpp
+            RtlSimulator.h
+            SequentialLogics.cpp
+            SequentialLogics.h
+    )
+    target_link_libraries(ParserTests GTest::gtest_main)
+    target_link_libraries(ParserTests lexer -lfl)
+    include(GoogleTest)
+    gtest_discover_tests(ParserTests)
+endif ()
