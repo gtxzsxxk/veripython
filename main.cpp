@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
             out << astInXml << std::endl;
             out.close();
         }
-    } else {
+    } else if (!visualization) {
         usage();
         return 1;
     }
