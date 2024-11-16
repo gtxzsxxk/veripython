@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 option(RELEASE_CODE_MODE "Turn off google tests and use -O2" OFF)
 
 if (RELEASE_CODE_MODE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wno-error=missing-requires")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else ()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g -Wno-error=missing-requires")
     add_compile_options("-fsanitize=address")
