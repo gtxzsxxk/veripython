@@ -16,10 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Pandoc and Texlive
+      - name: Install Pandoc, Texlive and Flex
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-xetex texlive-lang-chinese
+          sudo apt-get install -y pandoc texlive-xetex texlive-lang-chinese libfl-dev
 
       - name: Set DOC_PATH and SUBMIT_FOLDER
         run: |
