@@ -1,0 +1,59 @@
+name: Generate Submission Zip
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  semi-submit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Pandoc and Texlive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex texlive-lang-chinese
+
+      - name: Set DOC_PATH and SUBMIT_FOLDER
+        run: |
+          mkdir -p front_end_submission
+          echo "SUBMIT_FOLDER=front_end_submission" >> $GITHUB_ENV
+
+      - name: Generate Report PDF
+        run: |
+          pandoc README.md --template=doc/template.latex -o REPORT.pdf --pdf-engine=xelatex
+          cp REPORT.pdf ${SUBMIT_FOLDER}
+
+      - name: Copy Source Code
+        run: |
+          mkdir -p ${SUBMIT_FOLDER}/src
+          cp $(pwd)/*.cpp ${SUBMIT_FOLDER}/src
+          cp $(pwd)/*.h ${SUBMIT_FOLDER}/src
+          cp $(pwd)/verilog.l ${SUBMIT_FOLDER}/src
+          cp $(pwd)/CMakeLists.txt ${SUBMIT_FOLDER}/src
+
+      - name: Copy Executable
+        run: |
+          mkdir -p build
+          mkdir -p ${SUBMIT_FOLDER}/exe
+          cd build
+          cmake .. -DRELEASE_CODE_MODE=ON
+          make -j
+          cp veripython ${SUBMIT_FOLDER}/exe
+          cd ..
+          cp tests/verilog_srcs/full_adder.v ${SUBMIT_FOLDER}/exe
+          cp tests/verilog_srcs/reg_simple_test2.v ${SUBMIT_FOLDER}/exe
+          cp doc/run_readme.txt ${SUBMIT_FOLDER}/exe/readme.txt
+
+      - name: Generate Frontend Submission
+        uses: actions/upload-artifact@v3
+        with:
+          name: 杨之凡_徐浩然_赵涵远_杨憬晗_编译小组作业_前端
+          path: front_end_submission
