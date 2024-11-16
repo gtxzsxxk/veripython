@@ -11,8 +11,9 @@ const auto usageString = "Usage\n"
                          "Another implementation for Verilator with Python target\n\n"
                          "Currently only the frontend is implemented. Supported arguments:\n"
                          "  -o           Specify the output filename\n"
-                         "  -ast         Output the AST in XML format.\n"
+                         "  -ast         Output the AST in Json format.\n"
                          "  -vis         Use graphviz to generate the RTL view. Your system must support the 'dot' command\n"
+                         "  -token       Only output the token stream\n"
                          "\n"
                          "Example:\n"
                          "veripython full_adder.v -o full_adder.xml -ast\n";
@@ -20,7 +21,10 @@ const auto usageString = "Usage\n"
 enum class FrontendTask {
     NOT_SPECIFIED,
     AST,
+    TOKEN_STREAM
 };
+
+std::string getAllTokens(const std::string &filename);
 
 void usage() {
     std::cerr << usageString << std::endl;
@@ -39,9 +43,19 @@ int main(int argc, char **argv) {
             }
             outputFileName = std::string{argv[++i]};
         } else if (!strcmp(argv[i], "-ast")) {
+            if (task != FrontendTask::NOT_SPECIFIED) {
+                usage();
+                return 1;
+            }
             task = FrontendTask::AST;
         } else if (!strcmp(argv[i], "-vis")) {
             visualization = true;
+        } else if (!strcmp(argv[i], "-token")) {
+            if (task != FrontendTask::NOT_SPECIFIED) {
+                usage();
+                return 1;
+            }
+            task = FrontendTask::TOKEN_STREAM;
         } else {
             inputFiles.emplace_back(argv[i]);
         }
@@ -50,6 +64,19 @@ int main(int argc, char **argv) {
     if (inputFiles.empty() || inputFiles.size() > 1) {
         usage();
         return 1;
+    }
+
+    if (task == FrontendTask::TOKEN_STREAM) {
+        auto tokenStream = getAllTokens(inputFiles[0]);
+        if (outputFileName.empty()) {
+            std::cout << tokenStream << std::endl;
+        } else {
+            std::ofstream out{outputFileName};
+            out << tokenStream << std::endl;
+            out.close();
+        }
+
+        return 0;
     }
 
     auto parser = Parser(inputFiles[0]);

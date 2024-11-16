@@ -51,6 +51,7 @@ add_executable(veripython
         RtlSimulator.h
         SequentialLogics.cpp
         SequentialLogics.h
+        Lexer.cpp
 )
 
 target_link_libraries(veripython lexer -lfl)
