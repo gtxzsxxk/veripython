@@ -43,9 +43,12 @@ MLIR (LLVM) 生成器与 Arcilator (CIRCT (LLVM)) 中的 Python 后端。
 
 Example:
 ```bash
+# 编译
 $ mkdir build && cd build
-$ cmake ..
+$ cmake .. -DRELEASE_CODE_MODE=ON
 $ make -j
+
+# 如果已有 veripython 的二进制，可以直接执行
 $ veripython ../tests/verilog_srcs/full_adder.v -o full_adder.json -ast -vis
 ```
 
@@ -193,13 +196,13 @@ end
 endmodule
 ```
 
-生成的 RTL 视图：
+生成的 RTL 视图如图1所示：
 
 ![RTL 级别视图](doc/reg_tst_2_rtl.png)
 
-手动重绘后的视图如下：
+手动重绘后的视图如图2所示：
 
-![手动重绘后的视图](doc/reg_tst_2_elaborated.png)
+![手动重绘后的视图（Elaborated Design）](doc/reg_tst_2_elaborated.png)
 
 可以观察到，我们的前端正常工作，正确解析了 verilog 源代码，并且正确生成了复用器（Multiplexer）、非门、加法器、比较器（全部相等）、
 寄存器、输入输出端口等电路组件，成功生成了 DAG 图。仿真功能我们目前仅支持组合逻辑，时序逻辑由于需要依赖于敏感列表进行寄存器的更新，因此
