@@ -9,6 +9,9 @@
 我们提供了两个测试文件，分别是 full_adder.v （1位全加器模块）
 与 reg_simple_test2.v （简单的计数器模块）。
 
+词法分析输出的 token 流分别为 full_adder_token.json 与
+reg_simple_test2_token.json
+
 我们的前端进行解析后输出的 AST 分别为 full_adder.json 与
 reg_simple_test2.json。
 

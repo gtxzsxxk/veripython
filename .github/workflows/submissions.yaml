@@ -51,6 +51,8 @@ jobs:
           cp tests/verilog_srcs/full_adder.v ${SUBMIT_FOLDER}/exe
           cp tests/verilog_srcs/reg_simple_test2.v ${SUBMIT_FOLDER}/exe
           cp doc/run_readme.txt ${SUBMIT_FOLDER}/exe/readme.txt
+          cp doc/full_adder_token.json ${SUBMIT_FOLDER}/exe
+          cp doc/reg_simple_test2_token.json ${SUBMIT_FOLDER}/exe
           cp doc/full_adder.json ${SUBMIT_FOLDER}/exe
           cp doc/reg_simple_test2.json ${SUBMIT_FOLDER}/exe
           cp doc/full_adder.png ${SUBMIT_FOLDER}/exe

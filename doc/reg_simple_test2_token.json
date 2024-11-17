@@ -1,0 +1,381 @@
+[{
+  "token": "module",
+  "data": "module"
+},
+{
+  "token": "identifier",
+  "data": "counter"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "input",
+  "data": "input"
+},
+{
+  "token": "wire",
+  "data": "wire"
+},
+{
+  "token": "identifier",
+  "data": "clk"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "input",
+  "data": "input"
+},
+{
+  "token": "wire",
+  "data": "wire"
+},
+{
+  "token": "identifier",
+  "data": "rst_n"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "output",
+  "data": "output"
+},
+{
+  "token": "lbracket",
+  "data": "["
+},
+{
+  "token": "const_number",
+  "data": "7"
+},
+{
+  "token": "colon",
+  "data": ":"
+},
+{
+  "token": "const_number",
+  "data": "0"
+},
+{
+  "token": "rbracket",
+  "data": "]"
+},
+{
+  "token": "identifier",
+  "data": "count"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "reg",
+  "data": "reg"
+},
+{
+  "token": "lbracket",
+  "data": "["
+},
+{
+  "token": "const_number",
+  "data": "7"
+},
+{
+  "token": "colon",
+  "data": ":"
+},
+{
+  "token": "const_number",
+  "data": "0"
+},
+{
+  "token": "rbracket",
+  "data": "]"
+},
+{
+  "token": "identifier",
+  "data": "counter_reg"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "reg",
+  "data": "reg"
+},
+{
+  "token": "lbracket",
+  "data": "["
+},
+{
+  "token": "const_number",
+  "data": "7"
+},
+{
+  "token": "colon",
+  "data": ":"
+},
+{
+  "token": "const_number",
+  "data": "0"
+},
+{
+  "token": "rbracket",
+  "data": "]"
+},
+{
+  "token": "identifier",
+  "data": "aux_counter_reg"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "assign",
+  "data": "assign"
+},
+{
+  "token": "identifier",
+  "data": "count"
+},
+{
+  "token": "single_eq",
+  "data": "="
+},
+{
+  "token": "identifier",
+  "data": "counter_reg"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "always",
+  "data": "always"
+},
+{
+  "token": "at",
+  "data": "@"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "posedge",
+  "data": "posedge"
+},
+{
+  "token": "identifier",
+  "data": "clk"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "begin",
+  "data": "begin"
+},
+{
+  "token": "if",
+  "data": "if"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "logical_not",
+  "data": "!"
+},
+{
+  "token": "identifier",
+  "data": "rst_n"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "begin",
+  "data": "begin"
+},
+{
+  "token": "identifier",
+  "data": "counter_reg"
+},
+{
+  "token": "cond_le",
+  "data": "<="
+},
+{
+  "token": "sized_number",
+  "data": "8'd0"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "identifier",
+  "data": "aux_counter_reg"
+},
+{
+  "token": "cond_le",
+  "data": "<="
+},
+{
+  "token": "sized_number",
+  "data": "8'd0"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "end",
+  "data": "end"
+},
+{
+  "token": "else",
+  "data": "else"
+},
+{
+  "token": "begin",
+  "data": "begin"
+},
+{
+  "token": "identifier",
+  "data": "counter_reg"
+},
+{
+  "token": "cond_le",
+  "data": "<="
+},
+{
+  "token": "identifier",
+  "data": "counter_reg"
+},
+{
+  "token": "op_add",
+  "data": "+"
+},
+{
+  "token": "sized_number",
+  "data": "8'd1"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "identifier",
+  "data": "aux_counter_reg"
+},
+{
+  "token": "cond_le",
+  "data": "<="
+},
+{
+  "token": "identifier",
+  "data": "aux_counter_reg"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "if",
+  "data": "if"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "identifier",
+  "data": "counter_reg"
+},
+{
+  "token": "lbracket",
+  "data": "["
+},
+{
+  "token": "const_number",
+  "data": "0"
+},
+{
+  "token": "rbracket",
+  "data": "]"
+},
+{
+  "token": "cond_eq",
+  "data": "=="
+},
+{
+  "token": "sized_number",
+  "data": "1'd1"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "begin",
+  "data": "begin"
+},
+{
+  "token": "identifier",
+  "data": "aux_counter_reg"
+},
+{
+  "token": "cond_le",
+  "data": "<="
+},
+{
+  "token": "identifier",
+  "data": "aux_counter_reg"
+},
+{
+  "token": "op_add",
+  "data": "+"
+},
+{
+  "token": "const_number",
+  "data": "1"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "end",
+  "data": "end"
+},
+{
+  "token": "end",
+  "data": "end"
+},
+{
+  "token": "end",
+  "data": "end"
+},
+{
+  "token": "endmodule",
+  "data": "endmodule"
+}
+]

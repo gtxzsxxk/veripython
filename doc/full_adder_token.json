@@ -1,0 +1,229 @@
+[{
+  "token": "module",
+  "data": "module"
+},
+{
+  "token": "identifier",
+  "data": "full_adder"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "identifier",
+  "data": "y"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "carryout"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "a"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "b"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "carryin"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "output",
+  "data": "output"
+},
+{
+  "token": "identifier",
+  "data": "y"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "carryout"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "input",
+  "data": "input"
+},
+{
+  "token": "identifier",
+  "data": "a"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "b"
+},
+{
+  "token": "comma",
+  "data": ","
+},
+{
+  "token": "identifier",
+  "data": "carryin"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "assign",
+  "data": "assign"
+},
+{
+  "token": "identifier",
+  "data": "y"
+},
+{
+  "token": "single_eq",
+  "data": "="
+},
+{
+  "token": "identifier",
+  "data": "a"
+},
+{
+  "token": "bitwise_xor",
+  "data": "^"
+},
+{
+  "token": "identifier",
+  "data": "b"
+},
+{
+  "token": "bitwise_xor",
+  "data": "^"
+},
+{
+  "token": "identifier",
+  "data": "carryin"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "assign",
+  "data": "assign"
+},
+{
+  "token": "identifier",
+  "data": "carryout"
+},
+{
+  "token": "single_eq",
+  "data": "="
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "identifier",
+  "data": "a"
+},
+{
+  "token": "bitwise_and",
+  "data": "&"
+},
+{
+  "token": "identifier",
+  "data": "b"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "bitwise_or",
+  "data": "|"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "identifier",
+  "data": "a"
+},
+{
+  "token": "bitwise_and",
+  "data": "&"
+},
+{
+  "token": "identifier",
+  "data": "carryin"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "bitwise_or",
+  "data": "|"
+},
+{
+  "token": "lparen",
+  "data": "("
+},
+{
+  "token": "identifier",
+  "data": "b"
+},
+{
+  "token": "bitwise_and",
+  "data": "&"
+},
+{
+  "token": "identifier",
+  "data": "carryin"
+},
+{
+  "token": "rparen",
+  "data": ")"
+},
+{
+  "token": "semicolon",
+  "data": ";"
+},
+{
+  "token": "endmodule",
+  "data": "endmodule"
+}
+]
