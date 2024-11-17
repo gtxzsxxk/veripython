@@ -1,0 +1,162 @@
+{
+  "nodeType": "RtlModule",
+  "name": "full_adder",
+  "ioPorts": [
+    {
+      "nodeType": "Port",
+      "name": "y",
+      "direction": "output",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    },
+    {
+      "nodeType": "Port",
+      "name": "carryout",
+      "direction": "output",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    },
+    {
+      "nodeType": "Port",
+      "name": "a",
+      "direction": "input",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    },
+    {
+      "nodeType": "Port",
+      "name": "b",
+      "direction": "input",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    },
+    {
+      "nodeType": "Port",
+      "name": "carryin",
+      "direction": "input",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    }
+  ],
+  "combinatorial": [
+    {
+      "nodeType": "Connection",
+      "Destination": [
+        {
+          "nodeType": "CircuitSymbol",
+          "name": "y",
+          "slicing":
+          {}
+        }
+      ],
+      "expression":
+          {
+            "nodeType": "bitwise_xor__-1_-1",
+            "children": [
+              {
+                "nodeType": "bitwise_xor__-1_-1",
+                "children": [
+                  {
+                    "nodeType": "identifier__-1_-1",
+                    "data": "a"
+                  }
+                  ,
+                  {
+                    "nodeType": "identifier__-1_-1",
+                    "data": "b"
+                  }
+                ]
+              }
+              ,
+              {
+                "nodeType": "identifier__-1_-1",
+                "data": "carryin"
+              }
+            ]
+          }
+    },
+    {
+      "nodeType": "Connection",
+      "Destination": [
+        {
+          "nodeType": "CircuitSymbol",
+          "name": "carryout",
+          "slicing":
+          {}
+        }
+      ],
+      "expression":
+          {
+            "nodeType": "bitwise_or__-1_-1",
+            "children": [
+              {
+                "nodeType": "bitwise_or__-1_-1",
+                "children": [
+                  {
+                    "nodeType": "bitwise_and__-1_-1",
+                    "children": [
+                      {
+                        "nodeType": "identifier__-1_-1",
+                        "data": "a"
+                      }
+                      ,
+                      {
+                        "nodeType": "identifier__-1_-1",
+                        "data": "b"
+                      }
+                    ]
+                  }
+                  ,
+                  {
+                    "nodeType": "bitwise_and__-1_-1",
+                    "children": [
+                      {
+                        "nodeType": "identifier__-1_-1",
+                        "data": "a"
+                      }
+                      ,
+                      {
+                        "nodeType": "identifier__-1_-1",
+                        "data": "carryin"
+                      }
+                    ]
+                  }
+                ]
+              }
+              ,
+              {
+                "nodeType": "bitwise_and__-1_-1",
+                "children": [
+                  {
+                    "nodeType": "identifier__-1_-1",
+                    "data": "b"
+                  }
+                  ,
+                  {
+                    "nodeType": "identifier__-1_-1",
+                    "data": "carryin"
+                  }
+                ]
+              }
+            ]
+          }
+    }
+  ],
+  "alwaysBlocks": [
+  ]
+}

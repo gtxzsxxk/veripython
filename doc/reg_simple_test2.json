@@ -1,0 +1,224 @@
+{
+  "nodeType": "RtlModule",
+  "name": "counter",
+  "ioPorts": [
+    {
+      "nodeType": "Port",
+      "name": "clk",
+      "direction": "input",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    },
+    {
+      "nodeType": "Port",
+      "name": "rst_n",
+      "direction": "input",
+      "slicing":
+      {
+        "low": "0",
+        "high": "0"
+      }
+    },
+    {
+      "nodeType": "Port",
+      "name": "count",
+      "direction": "output",
+      "slicing":
+      {
+        "low": "0",
+        "high": "7"
+      }
+    }
+  ],
+  "combinatorial": [
+    {
+      "nodeType": "Connection",
+      "Destination": [
+        {
+          "nodeType": "CircuitSymbol",
+          "name": "count",
+          "slicing":
+          {}
+        }
+      ],
+      "expression":
+          {
+            "nodeType": "identifier__-1_-1",
+            "data": "counter_reg"
+          }
+    }
+  ],
+  "alwaysBlocks": [
+    {
+      "nodeType": "alwaysBlock",
+      "SensitiveList": [
+        ["PositiveEdge", "clk"]
+      ],
+      "alwaysBlockAST":
+        {
+          "nodeType": "__hw_always_block__",
+          "children": [
+            {
+              "nodeType": "__hw_always_block_body__",
+              "children": [
+                {
+                  "nodeType": "IfBlock",
+                  "condition":
+                  {
+                    "nodeType": "logical_not__-1_-1",
+                    "children": [
+                      {
+                        "nodeType": "identifier__-1_-1",
+                        "data": "rst_n"
+                      }
+                    ]
+                  }
+                  ,
+                  "branches": [
+                    {
+                      "nodeType": "__hw_always_block_body__",
+                      "children": [
+                        {
+                          "nodeType": "NonBlockAssign",
+                          "destinations": [
+                            {
+                              "nodeType": "CircuitSymbol",
+                              "name": "counter_reg",
+                              "slicing":
+                                {}
+                            }  ],
+                          "expression":
+                            {
+                              "nodeType": "const_number__-1_-1",
+                              "data": "8'd0"
+                            }
+                        }
+                        ,
+                        {
+                          "nodeType": "NonBlockAssign",
+                          "destinations": [
+                            {
+                              "nodeType": "CircuitSymbol",
+                              "name": "aux_counter_reg",
+                              "slicing":
+                                {}
+                            }  ],
+                          "expression":
+                            {
+                              "nodeType": "const_number__-1_-1",
+                              "data": "8'd0"
+                            }
+                        }
+                      ]
+                    }
+                    ,
+                    {
+                      "nodeType": "__hw_always_block_body__",
+                      "children": [
+                        {
+                          "nodeType": "NonBlockAssign",
+                          "destinations": [
+                            {
+                              "nodeType": "CircuitSymbol",
+                              "name": "counter_reg",
+                              "slicing":
+                                {}
+                            }  ],
+                          "expression":
+                            {
+                              "nodeType": "op_add__-1_-1",
+                              "children": [
+                                {
+                                  "nodeType": "identifier__-1_-1",
+                                  "data": "counter_reg"
+                                }
+                                ,
+                                {
+                                  "nodeType": "const_number__-1_-1",
+                                  "data": "8'd1"
+                                }
+                              ]
+                            }
+                        }
+                        ,
+                        {
+                          "nodeType": "NonBlockAssign",
+                          "destinations": [
+                            {
+                              "nodeType": "CircuitSymbol",
+                              "name": "aux_counter_reg",
+                              "slicing":
+                                {}
+                            }  ],
+                          "expression":
+                            {
+                              "nodeType": "identifier__-1_-1",
+                              "data": "aux_counter_reg"
+                            }
+                        }
+                        ,
+                        {
+                          "nodeType": "IfBlock",
+                          "condition":
+                          {
+                            "nodeType": "cond_eq__-1_-1",
+                            "children": [
+                              {
+                                "nodeType": "identifier__0",
+                                "data": "counter_reg"
+                              }
+                              ,
+                              {
+                                "nodeType": "const_number__-1_-1",
+                                "data": "1'd1"
+                              }
+                            ]
+                          }
+                          ,
+                          "branches": [
+                            {
+                              "nodeType": "__hw_always_block_body__",
+                              "children": [
+                                {
+                                  "nodeType": "NonBlockAssign",
+                                  "destinations": [
+                                    {
+                                      "nodeType": "CircuitSymbol",
+                                      "name": "aux_counter_reg",
+                                      "slicing":
+                                        {}
+                                    }  ],
+                                  "expression":
+                                    {
+                                      "nodeType": "op_add__-1_-1",
+                                      "children": [
+                                        {
+                                          "nodeType": "identifier__-1_-1",
+                                          "data": "aux_counter_reg"
+                                        }
+                                        ,
+                                        {
+                                          "nodeType": "const_number__-1_-1",
+                                          "data": "32'd1"
+                                        }
+                                      ]
+                                    }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+    }
+  ]
+}
