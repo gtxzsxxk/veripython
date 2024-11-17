@@ -45,13 +45,13 @@ Verilog 编译器的核心任务：生成正确的硬件电路，而不是处理
 
 编译步骤如下：
 ```bash
-# 编译
+# 编译，代码路径不能出现中文
 $ mkdir build && cd build
 $ cmake .. -DRELEASE_CODE_MODE=ON
 $ make -j
 
-# exe 目录内提供 veripython 的二进制（c库版本需要升级到GLIBCXX >= 3.4.29 GLIBC >= 2.34），
-# 可以直接执行
+# exe 目录内提供 veripython 的二进制（在 Ubuntu 22.04 下编译），
+# 如果测试机器的c库满足条件，或者系统大于22.04，可以直接执行
 $ veripython ../tests/verilog_srcs/full_adder.v -o full_adder.json -ast -vis
 ```
 
