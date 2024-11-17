@@ -5,19 +5,25 @@
 #include "Parser.h"
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 std::string AST::toString() {
-    std::string xmlOutput = "<" + nodeType + ">\n";
+    std::stringstream out;
+    out << "{\n"
+        << R"(  "nodeType": ")" << nodeType << "\",\n"
+        << "  \"children\": [\n";
     for (const auto &ast: children) {
         std::string tmp = ast->toString();
         char *childOutput = strdup(tmp.c_str());
         for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
-            xmlOutput += "  " + std::string{line} + "\n";
+            out << "    " << std::string{line} << "\n";
         }
         free(childOutput);
+        out << "    ,\n";
     }
-    xmlOutput += "</" + nodeType + ">\n";
-    return xmlOutput;
+    out << "  ]\n"
+        << "}";
+    return out.str();
 }
 
 int ConstantExpressionAST::eval() {
@@ -48,7 +54,7 @@ int ConstantExpressionAST::eval() {
 }
 
 std::string ConstantNumberAST::toString() {
-    return "<" + nodeType + ">\n  " + std::to_string(value) + "\n</" + nodeType + ">\n";
+    return R"({\n  "nodeType": ")" + nodeType + "\",\n  \"value\": \"" + std::to_string(value) + "\"\n}";
 }
 
 int ConstantNumberAST::eval() {
@@ -83,15 +89,15 @@ bool PortSlicingAST::operator==(const PortSlicingAST &slicingAST) const {
 
 std::string PortSlicingAST::toString() {
     if (isTrivial()) {
-        return "<Slicing></Slicing>\n";
+        return "{}";
     } else {
         if (isDownTo) {
-            return "<Slicing>\n  <Low>" + std::to_string(downToLow) + "</Low>\n" +
-                   "  <High>" + std::to_string(downToHigh) + "</High>\n" +
-                   "</Slicing>";
+            return "{\n  \"low\": \"" + std::to_string(downToLow) + "\",\n" +
+                   "  \"high\": \"" + std::to_string(downToHigh) + "\"\n" +
+                   "}";
         } else {
-            return "<Slicing>\n  <OnlyWhich>" + std::to_string(onlyWhich) + "</OnlyWhich>\n" +
-                   "</Slicing>";
+            return "{\n  \"onlyWhich\": \"" + std::to_string(onlyWhich) + "\"\n" +
+                   "}";
         }
     }
 }
@@ -110,17 +116,11 @@ std::string HDLExpressionAST::toString() {
     } else {
         nodeName += "__" + std::to_string(exprSlicing.onlyWhich);
     }
-    std::string xmlOutput = "<" + nodeName + ">\n";
-    for (const auto &ast: children) {
-        std::string tmp = ast->toString();
-        char *childOutput = strdup(tmp.c_str());
-        for (char *line = strtok(childOutput, "\n"); line; line = strtok(nullptr, "\n")) {
-            xmlOutput += "  " + std::string{line} + "\n";
-        }
-        free(childOutput);
-    }
-    xmlOutput += "</" + nodeName + ">\n";
-    return xmlOutput;
+    auto tmp = nodeType;
+    nodeType = nodeName;
+    auto ret = AST::toString();
+    nodeType = tmp;
+    return ret;
 }
 
 bool HDLExpressionAST::canParseToCombLogics(VeriPythonTokens _operator) {
@@ -146,7 +146,7 @@ std::string HDLPrimaryAST::toString() {
     } else {
         nodeName += "__" + std::to_string(exprSlicing.onlyWhich);
     }
-    return "<" + nodeName + ">\n  " + output + "\n</" + nodeName + ">\n";
+    return "{\n  \"nodeType\": \"" + nodeName + "\"\n  \"data\": \"" + output + "\"\n}";
 }
 
 bool HDLPrimaryAST::isIdentifier() const {
@@ -170,15 +170,15 @@ std::shared_ptr<HDLExpressionAST> &AlwaysBlockBodyAST::getCondition() {
 
 std::string AlwaysBlockBodyAST::toString() {
     if (nodeType == "__hw_always_block_body_if_block__") {
-        std::string xmlOutput = "<IfBlock>\n";
-        xmlOutput += "  <Condition>\n";
+        std::string xmlOutput = "{\n  \"nodeType\": \"IfBlock\",\n";
+        xmlOutput += "  \"condition\":\n";
         char *condOutput = strdup(condition->toString().c_str());
         for (char *line = strtok(condOutput, "\n"); line; line = strtok(nullptr, "\n")) {
-            xmlOutput += "    " + std::string{line} + "\n";
+            xmlOutput += "  " + std::string{line} + "\n";
         }
         free(condOutput);
-        xmlOutput += "  </Condition>\n";
-        xmlOutput += "  <Branches>\n";
+        xmlOutput += "  ,\n";
+        xmlOutput += "  \"branches\": [\n";
         for (const auto &ast: children) {
             std::string tmp = ast->toString();
             char *childOutput = strdup(tmp.c_str());
@@ -186,35 +186,36 @@ std::string AlwaysBlockBodyAST::toString() {
                 xmlOutput += "    " + std::string{line} + "\n";
             }
             free(childOutput);
+            xmlOutput += "    ,\n";
         }
-        xmlOutput += "  </Branches>\n";
-        xmlOutput += "</IfBlock>\n";
+        xmlOutput += "  ]\n";
+        xmlOutput += "}";
         return xmlOutput;
     } else if (nodeType == "__hw_non_blk_assign__") {
-        std::string xmlOutput = "<NonBlockAssign>\n";
-        xmlOutput += "  <Destination>\n";
+        std::string xmlOutput = "{\n  \"nodeType\": \"NonBlockAssign\",\n";
+        xmlOutput += "  \"destinations\": [\n";
         auto *nonBlkAssignPtr = dynamic_cast<NonBlockingAssignAST *>(this);
         for (const auto &[name, slicing]: nonBlkAssignPtr->connection.getDestIdentifiers()) {
-            xmlOutput += "    <CircuitSymbol>\n";
-            xmlOutput += "      <name>" + name + "</name>\n";
+            xmlOutput += "    {\n      \"nodeType\": \"CircuitSymbol\",\n";
+            xmlOutput += "      \"name\": \"" + name + "\",\n";
+            xmlOutput += "      \"slicing\":\n";
             auto slicingString = strdup(const_cast<PortSlicingAST &>(slicing).toString().c_str());
             for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
-                xmlOutput += std::string{"          "} + line + "\n";
+                xmlOutput += std::string{"        "} + line + "\n";
             }
             free(slicingString);
-            xmlOutput += "        </CircuitSymbol>\n";
+            xmlOutput += "    }";
         }
-        xmlOutput += "  </Destination>\n";
+        xmlOutput += "  ],\n";
 
-        xmlOutput += "  <HDLExpression>\n";
+        xmlOutput += "  \"expression\": \n";
         auto exprString = strdup(nonBlkAssignPtr->connection.ast->toString().c_str());
         for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
             xmlOutput += std::string{"    "} + line + "\n";
         }
         free(exprString);
-        xmlOutput += "  </HDLExpression>\n";
 
-        xmlOutput += "</NonBlockAssign>\n";
+        xmlOutput += "}";
         return xmlOutput;
     }
     return AST::toString();

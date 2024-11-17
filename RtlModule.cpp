@@ -164,78 +164,77 @@ void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &b
 
 void RtlModule::genXmlFormattedAstData() {
     std::stringstream xml;
-    xml << "<RtlModule>" << std::endl;
-    xml << "  <Name>" << moduleName << "</Name>" << std::endl;
-    xml << "  <IoPorts>" << std::endl;
+    xml << "{\n  \"nodeType\": \"RtlModule\"," << std::endl;
+    xml << "  \"name\": \"" << moduleName << "\"," << std::endl;
+    xml << "  \"ioPorts\": [" << std::endl;
     for (const auto &ioPort: ioPorts) {
-        xml << "    <Port>" << std::endl;
-        xml << "      <name>" << ioPort->getIdentifier() << "</name>" << std::endl;
-        xml << "      <direction>" <<
+        xml << "    {\n      \"nodeType\": \"Port\"," << std::endl;
+        xml << "      \"name\": \"" << ioPort->getIdentifier() << "\"," << std::endl;
+        xml << "      \"direction\": \"" <<
             ((ioPort->getPortDirection() == PortDirection::Input) ? "input" : ((ioPort->getPortDirection() ==
                                                                                 PortDirection::Output) ? "output"
                                                                                                        : "not specified"))
-            << "</direction>" << std::endl;
+            << "\"," << std::endl;
+        xml << "      \"slicing\":\n";
         auto slicingString = strdup(const_cast<PortSlicingAST &>(ioPort->getSlicing()).toString().c_str());
         for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
             xml << "      " << line << std::endl;
         }
         free(slicingString);
-        xml << "    </Port>" << std::endl;
+        xml << "    }," << std::endl;
     }
-    xml << "  </IoPorts>" << std::endl;
+    xml << "  ]," << std::endl;
 
-    xml << "  <Combinatorial>" << std::endl;
+    xml << "  \"combinatorial\": [" << std::endl;
     for (auto &conn: circuitConnections) {
-        xml << "    <Connection>" << std::endl;
-        xml << "      <Destination>" << std::endl;
+        xml << "    {\n      \"nodeType\": \"Connection\"," << std::endl;
+        xml << "      \"Destination\": [" << std::endl;
         for (const auto &[name, slicing]: conn.getDestIdentifiers()) {
-            xml << "        <CircuitSymbol>" << std::endl;
-            xml << "          <name>" << name << "</name>" << std::endl;
+            xml << "        {\n          \"nodeType\": \"CircuitSymbol\"," << std::endl;
+            xml << "          \"name\": \"" << name << "\"," << std::endl;
+            xml << "          \"slicing\":\n";
             auto slicingString = strdup(const_cast<PortSlicingAST &>(slicing).toString().c_str());
             for (char *line = strtok(slicingString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
                 xml << "          " << line << std::endl;
             }
             free(slicingString);
-            xml << "        </CircuitSymbol>" << std::endl;
+            xml << "        }," << std::endl;
         }
-        xml << "      </Destination>" << std::endl;
+        xml << "      ]," << std::endl;
 
-        xml << "      <HDLExpression>" << std::endl;
+        xml << "      \"expression\": " << std::endl;
         auto exprString = strdup(conn.ast->toString().c_str());
         for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
             xml << "          " << line << std::endl;
         }
         free(exprString);
-        xml << "      </HDLExpression>" << std::endl;
-
-        xml << "    </Connection>" << std::endl;
+        xml << "    }," << std::endl;
     }
-    xml << "  </Combinatorial>" << std::endl;
+    xml << "  ]," << std::endl;
 
-    xml << "  <AlwaysBlocks>" << std::endl;
+    xml << "  \"alwaysBlocks\": [" << std::endl;
     for (auto &blk: alwaysBlocks) {
-        xml << "    <AlwaysBlock>" << std::endl;
-        xml << "      <SensitiveList>" << std::endl;
+        xml << "    {\n      \"nodeType\": \"alwaysBlock\"," << std::endl;
+        xml << "      \"SensitiveList\": [" << std::endl;
         for (const auto &[triggerType, identifier]: blk->getSensitiveList()) {
             auto triggerString = (triggerType == TriggerEdgeType::POSITIVE_EDGE ? "PositiveEdge" : (triggerType ==
                                                                                                     TriggerEdgeType::NEGATIVE_EDGE
                                                                                                     ? "NegativeEdge"
                                                                                                     : "LevelTriggered"));
-            xml << "        <" << triggerString << ">" + identifier + "</" + triggerString + ">" << std::endl;
+            xml << "        [\"" << triggerString << "\", \"" + identifier + "\"]," << std::endl;
         }
-        xml << "      </SensitiveList>" << std::endl;
-        xml << "      <AlwaysBlockAST>" << std::endl;
+        xml << "      ]," << std::endl;
+        xml << "      \"alwaysBlockAST\": " << std::endl;
         auto exprString = strdup(blk->toString().c_str());
         for (char *line = strtok(exprString, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
             xml << "        " << line << std::endl;
         }
         free(exprString);
-        xml << "      </AlwaysBlockAST>" << std::endl;
-        xml << "    </AlwaysBlock>" << std::endl;
+        xml << "    }," << std::endl;
     }
-    xml << "  </AlwaysBlocks>" << std::endl;
+    xml << "  ]" << std::endl;
 
-    xml << "</RtlModule>" << std::endl;
+    xml << "}";
     xmlAstData = xml.str();
 }
 
