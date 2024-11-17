@@ -37,23 +37,28 @@ Verilog 编译器的核心任务：生成正确的硬件电路，而不是处理
 
 ## 编译与运行说明
 
-本项目运行在 Linux 环境。
-目前提交的代码仅包含前端部分。支持的参数有：
-- `-o`：指定输出文件名
-- `-ast`：将语法分析树以`json`格式进行输出
-- `-vis`：使用`graphviz`生成 HDL 的 RTL 视图到 `rtl_view.png`中
-- `-token`：仅生成 `token` 流
+本项目运行在 Linux 环境。依赖有：
 
-Example:
+- `cmake` >= 3.22
+- `flex`
+- `gcc` >= 11
+
+编译步骤如下：
 ```bash
 # 编译
 $ mkdir build && cd build
 $ cmake .. -DRELEASE_CODE_MODE=ON
 $ make -j
 
-# 如果已有 veripython 的二进制，可以直接执行
+# exe 目录内提供 veripython 的二进制（c库版本需要升级到GLIBCXX >= 3.4.29 GLIBC >= 2.34），可以直接执行
 $ veripython ../tests/verilog_srcs/full_adder.v -o full_adder.json -ast -vis
 ```
+
+目前提交的代码仅包含前端部分。支持的参数有：
+- `-o`：指定输出文件名
+- `-ast`：将语法分析树以`json`格式进行输出
+- `-vis`：使用`graphviz`生成 HDL 的 RTL 视图到 `rtl_view.png`中
+- `-token`：仅生成 `token` 流
 
 ## 实现
 
