@@ -50,7 +50,8 @@ $ mkdir build && cd build
 $ cmake .. -DRELEASE_CODE_MODE=ON
 $ make -j
 
-# exe 目录内提供 veripython 的二进制（c库版本需要升级到GLIBCXX >= 3.4.29 GLIBC >= 2.34），可以直接执行
+# exe 目录内提供 veripython 的二进制（c库版本需要升级到GLIBCXX >= 3.4.29 GLIBC >= 2.34），
+# 可以直接执行
 $ veripython ../tests/verilog_srcs/full_adder.v -o full_adder.json -ast -vis
 ```
 
