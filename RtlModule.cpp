@@ -162,11 +162,12 @@ void RtlModule::addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &b
     }
 }
 
-void RtlModule::genXmlFormattedAstData() {
+void RtlModule::genAstJson() {
     std::stringstream xml;
     xml << "{\n  \"nodeType\": \"RtlModule\"," << std::endl;
     xml << "  \"name\": \"" << moduleName << "\"," << std::endl;
     xml << "  \"ioPorts\": [" << std::endl;
+    std::size_t counter = 0;
     for (const auto &ioPort: ioPorts) {
         xml << "    {\n      \"nodeType\": \"Port\"," << std::endl;
         xml << "      \"name\": \"" << ioPort->getIdentifier() << "\"," << std::endl;
@@ -181,15 +182,23 @@ void RtlModule::genXmlFormattedAstData() {
             xml << "      " << line << std::endl;
         }
         free(slicingString);
-        xml << "    }," << std::endl;
+        if (counter != ioPorts.size() - 1) {
+            xml << "    }," << std::endl;
+        } else {
+            xml << "    }" << std::endl;
+        }
+        counter++;
     }
     xml << "  ]," << std::endl;
 
     xml << "  \"combinatorial\": [" << std::endl;
+    counter = 0;
     for (auto &conn: circuitConnections) {
         xml << "    {\n      \"nodeType\": \"Connection\"," << std::endl;
         xml << "      \"Destination\": [" << std::endl;
-        for (const auto &[name, slicing]: conn.getDestIdentifiers()) {
+        std::size_t counterTmp = 0;
+        auto &destData = conn.getDestIdentifiers();
+        for (const auto &[name, slicing]: destData) {
             xml << "        {\n          \"nodeType\": \"CircuitSymbol\"," << std::endl;
             xml << "          \"name\": \"" << name << "\"," << std::endl;
             xml << "          \"slicing\":\n";
@@ -198,7 +207,12 @@ void RtlModule::genXmlFormattedAstData() {
                 xml << "          " << line << std::endl;
             }
             free(slicingString);
-            xml << "        }," << std::endl;
+            if (counterTmp != destData.size() - 1) {
+                xml << "        }," << std::endl;
+            } else {
+                xml << "        }" << std::endl;
+            }
+            counterTmp++;
         }
         xml << "      ]," << std::endl;
 
@@ -208,20 +222,33 @@ void RtlModule::genXmlFormattedAstData() {
             xml << "          " << line << std::endl;
         }
         free(exprString);
-        xml << "    }," << std::endl;
+        if (counter != circuitConnections.size() - 1) {
+            xml << "    }," << std::endl;
+        } else {
+            xml << "    }" << std::endl;
+        }
+        counter++;
     }
     xml << "  ]," << std::endl;
 
     xml << "  \"alwaysBlocks\": [" << std::endl;
+    counter = 0;
     for (auto &blk: alwaysBlocks) {
         xml << "    {\n      \"nodeType\": \"alwaysBlock\"," << std::endl;
         xml << "      \"SensitiveList\": [" << std::endl;
-        for (const auto &[triggerType, identifier]: blk->getSensitiveList()) {
+        std::size_t counterTmp = 0;
+        auto &sensList = blk->getSensitiveList();
+        for (const auto &[triggerType, identifier]: sensList) {
             auto triggerString = (triggerType == TriggerEdgeType::POSITIVE_EDGE ? "PositiveEdge" : (triggerType ==
                                                                                                     TriggerEdgeType::NEGATIVE_EDGE
                                                                                                     ? "NegativeEdge"
                                                                                                     : "LevelTriggered"));
-            xml << "        [\"" << triggerString << "\", \"" + identifier + "\"]," << std::endl;
+            if (counterTmp != sensList.size() - 1) {
+                xml << "        [\"" << triggerString << "\", \"" + identifier + "\"]," << std::endl;
+            } else {
+                xml << "        [\"" << triggerString << "\", \"" + identifier + "\"]" << std::endl;
+            }
+            counterTmp++;
         }
         xml << "      ]," << std::endl;
         xml << "      \"alwaysBlockAST\": " << std::endl;
@@ -230,7 +257,12 @@ void RtlModule::genXmlFormattedAstData() {
             xml << "        " << line << std::endl;
         }
         free(exprString);
-        xml << "    }," << std::endl;
+        if (counter != alwaysBlocks.size() - 1) {
+            xml << "    }," << std::endl;
+        } else {
+            xml << "    }" << std::endl;
+        }
+        counter++;
     }
     xml << "  ]" << std::endl;
 
@@ -239,7 +271,7 @@ void RtlModule::genXmlFormattedAstData() {
 }
 
 void RtlModule::buildCircuit() {
-    genXmlFormattedAstData();
+    genAstJson();
 
     for (auto &blk: alwaysBlocks) {
         const auto &sensitiveList = blk->getSensitiveList();

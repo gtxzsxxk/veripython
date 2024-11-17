@@ -27,7 +27,7 @@ class RtlModule {
     void addConditionForAlwaysBlockBody(std::vector<CircuitConnection> &blockBody,
                                         std::shared_ptr<HDLExpressionAST> &condition);
 
-    void genXmlFormattedAstData();
+    void genAstJson();
 
 public:
     std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;

@@ -12,6 +12,7 @@ std::string AST::toString() {
     out << "{\n"
         << R"(  "nodeType": ")" << nodeType << "\",\n"
         << "  \"children\": [\n";
+    std::size_t counter = 0;
     for (const auto &ast: children) {
         std::string tmp = ast->toString();
         char *childOutput = strdup(tmp.c_str());
@@ -19,7 +20,12 @@ std::string AST::toString() {
             out << "    " << std::string{line} << "\n";
         }
         free(childOutput);
-        out << "    ,\n";
+        if (counter != children.size() - 1) {
+            out << "    ,\n";
+        } else {
+            out << "\n";
+        }
+        counter++;
     }
     out << "  ]\n"
         << "}";
@@ -146,7 +152,7 @@ std::string HDLPrimaryAST::toString() {
     } else {
         nodeName += "__" + std::to_string(exprSlicing.onlyWhich);
     }
-    return "{\n  \"nodeType\": \"" + nodeName + "\"\n  \"data\": \"" + output + "\"\n}";
+    return "{\n  \"nodeType\": \"" + nodeName + "\",\n  \"data\": \"" + output + "\"\n}";
 }
 
 bool HDLPrimaryAST::isIdentifier() const {
@@ -179,6 +185,7 @@ std::string AlwaysBlockBodyAST::toString() {
         free(condOutput);
         xmlOutput += "  ,\n";
         xmlOutput += "  \"branches\": [\n";
+        std::size_t counter = 0;
         for (const auto &ast: children) {
             std::string tmp = ast->toString();
             char *childOutput = strdup(tmp.c_str());
@@ -186,7 +193,12 @@ std::string AlwaysBlockBodyAST::toString() {
                 xmlOutput += "    " + std::string{line} + "\n";
             }
             free(childOutput);
-            xmlOutput += "    ,\n";
+            if (counter != children.size() - 1) {
+                xmlOutput += "    ,\n";
+            } else {
+                xmlOutput += "\n";
+            }
+            counter++;
         }
         xmlOutput += "  ]\n";
         xmlOutput += "}";
@@ -195,7 +207,9 @@ std::string AlwaysBlockBodyAST::toString() {
         std::string xmlOutput = "{\n  \"nodeType\": \"NonBlockAssign\",\n";
         xmlOutput += "  \"destinations\": [\n";
         auto *nonBlkAssignPtr = dynamic_cast<NonBlockingAssignAST *>(this);
-        for (const auto &[name, slicing]: nonBlkAssignPtr->connection.getDestIdentifiers()) {
+        std::size_t counter = 0;
+        auto &destData = nonBlkAssignPtr->connection.getDestIdentifiers();
+        for (const auto &[name, slicing]: destData) {
             xmlOutput += "    {\n      \"nodeType\": \"CircuitSymbol\",\n";
             xmlOutput += "      \"name\": \"" + name + "\",\n";
             xmlOutput += "      \"slicing\":\n";
@@ -204,7 +218,12 @@ std::string AlwaysBlockBodyAST::toString() {
                 xmlOutput += std::string{"        "} + line + "\n";
             }
             free(slicingString);
-            xmlOutput += "    }";
+            if (counter != destData.size() - 1) {
+                xmlOutput += "    },";
+            } else {
+                xmlOutput += "    }";
+            }
+            counter++;
         }
         xmlOutput += "  ],\n";
 
