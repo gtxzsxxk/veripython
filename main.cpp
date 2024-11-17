@@ -16,7 +16,7 @@ const auto usageString = "Usage\n"
                          "  -token       Only output the token stream\n"
                          "\n"
                          "Example:\n"
-                         "veripython full_adder.v -o full_adder.xml -ast\n";
+                         "veripython full_adder.v -o full_adder.json -ast\n";
 
 enum class FrontendTask {
     NOT_SPECIFIED,
