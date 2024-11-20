@@ -58,6 +58,8 @@ add_executable(veripython
         SequentialLogics.cpp
         SequentialLogics.h
         Lexer.cpp
+        EmitFIRRTL.cpp
+        EmitFIRRTL.h
 )
 
 target_link_libraries(veripython lexer -lfl)
