@@ -27,7 +27,6 @@ find_package(FLEX REQUIRED)
 set(FLEX_SRC "${CMAKE_SOURCE_DIR}/verilog.l")
 set(FLEX_OUT "${CMAKE_BINARY_DIR}/lex.yy.c")
 set(FLEX_DIR "${CMAKE_BINARY_DIR}")
-
 add_custom_command(
         OUTPUT ${FLEX_OUT}
         COMMAND cp ${CMAKE_SOURCE_DIR}/Lexer.h ${FLEX_DIR}
@@ -35,8 +34,14 @@ add_custom_command(
         MAIN_DEPENDENCY ${FLEX_SRC} ${CMAKE_SOURCE_DIR}/Lexer.h
         COMMENT "Generating lex.yy.c from verilog.l"
 )
-
 add_library(lexer OBJECT ${FLEX_OUT})
+
+set(FIRTOOL_INSTALL_PATH "/root/circt/firtool-1.93.1/lib/cmake/circt")
+find_package(CIRCT REQUIRED CONFIG
+             HINTS "${FIRTOOL_INSTALL_PATH}")
+message(STATUS "Found CIRCT include dir ${CIRCT_INCLUDE_DIRS}")
+
+include_directories(${CIRCT_INCLUDE_DIRS})
 
 add_executable(veripython
         main.cpp
@@ -63,6 +68,7 @@ add_executable(veripython
 )
 
 target_link_libraries(veripython lexer -lfl)
+target_link_libraries(veripython ${CIRCT_DIALECT_LIBS} ${MLIR_UPSTREAM_CAPI_LIBS})
 
 if (NOT RELEASE_CODE_MODE)
     enable_testing()
