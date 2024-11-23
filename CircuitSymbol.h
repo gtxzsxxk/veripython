@@ -86,6 +86,8 @@ protected:
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
     std::vector<bool> inputReadyVec;
     std::vector<std::tuple<std::size_t, CircuitSymbol *, PortSlicingAST>> propagateTargets;
+    /* backward symbol, input slicing, dest slicing */
+    std::vector<std::tuple<std::shared_ptr<CircuitSymbol>, PortSlicingAST, PortSlicingAST>> backwardSymbols;
     CircuitData outputData{PortSlicingAST{0, 0}};
 
     virtual CircuitData calculateOutput() = 0;
@@ -107,7 +109,7 @@ public:
 
     [[nodiscard]] const PortSlicingAST &getSlicing() const;
 
-    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
+    std::size_t registerInput(const std::shared_ptr<CircuitSymbol> &symbol,
                               const PortSlicingAST &inputSlicing = {-1, -1});
 
     virtual void propagate(std::size_t pos, const CircuitData &data);
@@ -134,7 +136,7 @@ public:
         slicing = slicingAst;
     }
 
-    std::size_t registerInput(std::shared_ptr<CircuitSymbol> symbol,
+    std::size_t registerInput(const std::shared_ptr<CircuitSymbol> &symbol,
                               const PortSlicingAST &destSlicing,
                               const PortSlicingAST &inputSlicing = {-1, -1});
 

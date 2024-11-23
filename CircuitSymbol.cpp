@@ -44,7 +44,7 @@ const PortSlicingAST &CircuitSymbol::getSlicing() const {
     return slicing;
 }
 
-std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol,
+std::size_t CircuitSymbol::registerInput(const std::shared_ptr<CircuitSymbol> &symbol,
                                          const PortSlicingAST &inputSlicing) {
     int currentPos = static_cast<int>(inputDataVec.size());
     if (currentPos >= getMaxInputs()) {
@@ -52,6 +52,7 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol,
     }
     inputDataVec.emplace_back(CircuitData{slicing}, slicing);
     inputReadyVec.push_back(false);
+    backwardSymbols.emplace_back(symbol, inputSlicing, PortSlicingAST{-1, -1});
     symbol->propagateTargets.emplace_back(currentPos, this, inputSlicing);
     return currentPos;
 }
@@ -136,7 +137,7 @@ int CircuitSymbolWire::getMaxInputs() {
     return 1;
 }
 
-std::size_t CircuitSymbolWire::registerInput(std::shared_ptr<CircuitSymbol> symbol,
+std::size_t CircuitSymbolWire::registerInput(const std::shared_ptr<CircuitSymbol> &symbol,
                                              const PortSlicingAST &destSlicing,
                                              const PortSlicingAST &inputSlicing) {
     int currentPos = static_cast<int>(inputDataVec.size());
@@ -171,6 +172,7 @@ std::size_t CircuitSymbolWire::registerInput(std::shared_ptr<CircuitSymbol> symb
     }
     inputDataVec.emplace_back(CircuitData{slicing}, destSlicing);
     inputReadyVec.push_back(false);
+    backwardSymbols.emplace_back(symbol, inputSlicing, destSlicing);
     symbol->propagateTargets.emplace_back(currentPos, this, inputSlicing);
     return currentPos;
 }
