@@ -85,7 +85,7 @@ protected:
     PortSlicingAST slicing;
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
     std::vector<bool> inputReadyVec;
-    std::vector<std::tuple<std::size_t, CircuitSymbol *, std::pair<bool, PortSlicingAST>>> propagateTargets;
+    std::vector<std::tuple<std::size_t, CircuitSymbol *, PortSlicingAST>> propagateTargets;
     CircuitData outputData{PortSlicingAST{0, 0}};
 
     virtual CircuitData calculateOutput() = 0;

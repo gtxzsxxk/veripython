@@ -52,11 +52,7 @@ std::size_t CircuitSymbol::registerInput(std::shared_ptr<CircuitSymbol> symbol,
     }
     inputDataVec.emplace_back(CircuitData{slicing}, slicing);
     inputReadyVec.push_back(false);
-    std::pair<bool, PortSlicingAST> inputSlicingPair{false, {-1, -1}};
-    if (!inputSlicing.isTrivial()) {
-        inputSlicingPair = std::make_pair(true, inputSlicing);
-    }
-    symbol->propagateTargets.emplace_back(currentPos, this, inputSlicingPair);
+    symbol->propagateTargets.emplace_back(currentPos, this, inputSlicing);
     return currentPos;
 }
 
@@ -70,18 +66,17 @@ void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
     if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
         resetReadyInputs();
         outputData = calculateOutput();
-        for (auto [nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
-            if (propagateSlicing.first) {
-                auto propagateSlicingData = propagateSlicing.second;
-                CircuitData slicedData{propagateSlicingData};
-                if (propagateSlicingData.isDownTo) {
-                    for (auto i = propagateSlicingData.downToLow;
-                         i <= propagateSlicingData.downToHigh;
+        for (auto &[nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
+            if (!propagateSlicing.isTrivial()) {
+                CircuitData slicedData{propagateSlicing};
+                if (propagateSlicing.isDownTo) {
+                    for (auto i = propagateSlicing.downToLow;
+                         i <= propagateSlicing.downToHigh;
                          i++) {
-                        slicedData.bits[i - propagateSlicingData.downToLow] = outputData.bits[i];
+                        slicedData.bits[i - propagateSlicing.downToLow] = outputData.bits[i];
                     }
                 } else {
-                    slicedData.bits[0] = outputData.bits[propagateSlicingData.onlyWhich];
+                    slicedData.bits[0] = outputData.bits[propagateSlicing.onlyWhich];
                 }
                 nextSymbol->propagate(nextPos, slicedData);
             } else {
@@ -176,11 +171,7 @@ std::size_t CircuitSymbolWire::registerInput(std::shared_ptr<CircuitSymbol> symb
     }
     inputDataVec.emplace_back(CircuitData{slicing}, destSlicing);
     inputReadyVec.push_back(false);
-    std::pair<bool, PortSlicingAST> inputSlicingPair{false, {-1, -1}};
-    if (!inputSlicing.isTrivial()) {
-        inputSlicingPair = std::make_pair(true, inputSlicing);
-    }
-    symbol->propagateTargets.emplace_back(currentPos, this, inputSlicingPair);
+    symbol->propagateTargets.emplace_back(currentPos, this, inputSlicing);
     return currentPos;
 }
 
@@ -197,18 +188,17 @@ void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
     }
     inputDataVec[0] = std::make_pair(inputData, destSlicing);
     outputData = calculateOutput();
-    for (auto [nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
-        if (propagateSlicing.first) {
-            auto propagateSlicingData = propagateSlicing.second;
-            CircuitData slicedData{propagateSlicingData};
-            if (propagateSlicingData.isDownTo) {
-                for (auto i = propagateSlicingData.downToLow;
-                     i <= propagateSlicingData.downToHigh;
+    for (auto &[nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
+        if (!propagateSlicing.isTrivial()) {
+            CircuitData slicedData{propagateSlicing};
+            if (propagateSlicing.isDownTo) {
+                for (auto i = propagateSlicing.downToLow;
+                     i <= propagateSlicing.downToHigh;
                      i++) {
-                    slicedData.bits[i - propagateSlicingData.downToLow] = outputData.bits[i];
+                    slicedData.bits[i - propagateSlicing.downToLow] = outputData.bits[i];
                 }
             } else {
-                slicedData.bits[0] = outputData.bits[propagateSlicingData.onlyWhich];
+                slicedData.bits[0] = outputData.bits[propagateSlicing.onlyWhich];
             }
             nextSymbol->propagate(nextPos, slicedData);
         } else {
