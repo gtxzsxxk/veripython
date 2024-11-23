@@ -11,10 +11,29 @@
 #include <string>
 #include <vector>
 
+class HardwareConnection {
+public:
+    std::shared_ptr<CircuitSymbol> destSymbol;
+    std::shared_ptr<CircuitSymbol> fromSymbol;
+    PortSlicingAST destSlicing{-1, -1};
+    PortSlicingAST inputSlicing{-1, -1};
+
+    HardwareConnection(std::shared_ptr<CircuitSymbol> &destSymbol,
+                       std::shared_ptr<CircuitSymbol> &fromSymbol,
+                       PortSlicingAST &inputSlicing);
+
+    HardwareConnection(std::shared_ptr<CircuitSymbol> &destSymbol,
+                       std::shared_ptr<CircuitSymbol> &fromSymbol,
+                       PortSlicingAST &inputSlicing,
+                       PortSlicingAST &destSlicing);
+};
+
 class RtlModule {
     std::string xmlAstData = "You should build circuit at first!";
 
     std::vector<CircuitConnection> circuitConnections;
+
+    std::vector<HardwareConnection> hardwareConnections;
 
     std::vector<std::unique_ptr<AlwaysBlockAST>> alwaysBlocks;
 
@@ -41,6 +60,8 @@ public:
     void addAlwaysBlock(std::unique_ptr<AlwaysBlockAST> &&alwaysBlock);
 
     void buildCircuit();
+
+    [[nodiscard]] const std::vector<HardwareConnection> &getHardwareConnections() const;
 
     [[nodiscard]] std::string toString() const;
 };

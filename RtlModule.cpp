@@ -7,6 +7,21 @@
 #include <sstream>
 #include <stdexcept>
 
+HardwareConnection::HardwareConnection(std::shared_ptr<CircuitSymbol> &destSymbol,
+                                       std::shared_ptr<CircuitSymbol> &fromSymbol,
+                                       PortSlicingAST &inputSlicing) :
+                                       destSymbol(destSymbol), fromSymbol(fromSymbol), inputSlicing(inputSlicing) {
+
+}
+
+HardwareConnection::HardwareConnection(std::shared_ptr<CircuitSymbol> &destSymbol,
+                                       std::shared_ptr<CircuitSymbol> &fromSymbol,
+                                       PortSlicingAST &inputSlicing, PortSlicingAST &destSlicing) :
+                                       destSymbol(destSymbol), fromSymbol(fromSymbol), inputSlicing(inputSlicing),
+                                       destSlicing(destSlicing) {
+
+}
+
 std::shared_ptr<ModuleIOPort> RtlModule::getModuleIOPortByName(const std::string &name) {
     for (auto port: ioPorts) {
         if (port->getIdentifier() == name) {
@@ -300,16 +315,22 @@ void RtlModule::buildCircuit() {
 
             if (destSlicing.isTrivial()) {
                 destSymbol->registerInput(symbol, inputSlicingInTotal);
+                hardwareConnections.emplace_back(destSymbol, symbol, inputSlicingInTotal);
             } else {
                 auto destWireSymbol = std::static_pointer_cast<CircuitSymbolWire>(destSymbol);
                 if (destWireSymbol) {
                     destWireSymbol->registerInput(symbol, destSlicing, inputSlicingInTotal);
+                    hardwareConnections.emplace_back(destSymbol, symbol, inputSlicingInTotal, destSlicing);
                 } else {
                     throw std::runtime_error("Cannot set slicing");
                 }
             }
         }
     }
+}
+
+const std::vector<HardwareConnection> &RtlModule::getHardwareConnections() const {
+    return hardwareConnections;
 }
 
 std::string RtlModule::toString() const {
