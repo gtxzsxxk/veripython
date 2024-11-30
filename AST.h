@@ -79,6 +79,8 @@ public:
     [[nodiscard]] bool isTrivial() const;
 
     std::string toString() override;
+
+    [[nodiscard]] int32_t getWidth() const;
 };
 
 class HDLExpressionAST : public AST {

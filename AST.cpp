@@ -108,6 +108,10 @@ std::string PortSlicingAST::toString() {
     }
 }
 
+int32_t PortSlicingAST::getWidth() const {
+    return isDownTo ? downToHigh - downToLow + 1 : 1;
+}
+
 void HDLExpressionAST::setExprSlicing(const PortSlicingAST &slicingAst) {
     exprSlicing = slicingAst;
 }
