@@ -22,3 +22,12 @@ void EmitFIRRTL::emit() {
 
     }
 }
+
+bool EmitFIRRTL::isOutputPort(std::string &identifier) const {
+    for (const auto &port: rtlModule.ioPorts) {
+        if (port->getPortDirection() == PortDirection::Output && port->getIdentifier() == identifier) {
+            return true;
+        }
+    }
+    return false;
+}
