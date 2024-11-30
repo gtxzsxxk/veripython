@@ -115,6 +115,10 @@ CircuitData CircuitSymbol::getInputCircuitData(std::size_t which) {
     return inputDataVec[which].first;
 }
 
+const decltype(CircuitSymbol::backwardSymbols) &CircuitSymbol::getBackwardSymbols() const {
+    return backwardSymbols;
+}
+
 CircuitData CircuitSymbolConstant::calculateOutput() {
     CircuitData data{slicing};
     int tmpValue = value;

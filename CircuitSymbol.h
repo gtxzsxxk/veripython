@@ -120,6 +120,8 @@ public:
 
     [[nodiscard]] const decltype(propagateTargets) &getPropagateTargets() const;
 
+    [[nodiscard]] const decltype(backwardSymbols) &getBackwardSymbols() const;
+
     virtual ~CircuitSymbol() = default;
 };
 
@@ -180,6 +182,8 @@ public:
         inputDataVec.emplace_back(CircuitData{slicing}, slicing);
         inputReadyVec.push_back(false);
     }
+
+    [[nodiscard]] decltype(value) getValue() const { return value; }
 };
 
 class ModuleIOPort : public CircuitSymbolWire {
