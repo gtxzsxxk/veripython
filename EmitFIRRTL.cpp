@@ -64,6 +64,8 @@ void EmitFIRRTL::emit() {
             circt::firrtl::emitConnect(implicitLocOpBuilder, symbolTable[ioPort->getIdentifier()], rhs);
         }
     }
+
+    mlirModule.dump();
 }
 
 bool EmitFIRRTL::isOutputPort(std::string &identifier) const {
