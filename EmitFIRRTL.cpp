@@ -85,10 +85,11 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
         if (isOutput) {
             returnValue = next;
         } else {
-            node = implicitLocOpBuilder.create<circt::firrtl::NodeOp>(next, circt::StringRef{symbol->getIdentifier()},
-                                                                      circt::firrtl::NameKindEnum::InterestingName,
-                                                                      emptyArrayAttr,
-                                                                      circt::StringAttr{});
+            node = implicitLocOpBuilder.create<circt::firrtl::NodeOp>(
+                    next, circt::StringRef{symbol->getIdentifier()},
+                    circt::firrtl::NameKindEnum::InterestingName,
+                    emptyArrayAttr,
+                    circt::StringAttr{});
 
             returnValue = node.getResult();
         }
@@ -109,9 +110,11 @@ void EmitFIRRTL::emit() {
 
     auto mlirModule = mlir::ModuleOp::create(mlir::UnknownLoc::get(&context));
     circt::OpBuilder b{mlirModule.getBodyRegion()};
-    auto circuit = b.create<circt::firrtl::CircuitOp>(mlir::UnknownLoc::get(&context),
-                                                      circt::StringAttr::get(&context,
-                                                                             circt::StringRef{rtlModule.moduleName}));
+    auto circuit = b.create<circt::firrtl::CircuitOp>(
+            mlir::UnknownLoc::get(&context),
+            circt::StringAttr::get(
+                    &context,
+                    circt::StringRef{rtlModule.moduleName}));
 
     for (const auto &ioPort: rtlModule.ioPorts) {
         auto name = circt::StringAttr::get(&context, circt::StringRef{ioPort->getIdentifier()});
@@ -121,12 +124,14 @@ void EmitFIRRTL::emit() {
     }
 
     auto builder = circuit.getBodyBuilder();
-    auto moduleOp = builder.create<circt::firrtl::FModuleOp>(mlir::UnknownLoc::get(&context),
-                                                             circt::StringAttr::get(&context, circt::StringRef{
-                                                                     rtlModule.moduleName}),
-                                                             circt::firrtl::ConventionAttr::get(&context,
-                                                                                                circt::firrtl::Convention::Internal),
-                                                             ports, emptyArrayAttr, layers
+    auto moduleOp = builder.create<circt::firrtl::FModuleOp>(
+            mlir::UnknownLoc::get(&context),
+            circt::StringAttr::get(
+                    &context, circt::StringRef{rtlModule.moduleName}),
+            circt::firrtl::ConventionAttr::get(
+                    &context,
+                    circt::firrtl::Convention::Internal),
+            ports, emptyArrayAttr, layers
     );
     auto &body = moduleOp->getRegion(0).front();
     auto portArgs = body.getArguments();
