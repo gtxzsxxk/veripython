@@ -112,6 +112,14 @@ int32_t PortSlicingAST::getWidth() const {
     return isDownTo ? downToHigh - downToLow + 1 : 1;
 }
 
+std::pair<int, int> PortSlicingAST::toDownTo() const {
+    if (isDownTo) {
+        return {downToHigh, downToLow};
+    } else {
+        return {onlyWhich, onlyWhich};
+    }
+}
+
 void HDLExpressionAST::setExprSlicing(const PortSlicingAST &slicingAst) {
     exprSlicing = slicingAst;
 }

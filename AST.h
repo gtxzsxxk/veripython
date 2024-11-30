@@ -81,6 +81,8 @@ public:
     std::string toString() override;
 
     [[nodiscard]] int32_t getWidth() const;
+
+    [[nodiscard]] std::pair<int, int> toDownTo() const;
 };
 
 class HDLExpressionAST : public AST {
