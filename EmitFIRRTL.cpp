@@ -9,13 +9,96 @@
 #include <circt/Dialect/FIRRTL/FIRRTLTypes.h>
 #include <circt/Dialect/FIRRTL/FIRRTLUtils.h>
 #include <mlir/IR/MLIRContext.h>
-#include <mlir/IR/ImplicitLocOpBuilder.h>
+#include <iostream>
 
-circt::Value EmitFIRRTL::emitFromSymbol(std::shared_ptr<CircuitSymbol> &symbol) {
-    if (symbol->getIdentifier().starts_with("__comb_" + Parser::operatorName[TOKEN_question])) {
+circt::Value
+EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const PortSlicingAST &inputSlicing) {
+    static int tmpCounter = 0;
+    std::cout << symbol->getIdentifier() << std::endl;
+    auto &backward = symbol->getBackwardSymbols();
+    auto symbolIdentifier = symbol->getIdentifier();
+    bool isOutput = isOutputPort(symbolIdentifier);
+    circt::Value returnValue{};
 
+    if (!isOutput && symbolTable.count(symbolIdentifier)) {
+        return symbolTable[symbolIdentifier];
     }
-    return {};
+
+    if (symbol->getIdentifier().starts_with("__comb_" + Parser::operatorName[TOKEN_question])) {
+        auto cond = emitFromSymbol(std::get<0>(backward[0]));
+        auto branch1 = emitFromSymbol(std::get<0>(backward[1]));
+        auto branch2 = emitFromSymbol(std::get<0>(backward[2]));
+        auto type = circt::firrtl::MuxPrimOp::inferReturnType(
+                llvm::cast<circt::firrtl::FIRRTLType>(cond.getType()),
+                llvm::cast<circt::firrtl::FIRRTLType>(branch1.getType()),
+                llvm::cast<circt::firrtl::FIRRTLType>(branch2.getType()), {});
+        auto op = implicitLocOpBuilder.create<circt::firrtl::MuxPrimOp>(type, cond, branch1, branch2);
+
+        returnValue = op.getResult();
+    } else if (symbol->getIdentifier().starts_with("__hwconst_")) {
+        circt::OpBuilder::InsertPoint savedIP;
+        auto width = symbol->getSlicing().getWidth();
+        auto constantSymbol = std::static_pointer_cast<CircuitSymbolConstant>(symbol);
+        mlir::APInt value{(unsigned) width, (uint64_t) constantSymbol->getValue()};
+
+//        auto *parentOp = implicitLocOpBuilder.getInsertionPoint()->getParentOp();
+//        parentOp->dump();
+//        if (!llvm::isa<circt::firrtl::FModuleLike>(parentOp)) {
+//            savedIP = implicitLocOpBuilder.saveInsertionPoint();
+//            while (!llvm::isa<circt::firrtl::FModuleLike>(parentOp)) {
+//                implicitLocOpBuilder.setInsertionPoint(parentOp);
+//                parentOp = implicitLocOpBuilder.getInsertionPoint()->getParentOp();
+//            }
+//        }
+
+        auto type = circt::firrtl::IntType::get(implicitLocOpBuilder.getContext(), false, width, true);
+        auto attrType = mlir::IntegerType::get(implicitLocOpBuilder.getContext(), value.getBitWidth(),
+                                               mlir::IntegerType::Unsigned);
+        auto attr = implicitLocOpBuilder.getIntegerAttr(attrType, value);
+
+        returnValue = implicitLocOpBuilder.create<circt::firrtl::ConstantOp>(type, attr);
+
+//        if (savedIP.isSet()) {
+//            implicitLocOpBuilder.setInsertionPoint(savedIP.getBlock(), savedIP.getPoint());
+//        }
+    } else {
+        auto &backwardSymbol = std::get<0>(backward[0]);
+        auto &inputSlicing = std::get<1>(backward[0]);
+
+        circt::firrtl::NodeOp node;
+        circt::Value next = emitFromSymbol(backwardSymbol);
+        if (!inputSlicing.isTrivial()) {
+            /* 先临时创建 bits */
+            auto tmpId = "_" + backwardSymbol->getIdentifier() + "__" + std::to_string(tmpCounter++);
+            auto type = circt::firrtl::BitsPrimOp::inferReturnType(
+                    llvm::cast<circt::firrtl::FIRRTLType>(next.getType()),
+                    inputSlicing.downToHigh,
+                    inputSlicing.downToLow, {});
+            auto bitsRhs = implicitLocOpBuilder.create<circt::firrtl::BitsPrimOp>(type, next, inputSlicing.downToHigh,
+                                                                                  inputSlicing.downToLow);
+            auto nextNode = implicitLocOpBuilder.create<circt::firrtl::NodeOp>(bitsRhs, circt::StringRef{tmpId},
+                                                                               circt::firrtl::NameKindEnum::InterestingName,
+                                                                               emptyArrayAttr, circt::StringAttr{});
+            next = nextNode.getResult();
+        }
+
+        if (isOutput) {
+            returnValue = next;
+        } else {
+            node = implicitLocOpBuilder.create<circt::firrtl::NodeOp>(next, circt::StringRef{symbol->getIdentifier()},
+                                                                      circt::firrtl::NameKindEnum::InterestingName,
+                                                                      emptyArrayAttr,
+                                                                      circt::StringAttr{});
+
+            returnValue = node.getResult();
+        }
+    }
+
+    if (!isOutput) {
+        symbolTable[symbolIdentifier] = returnValue;
+    }
+
+    return returnValue;
 }
 
 void EmitFIRRTL::emit() {
