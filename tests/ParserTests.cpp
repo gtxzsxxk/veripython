@@ -270,3 +270,14 @@ TEST(ParserTests, SimpleRegSimTest) {
     parser.hardwareModule.buildCircuit();
     RtlVisualizer::visualize(parser.hardwareModule);
 }
+
+TEST(ParserTests, LLVMTest) {
+    const std::string filename = "../tests/verilog_srcs/mux_test.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    RtlVisualizer::visualize(parser.hardwareModule);
+    auto emitter = EmitFIRRTL(parser.hardwareModule);
+    emitter.emit();
+}
