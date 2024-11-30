@@ -13,6 +13,8 @@
 class EmitFIRRTL {
     const RtlModule &rtlModule;
 
+    std::unordered_map<std::string, circt::Value> symbolTable{};
+
     circt::MLIRContext context{};
 
     circt::OpBuilder builder{&context};
