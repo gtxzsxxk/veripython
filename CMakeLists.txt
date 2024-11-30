@@ -78,8 +78,8 @@ add_executable(veripython
         EmitFIRRTL.h
 )
 
-target_link_libraries(ParserTests PRIVATE lexer -lfl)
-target_link_libraries(ParserTests PRIVATE
+target_link_libraries(veripython PRIVATE lexer -lfl)
+target_link_libraries(veripython PRIVATE
         CIRCTFIRRTL
         MLIRIR
 )
