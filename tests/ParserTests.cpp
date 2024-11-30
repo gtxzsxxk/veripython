@@ -4,6 +4,7 @@
 #include "../Parser.h"
 #include "../RtlSimulator.h"
 #include "../RtlVisualizer.h"
+#include "../EmitFIRRTL.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <filesystem>
