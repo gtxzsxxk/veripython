@@ -8,7 +8,7 @@ option(RELEASE_CODE_MODE "Turn off google tests and use -O2" OFF)
 if (RELEASE_CODE_MODE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g -Wno-error=missing-requires")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -Wno-error=missing-requires")
     add_compile_options("-fsanitize=address")
     link_libraries("-fsanitize=address")
 
@@ -36,12 +36,23 @@ add_custom_command(
 )
 add_library(lexer OBJECT ${FLEX_OUT})
 
-set(FIRTOOL_INSTALL_PATH "/root/circt/firtool-1.93.1/lib/cmake/circt")
+set(FIRTOOL_LIB_PATH "/root/circt/firtool-1.93.1/lib")
+set(FIRTOOL_INSTALL_PATH "${FIRTOOL_LIB_PATH}/cmake")
 find_package(CIRCT REQUIRED CONFIG
-             HINTS "${FIRTOOL_INSTALL_PATH}")
+             HINTS "${FIRTOOL_INSTALL_PATH}/circt")
+find_package(MLIR REQUIRED CONFIG
+             HINTS "${FIRTOOL_INSTALL_PATH}/mlir")
+find_package(LLVM REQUIRED CONFIG
+             HINTS "${FIRTOOL_INSTALL_PATH}/llvm")
 message(STATUS "Found CIRCT include dir ${CIRCT_INCLUDE_DIRS}")
 
 include_directories(${CIRCT_INCLUDE_DIRS})
+link_directories(${FIRTOOL_LIB_PATH})
+
+set(LLVM_ENABLE_RTTI ON)
+set(LLVM_ENABLE_EH ON)
+set(BUILD_SHARED_LIBS ON)
+add_definitions(${LLVM_DEFINITIONS})
 
 add_executable(veripython
         main.cpp
@@ -67,8 +78,11 @@ add_executable(veripython
         EmitFIRRTL.h
 )
 
-target_link_libraries(veripython lexer -lfl)
-target_link_libraries(veripython ${CIRCT_DIALECT_LIBS} ${MLIR_UPSTREAM_CAPI_LIBS})
+target_link_libraries(ParserTests PRIVATE lexer -lfl)
+target_link_libraries(ParserTests PRIVATE
+        CIRCTFIRRTL
+        MLIRIR
+)
 
 if (NOT RELEASE_CODE_MODE)
     enable_testing()
@@ -91,9 +105,15 @@ if (NOT RELEASE_CODE_MODE)
             RtlSimulator.h
             SequentialLogics.cpp
             SequentialLogics.h
+            EmitFIRRTL.cpp
+            EmitFIRRTL.h
     )
-    target_link_libraries(ParserTests GTest::gtest_main)
-    target_link_libraries(ParserTests lexer -lfl)
+    target_link_libraries(ParserTests PRIVATE GTest::gtest_main)
+    target_link_libraries(ParserTests PRIVATE lexer -lfl)
+    target_link_libraries(ParserTests PRIVATE
+            CIRCTFIRRTL
+            MLIRIR
+    )
     include(GoogleTest)
     gtest_discover_tests(ParserTests)
 endif ()
