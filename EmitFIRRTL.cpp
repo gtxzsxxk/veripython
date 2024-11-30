@@ -19,8 +19,6 @@ circt::Value EmitFIRRTL::emitFromSymbol(std::shared_ptr<CircuitSymbol> &symbol) 
 }
 
 void EmitFIRRTL::emit() {
-    auto hwConnections = rtlModule.getHardwareConnections();
-    for (const auto &conn: hwConnections) {
     /* 由 output 开始向后推 */
     circt::ArrayAttr layers;
     circt::SmallVector<circt::firrtl::PortInfo, 8> ports;
@@ -55,6 +53,16 @@ void EmitFIRRTL::emit() {
         symbolTable[port.getName().str()] = portArg;
     }
 
+    implicitLocOpBuilder.setInsertionPointToEnd(&body);
+
+    for (const auto &ioPort: rtlModule.ioPorts) {
+        if (ioPort->getPortDirection() == PortDirection::Output) {
+            auto rhs = emitFromSymbol(ioPort);
+            rhs.dump();
+            symbolTable[ioPort->getIdentifier()].dump();
+            /* 进行连接 */
+            circt::firrtl::emitConnect(implicitLocOpBuilder, symbolTable[ioPort->getIdentifier()], rhs);
+        }
     }
 }
 
