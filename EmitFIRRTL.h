@@ -15,11 +15,11 @@
 class EmitFIRRTL {
     const RtlModule &rtlModule;
 
-    const circt::ArrayAttr emptyArrayAttr;
-
     std::unordered_map<std::string, circt::Value> symbolTable{};
 
     circt::MLIRContext context{};
+
+    const circt::ArrayAttr emptyArrayAttr{mlir::ArrayAttr::get(&context, {})};
 
     circt::Value
     emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const PortSlicingAST &inputSlicing = {-1, -1});
