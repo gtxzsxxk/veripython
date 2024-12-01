@@ -81,6 +81,7 @@ add_executable(veripython
 target_link_libraries(veripython PRIVATE lexer -lfl)
 target_link_libraries(veripython PRIVATE
         CIRCTFIRRTL
+        CIRCTFirtool
         MLIRIR
 )
 
@@ -112,6 +113,7 @@ if (NOT RELEASE_CODE_MODE)
     target_link_libraries(ParserTests PRIVATE lexer -lfl)
     target_link_libraries(ParserTests PRIVATE
             CIRCTFIRRTL
+            CIRCTFirtool
             MLIRIR
     )
     include(GoogleTest)

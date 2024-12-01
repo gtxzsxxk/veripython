@@ -4,11 +4,13 @@
 
 #include "EmitFIRRTL.h"
 #include "Parser.h"
+#include <circt/Firtool/Firtool.h>
 #include <circt/Dialect/FIRRTL/FIRRTLAnnotations.h>
 #include <circt/Dialect/FIRRTL/FIRRTLOps.h>
 #include <circt/Dialect/FIRRTL/FIRRTLTypes.h>
 #include <circt/Dialect/FIRRTL/FIRRTLUtils.h>
 #include <mlir/IR/MLIRContext.h>
+#include <mlir/Pass/PassManager.h>
 #include <iostream>
 
 circt::Value
@@ -150,7 +152,17 @@ void EmitFIRRTL::emit() {
         }
     }
 
-    mlirModule.dump();
+    mlir::PassManager pm(&context);
+    circt::firtool::FirtoolOptions opt{};
+    if (mlir::failed(circt::firtool::populatePreprocessTransforms(pm, opt))) {
+        throw std::runtime_error("Unable to populate preprocess passes for MLIR");
+    }
+
+    if (mlir::failed(pm.run(mlirModule))) {
+        throw std::runtime_error("Unable to run preprocess passes");
+    }
+
+    mlirModule.print(llvm::outs());
 }
 
 bool EmitFIRRTL::isOutputPort(std::string &identifier) const {
