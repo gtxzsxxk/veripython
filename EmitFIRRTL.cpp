@@ -16,7 +16,6 @@
 circt::Value
 EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const PortSlicingAST &inputSlicing) {
     static int tmpCounter = 0;
-    std::cout << symbol->getIdentifier() << std::endl;
     auto &backward = symbol->getBackwardSymbols();
     auto symbolIdentifier = symbol->getIdentifier();
     bool isOutput = isOutputPort(symbolIdentifier);
