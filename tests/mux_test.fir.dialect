@@ -1,13 +1,18 @@
 module {
-  firrtl.circuit "MuxTest" {
-    firrtl.module @MuxTest(in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>, in %a: !firrtl.uint<3>, in %b: !firrtl.uint<4>, in %sel: !firrtl.uint<2>, out %out: !firrtl.uint<3>) attributes {convention = #firrtl<convention scalarized>} {
-      %c2_ui3 = firrtl.constant 2 : !firrtl.uint<3>
-      %_out_T = firrtl.bits %sel 0 to 0 {name = "_out_T"} : (!firrtl.uint<2>) -> !firrtl.uint<1>
-      %_out_T_1 = firrtl.bits %b 3 to 1 {name = "_out_T_1"} : (!firrtl.uint<4>) -> !firrtl.uint<3>
-      %_out_T_2 = firrtl.bits %sel 1 to 1 {name = "_out_T_2"} : (!firrtl.uint<2>) -> !firrtl.uint<1>
-      %_out_T_3 = firrtl.mux(%_out_T_2, %a, %c2_ui3) {name = "_out_T_3"} : (!firrtl.uint<1>, !firrtl.uint<3>, !firrtl.uint<3>) -> !firrtl.uint<3>
-      %_out_T_4 = firrtl.mux(%_out_T, %_out_T_1, %_out_T_3) {name = "_out_T_4"} : (!firrtl.uint<1>, !firrtl.uint<3>, !firrtl.uint<3>) -> !firrtl.uint<3>
-      firrtl.strictconnect %out, %_out_T_4 : !firrtl.uint<3>
+  firrtl.circuit "mux_2to1" {
+    firrtl.module @mux_2to1(in %a: !firrtl.uint<3>, in %b: !firrtl.uint<4>, in %sel: !firrtl.uint<2>, out %out: !firrtl.uint<3>) {
+      %0 = firrtl.bits %sel 0 to 0 : (!firrtl.uint<2>) -> !firrtl.uint<1>
+      %_sel__0 = firrtl.node interesting_name %0 : !firrtl.uint<1>
+      %1 = firrtl.bits %b 3 to 1 : (!firrtl.uint<4>) -> !firrtl.uint<3>
+      %_b__1 = firrtl.node interesting_name %1 : !firrtl.uint<3>
+      %2 = firrtl.bits %sel 1 to 1 : (!firrtl.uint<2>) -> !firrtl.uint<1>
+      %_sel__2 = firrtl.node interesting_name %2 : !firrtl.uint<1>
+      %c2_ui3 = firrtl.constant 2 : !firrtl.const.uint<3>
+      %3 = firrtl.mux(%_sel__2, %a, %c2_ui3) : (!firrtl.uint<1>, !firrtl.uint<3>, !firrtl.const.uint<3>) -> !firrtl.uint<3>
+      %4 = firrtl.mux(%_sel__0, %_b__1, %3) : (!firrtl.uint<1>, !firrtl.uint<3>, !firrtl.uint<3>) -> !firrtl.uint<3>
+      %5 = firrtl.bits %4 2 to 0 : (!firrtl.uint<3>) -> !firrtl.uint<3>
+      %___comb_multiplexer__0__3 = firrtl.node interesting_name %5 : !firrtl.uint<3>
+      firrtl.matchingconnect %out, %___comb_multiplexer__0__3 : !firrtl.uint<3>
     }
   }
 }
