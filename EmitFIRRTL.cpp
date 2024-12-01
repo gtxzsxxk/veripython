@@ -145,8 +145,6 @@ void EmitFIRRTL::emit() {
     for (const auto &ioPort: rtlModule.ioPorts) {
         if (ioPort->getPortDirection() == PortDirection::Output) {
             auto rhs = emitFromSymbol(ioPort);
-            rhs.dump();
-            symbolTable[ioPort->getIdentifier()].dump();
             /* 进行连接 */
             circt::firrtl::emitConnect(implicitLocOpBuilder, symbolTable[ioPort->getIdentifier()], rhs);
         }
