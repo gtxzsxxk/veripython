@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import sys
 import json
 import re
 from dataclasses import dataclass
@@ -42,14 +41,14 @@ public:
 {% for io in model.io %}
   {{ state_cpp_type(io) }} &{{ io.name }};
 {% endfor %}
-  {{ indent(format_view_hierarchy(model.hierarchy[0], args.view_depth)) }} {{ model.hierarchy[0].name }};
+  {{ indent(format_view_hierarchy(model.hierarchy[0], view_depth)) }} {{ model.hierarchy[0].name }};
   uint8_t *state;
 
   {{ model.name }}View(uint8_t *state) :
 {% for io in model.io %}
     {{ io.name }}({{ state_cpp_ref(io) }}),
 {% endfor %}
-    {{ model.hierarchy[0].name }}({{ indent(format_view_constructor(model.hierarchy[0], args.view_depth), 2) }}),
+    {{ model.hierarchy[0].name }}({{ indent(format_view_constructor(model.hierarchy[0], view_depth), 2) }}),
     state(state) {}
 };
 
@@ -137,7 +136,7 @@ class ModelInfo:
 
 # Organize the state by hierarchy.
 def group_state_by_hierarchy(
-    states: List[StateInfo]) -> Tuple[List[StateInfo], List[StateHierarchy]]:
+      states: List[StateInfo]) -> Tuple[List[StateInfo], List[StateHierarchy]]:
   local_state = list()
   hierarchies = list()
   remainder = list()
@@ -276,8 +275,7 @@ def indent(s: str, amount: int = 1):
 
 
 def load_models(state_json):
-  ret = []
-  with open(args.state_json, "r") as f:
+  with open(state_json, "r") as f:
     ret = [ModelInfo.decode(d) for d in json.load(f)]
 
   for mdl in ret:
@@ -294,7 +292,7 @@ def load_models(state_json):
   return ret
 
 
-def render_header_cpp(models):
+def render_header_cpp(models, view_depth):
   for model in models:
     reserved = {"state"}
     for io in model.io:
@@ -318,7 +316,7 @@ def render_header_cpp(models):
     state_cpp_ref=state_cpp_ref,
     format_view_constructor=format_view_constructor,
     format_signal=format_signal,
-    args=args,
+    view_depth=view_depth,
   )
 
 
@@ -337,4 +335,4 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   models_data = load_models(args.state_json)
-  print(render_header_cpp(models_data))
+  print(render_header_cpp(models_data, args.view_depth))
