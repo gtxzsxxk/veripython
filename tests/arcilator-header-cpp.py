@@ -16,20 +16,6 @@ def removeprefix(text, prefix):
   return text
 
 
-# Parse command line arguments.
-parser = argparse.ArgumentParser(
-  description="Generate a C++ header for an Arc model")
-parser.add_argument("state_json",
-                    metavar="STATE_JSON",
-                    help="state description file to process")
-parser.add_argument("--view-depth",
-                    metavar="DEPTH",
-                    type=int,
-                    default=-1,
-                    help="hierarchy levels to expose as C++ structs")
-args = parser.parse_args()
-
-
 # Read the JSON descriptor.
 class StateType(Enum):
   INPUT = "input"
@@ -74,10 +60,6 @@ class ModelInfo:
                      [StateInfo.decode(d) for d in d["states"]], list(), list())
 
 
-with open(args.state_json, "r") as f:
-  models = [ModelInfo.decode(d) for d in json.load(f)]
-
-
 # Organize the state by hierarchy.
 def group_state_by_hierarchy(
     states: List[StateInfo]) -> Tuple[List[StateInfo], List[StateHierarchy]]:
@@ -118,18 +100,6 @@ def group_state_by_hierarchy(
     hierarchies.append(
       StateHierarchy(prefix, hierarchy_states, hierarchy_children))
   return local_state, hierarchies
-
-
-for model in models:
-  internal = list()
-  for state in model.states:
-    if state.typ != StateType.INPUT and state.typ != StateType.OUTPUT:
-      internal.append(state)
-    else:
-      model.io.append(state)
-  model.hierarchy = [
-    StateHierarchy("internal", *group_state_by_hierarchy(internal))
-  ]
 
 
 # Process each model separately.
@@ -230,28 +200,66 @@ def indent(s: str, amount: int = 1):
   return s.replace("\n", "\n" + "  " * amount)
 
 
-for model in models:
-  reserved = {"state"}
-  for io in model.io:
-    if io.name in reserved:
-      io.name = io.name + "_"
+def load_models(state_json):
+  ret = []
+  with open(args.state_json, "r") as f:
+    ret = [ModelInfo.decode(d) for d in json.load(f)]
 
-env = Environment(
-  loader=FileSystemLoader("."),
-  autoescape=select_autoescape(),
-  trim_blocks=True
-)
+  for mdl in ret:
+    internal = list()
+    for state in mdl.states:
+      if state.typ != StateType.INPUT and state.typ != StateType.OUTPUT:
+        internal.append(state)
+      else:
+        mdl.io.append(state)
+    mdl.hierarchy = [
+      StateHierarchy("internal", *group_state_by_hierarchy(internal))
+    ]
 
-template = env.get_template("header-cpp.template")
+  return ret
 
-print(template.render(
-  models=models,
-  indent=indent,
-  format_hierarchy=format_hierarchy,
-  format_view_hierarchy=format_view_hierarchy,
-  state_cpp_type=state_cpp_type,
-  state_cpp_ref=state_cpp_ref,
-  format_view_constructor=format_view_constructor,
-  format_signal=format_signal,
-  args=args,
-))
+
+def render_header_cpp(models):
+  for model in models:
+    reserved = {"state"}
+    for io in model.io:
+      if io.name in reserved:
+        io.name = io.name + "_"
+
+  env = Environment(
+    loader=FileSystemLoader("."),
+    autoescape=select_autoescape(),
+    trim_blocks=True
+  )
+
+  template = env.get_template("header-cpp.template")
+
+  return template.render(
+    models=models,
+    indent=indent,
+    format_hierarchy=format_hierarchy,
+    format_view_hierarchy=format_view_hierarchy,
+    state_cpp_type=state_cpp_type,
+    state_cpp_ref=state_cpp_ref,
+    format_view_constructor=format_view_constructor,
+    format_signal=format_signal,
+    args=args,
+  )
+
+
+if __name__ == "__main__":
+  # Parse command line arguments.
+  parser = argparse.ArgumentParser(
+    description="Generate a C++ header for an Arc model")
+  parser.add_argument("state_json",
+                      metavar="STATE_JSON",
+                      help="state description file to process")
+  parser.add_argument("--view-depth",
+                      metavar="DEPTH",
+                      type=int,
+                      default=-1,
+                      help="hierarchy levels to expose as C++ structs")
+  args = parser.parse_args()
+
+  models_data = load_models(args.state_json)
+  print(render_header_cpp(models_data))
