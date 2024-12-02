@@ -17,7 +17,7 @@ def removeprefix(text, prefix):
 
 # Parse command line arguments.
 parser = argparse.ArgumentParser(
-    description="Generate a C++ header for an Arc model")
+  description="Generate a C++ header for an Arc model")
 parser.add_argument("state_json",
                     metavar="STATE_JSON",
                     help="state description file to process")
@@ -115,7 +115,7 @@ def group_state_by_hierarchy(
     hierarchy_states, hierarchy_children = group_state_by_hierarchy(substates)
     prefix = uniquify(prefix)
     hierarchies.append(
-        StateHierarchy(prefix, hierarchy_states, hierarchy_children))
+      StateHierarchy(prefix, hierarchy_states, hierarchy_children))
   return local_state, hierarchies
 
 
@@ -127,15 +127,15 @@ for model in models:
     else:
       model.io.append(state)
   model.hierarchy = [
-      StateHierarchy("internal", *group_state_by_hierarchy(internal))
+    StateHierarchy("internal", *group_state_by_hierarchy(internal))
   ]
 
 
 # Process each model separately.
 def format_signal(state: StateInfo) -> str:
   fields = [
-      f"\"{state.name}\"", state.offset, state.numBits,
-      f"Signal::{state.typ.value.capitalize()}"
+    f"\"{state.name}\"", state.offset, state.numBits,
+    f"Signal::{state.typ.value.capitalize()}"
   ]
   if state.typ == StateType.MEMORY:
     fields += [state.stride, state.depth]
@@ -149,7 +149,7 @@ def format_hierarchy(hierarchy: StateHierarchy) -> str:
     states = "\n  " + states + "\n"
   states = "{" + states + "}"
   children = ",\n  ".join(
-      (format_hierarchy(c).replace("\n", "\n  ") for c in hierarchy.children))
+    (format_hierarchy(c).replace("\n", "\n  ") for c in hierarchy.children))
   if children:
     children = "\n  " + children + "\n"
   children = "{" + children + "}"
@@ -161,7 +161,7 @@ def state_cpp_type_nonmemory(state: StateInfo) -> str:
                    (64, "uint64_t")]:
     if state.numBits <= bits:
       return ty
-  return f"Bytes<{(state.numBits+7)//8}>"
+  return f"Bytes<{(state.numBits + 7) // 8}>"
 
 
 def state_cpp_type(state: StateInfo) -> str:
@@ -198,7 +198,7 @@ def format_view_hierarchy(hierarchy: StateHierarchy, depth: int) -> str:
   if depth != 0:
     for child in hierarchy.children:
       lines.append(
-          f"{indent(format_view_hierarchy(child, depth-1))} {clean_name(child.name)};"
+        f"{indent(format_view_hierarchy(child, depth - 1))} {clean_name(child.name)};"
       )
   lines = "\n  ".join(lines)
   if lines:
@@ -217,7 +217,7 @@ def format_view_constructor(hierarchy: StateHierarchy, depth: int) -> str:
   if depth != 0:
     for child in hierarchy.children:
       lines.append(
-          f".{clean_name(child.name)} = {indent(format_view_constructor(child, depth-1))}"
+        f".{clean_name(child.name)} = {indent(format_view_constructor(child, depth - 1))}"
       )
   lines = ",\n  ".join(lines)
   if lines:
