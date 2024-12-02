@@ -1,0 +1,262 @@
+[
+  {
+    "name": "Tile",
+    "numStateBytes": 11004,
+    "initialFnSym": "",
+    "finalFnSym": "",
+    "states": [
+      {
+        "name": "clock",
+        "offset": 0,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "reset",
+        "offset": 1,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_host_fromhost_valid",
+        "offset": 2,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_host_fromhost_bits",
+        "offset": 4,
+        "numBits": 32,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_aw_ready",
+        "offset": 8,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_w_ready",
+        "offset": 9,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_b_valid",
+        "offset": 10,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_b_bits_id",
+        "offset": 11,
+        "numBits": 5,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_b_bits_resp",
+        "offset": 12,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_ar_ready",
+        "offset": 13,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_r_valid",
+        "offset": 14,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_r_bits_id",
+        "offset": 15,
+        "numBits": 5,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_r_bits_data",
+        "offset": 16,
+        "numBits": 64,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_r_bits_resp",
+        "offset": 24,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "io_nasti_r_bits_last",
+        "offset": 25,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "io_host_tohost",
+        "offset": 10956,
+        "numBits": 32,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_valid",
+        "offset": 10960,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_id",
+        "offset": 10961,
+        "numBits": 5,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_addr",
+        "offset": 10964,
+        "numBits": 32,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_len",
+        "offset": 10968,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_size",
+        "offset": 10969,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_burst",
+        "offset": 10970,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_lock",
+        "offset": 10971,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_cache",
+        "offset": 10972,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_prot",
+        "offset": 10973,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_aw_bits_qos",
+        "offset": 10974,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_w_valid",
+        "offset": 10975,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_w_bits_data",
+        "offset": 10976,
+        "numBits": 64,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_w_bits_strb",
+        "offset": 10984,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_w_bits_last",
+        "offset": 10985,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_b_ready",
+        "offset": 10986,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_valid",
+        "offset": 10987,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_id",
+        "offset": 10988,
+        "numBits": 5,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_addr",
+        "offset": 10992,
+        "numBits": 32,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_len",
+        "offset": 10996,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_size",
+        "offset": 10997,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_burst",
+        "offset": 10998,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_lock",
+        "offset": 10999,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_cache",
+        "offset": 11000,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_prot",
+        "offset": 11001,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_ar_bits_qos",
+        "offset": 11002,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "io_nasti_r_ready",
+        "offset": 11003,
+        "numBits": 1,
+        "type": "output"
+      }
+    ]
+  }
+]

@@ -1,0 +1,76 @@
+[
+  {
+    "name": "DecoupledGcd",
+    "numStateBytes": 30,
+    "initialFnSym": "",
+    "finalFnSym": "",
+    "states": [
+      {
+        "name": "clock",
+        "offset": 0,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "reset",
+        "offset": 1,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "input_valid",
+        "offset": 2,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "input_bits_value1",
+        "offset": 4,
+        "numBits": 16,
+        "type": "input"
+      },
+      {
+        "name": "input_bits_value2",
+        "offset": 6,
+        "numBits": 16,
+        "type": "input"
+      },
+      {
+        "name": "output_ready",
+        "offset": 8,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "input_ready",
+        "offset": 21,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "output_valid",
+        "offset": 22,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "output_bits_value1",
+        "offset": 24,
+        "numBits": 16,
+        "type": "output"
+      },
+      {
+        "name": "output_bits_value2",
+        "offset": 26,
+        "numBits": 16,
+        "type": "output"
+      },
+      {
+        "name": "output_bits_gcd",
+        "offset": 28,
+        "numBits": 16,
+        "type": "output"
+      }
+    ]
+  }
+]
