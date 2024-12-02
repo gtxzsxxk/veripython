@@ -116,6 +116,8 @@ if (NOT RELEASE_CODE_MODE)
             CIRCTFirtool
             MLIRIR
     )
+    add_executable(AcrilatorHeaderCppTests tests/ArcilatorHeaderCppTests.cpp)
+    target_link_libraries(AcrilatorHeaderCppTests PRIVATE GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(ParserTests)
 endif ()
