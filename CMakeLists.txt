@@ -3,11 +3,11 @@ project(veripython)
 
 set(CMAKE_CXX_STANDARD 20)
 
-option(RELEASE_CODE_MODE "Turn off google tests and use -O2" OFF)
-
-if (RELEASE_CODE_MODE)
+if (CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    message(STATUS "We are in Release Mode")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else ()
+    message(STATUS "We are in Debug Mode, gtest is enabled")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -Wno-error=missing-requires")
     add_compile_options("-fsanitize=address")
     link_libraries("-fsanitize=address")
@@ -83,7 +83,7 @@ target_link_libraries(veripython PRIVATE
         MLIRIR
 )
 
-if (NOT RELEASE_CODE_MODE)
+if (NOT (CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release")))
     enable_testing()
     add_executable(ParserTests
             tests/ParserTests.cpp
