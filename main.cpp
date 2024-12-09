@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "RtlVisualizer.h"
+#include "EmitFIRRTL.h"
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -14,6 +15,7 @@ const auto usageString = "Usage\n"
                          "  -ast         Output the AST in Json format.\n"
                          "  -vis         Use graphviz to generate the RTL view. Your system must support the 'dot' command\n"
                          "  -token       Only output the token stream\n"
+                         "  -firrtl      Parse the verilog source file and emit IR in FIRRTL\n"
                          "\n"
                          "Example:\n"
                          "veripython full_adder.v -o full_adder.json -ast\n";
@@ -21,7 +23,8 @@ const auto usageString = "Usage\n"
 enum class FrontendTask {
     NOT_SPECIFIED,
     AST,
-    TOKEN_STREAM
+    TOKEN_STREAM,
+    EMIT_FIRRTL
 };
 
 std::string getAllTokens(const std::string &filename);
@@ -56,6 +59,12 @@ int main(int argc, char **argv) {
                 return 1;
             }
             task = FrontendTask::TOKEN_STREAM;
+        } else if (!strcmp(argv[i], "-firrtl")) {
+            if (task != FrontendTask::NOT_SPECIFIED) {
+                usage();
+                return 1;
+            }
+            task = FrontendTask::EMIT_FIRRTL;
         } else {
             inputFiles.emplace_back(argv[i]);
         }
@@ -86,18 +95,24 @@ int main(int argc, char **argv) {
         RtlVisualizer::visualize(parser.hardwareModule);
     }
 
+    std::string outputData;
+
     if (task == FrontendTask::AST) {
-        auto astInXml = parser.hardwareModule.toString();
-        if (outputFileName.empty()) {
-            std::cout << astInXml << std::endl;
-        } else {
-            std::ofstream out{outputFileName};
-            out << astInXml << std::endl;
-            out.close();
-        }
+        outputData = parser.hardwareModule.toString();
+    } else if (task == FrontendTask::EMIT_FIRRTL) {
+        auto emitter = EmitFIRRTL{parser.hardwareModule};
+        outputData = emitter.emit();
     } else if (!visualization) {
         usage();
         return 1;
+    }
+
+    if (outputFileName.empty()) {
+        std::cout << outputData << std::endl;
+    } else {
+        std::ofstream out{outputFileName};
+        out << outputData << std::endl;
+        out.close();
     }
 
     return 0;

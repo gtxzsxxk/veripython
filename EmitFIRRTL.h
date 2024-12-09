@@ -31,7 +31,7 @@ class EmitFIRRTL {
 public:
     explicit EmitFIRRTL(const RtlModule &module) : rtlModule(module) {}
 
-    void emit();
+    std::string emit();
 };
 
 

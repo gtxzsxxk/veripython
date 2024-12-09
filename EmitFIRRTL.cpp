@@ -11,6 +11,7 @@
 #include <circt/Dialect/FIRRTL/FIRRTLUtils.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/Pass/PassManager.h>
+#include <llvm/Support/raw_ostream.h>
 #include <iostream>
 
 circt::Value
@@ -100,7 +101,7 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
     return returnValue;
 }
 
-void EmitFIRRTL::emit() {
+std::string EmitFIRRTL::emit() {
     /* 由 output 开始向后推 */
     circt::ArrayAttr layers;
     circt::SmallVector<circt::firrtl::PortInfo, 8> ports;
@@ -159,7 +160,11 @@ void EmitFIRRTL::emit() {
         throw std::runtime_error("Unable to run preprocess passes");
     }
 
-    mlirModule.print(llvm::outs());
+    std::string irStr;
+    llvm::raw_string_ostream outs{irStr};
+    mlirModule.print(outs);
+
+    return irStr;
 }
 
 bool EmitFIRRTL::isOutputPort(std::string &identifier) const {
