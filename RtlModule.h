@@ -32,6 +32,7 @@ class RtlModule {
 public:
     std::vector<std::shared_ptr<ModuleIOPort>> ioPorts;
     std::vector<std::shared_ptr<CircuitSymbol>> circuitSymbols;
+    std::vector<std::shared_ptr<CircuitSymbolReg>> registers;
     std::string moduleName;
 
     std::shared_ptr<ModuleIOPort> getModuleIOPortByName(const std::string &name);

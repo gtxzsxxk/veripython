@@ -51,12 +51,27 @@ void RtlSimulator::poke(std::string idName, const CircuitData &data) {
     }
 
     port->propagate(0, data);
-}
 
-void RtlSimulator::doSimulation() {
     for (auto &constSym: constantSymbols) {
         constSym->propagate(0, CircuitData{PortSlicingAST{0, 0}});
     }
+
+    for (auto &reg: rtlModule.registers) {
+        reg->propagateStoredData();
+    }
+}
+
+CircuitData RtlSimulator::peek(std::string idName) {
+    for (auto &outPort: outputSymbols) {
+        if (outPort->getIdentifier() == idName) {
+            return outPort->getOutputData();
+        }
+    }
+
+    throw std::runtime_error("No such an output port");
+}
+
+void RtlSimulator::printOutcome() {
     for (auto &outputSym: outputSymbols) {
         auto outputData = outputSym->getOutputData();
         std::cout << outputSym->getIdentifier() << " output: " << outputData.toString() << std::endl;

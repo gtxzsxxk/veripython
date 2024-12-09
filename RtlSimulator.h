@@ -28,7 +28,9 @@ public:
 
     void poke(std::string idName, const CircuitData &data);
 
-    void doSimulation();
+    CircuitData peek(std::string idName);
+
+    void printOutcome();
 };
 
 #endif //VERIPYTHON_RTLSIMULATOR_H

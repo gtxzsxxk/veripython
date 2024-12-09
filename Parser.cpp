@@ -410,6 +410,7 @@ void Parser::parseRegWireStatement() {
     } else if (wireOrRegToken.first == TOKEN_reg) {
         auto reg = std::make_shared<CircuitSymbolReg>(identifierToken.second, slicing);
         hardwareModule.circuitSymbols.push_back(reg);
+        hardwareModule.registers.push_back(reg);
         VERIFY_NEXT_TOKEN(semicolon);
     } else {
         errorParsing("Expecting wire or reg");
