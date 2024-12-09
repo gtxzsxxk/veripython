@@ -97,6 +97,21 @@ std::string generateComplexExpressionWithParen(int depth) {
     return answer;
 }
 
+uint64_t circuitDataToUInt(const CircuitData &data) {
+    uint64_t ret = 0;
+    if (data.bits.empty()) {
+        throw std::runtime_error("Cannot convert a circuit data to unsigned integer");
+    }
+    for (auto i = (ssize_t) data.bits.size() - 1; i >= 0; i--) {
+        ret <<= 1;
+        if (data.bits[i] == -1) {
+            throw std::runtime_error("Has unknown bits, cannot convert");
+        }
+        ret |= data.bits[i];
+    }
+    return ret;
+}
+
 TEST(ParserTests, SimpleConstantExpressionParsing) {
     const std::string filename = "expressions.v";
     srand(static_cast<unsigned int>(time(nullptr)));
@@ -270,6 +285,43 @@ TEST(ParserTests, SimpleRegSimTest) {
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
     RtlVisualizer::visualize(parser.hardwareModule);
+    auto simulator = RtlSimulator{parser.hardwareModule};
+    auto clkData = CircuitData(PortSlicingAST(0, 0));
+    auto resetData = CircuitData(PortSlicingAST(0, 0));
+
+    resetData.bits[0] = true;
+    simulator.poke("rst_n", resetData);
+    clkData.bits[0] = false;
+    simulator.poke("clk", clkData);
+    simulator.printOutcome();
+
+    resetData.bits[0] = false;
+    simulator.poke("rst_n", resetData);
+    clkData.bits[0] = true;
+    simulator.poke("clk", clkData);
+    clkData.bits[0] = false;
+    simulator.poke("clk", clkData);
+    EXPECT_EQ(0, circuitDataToUInt(simulator.peek("count")));
+    simulator.printOutcome();
+
+    resetData.bits[0] = true;
+    simulator.poke("rst_n", resetData);
+    EXPECT_EQ(0, circuitDataToUInt(simulator.peek("count")));
+    simulator.printOutcome();
+
+    for (int i = 1; i <= 255; i++) {
+        clkData.bits[0] = false;
+        simulator.poke("clk", clkData);
+        clkData.bits[0] = true;
+        simulator.poke("clk", clkData);
+        EXPECT_EQ(i, circuitDataToUInt(simulator.peek("count")));
+    }
+
+    clkData.bits[0] = false;
+    simulator.poke("clk", clkData);
+    clkData.bits[0] = true;
+    simulator.poke("clk", clkData);
+    EXPECT_EQ(0, circuitDataToUInt(simulator.peek("count")));
 }
 
 TEST(ParserTests, LLVMTest) {
