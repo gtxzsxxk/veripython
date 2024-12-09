@@ -8,11 +8,7 @@
 
 void RtlSimulatorEndSymbol::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = std::make_pair(data, inputDataVec[pos].second);
-    inputReadyVec[pos] = true;
-    if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
-        resetReadyInputs();
-        outputData = calculateOutput();
-    }
+    outputData = calculateOutput();
 }
 
 RtlSimulatorEndSymbol::RtlSimulatorEndSymbol(std::shared_ptr<ModuleIOPort> port) :

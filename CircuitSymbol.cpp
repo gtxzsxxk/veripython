@@ -51,7 +51,6 @@ std::size_t CircuitSymbol::registerInput(const std::shared_ptr<CircuitSymbol> &s
         throw std::runtime_error("Cannot bind more input ports!");
     }
     inputDataVec.emplace_back(CircuitData{slicing}, slicing);
-    inputReadyVec.push_back(false);
     backwardSymbols.emplace_back(symbol, inputSlicing, PortSlicingAST{-1, -1});
     symbol->propagateTargets.emplace_back(currentPos, this, inputSlicing);
     return currentPos;
@@ -63,48 +62,28 @@ const decltype(CircuitSymbol::propagateTargets) &CircuitSymbol::getPropagateTarg
 
 void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = std::make_pair(data, inputDataVec[pos].second);
-    inputReadyVec[pos] = true;
-    if (getReadyInputs() == static_cast<int>(inputDataVec.size())) {
-        resetReadyInputs();
-        outputData = calculateOutput();
-        for (auto &[nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
-            if (!propagateSlicing.isTrivial()) {
-                CircuitData slicedData{propagateSlicing};
-                if (propagateSlicing.isDownTo) {
-                    for (auto i = propagateSlicing.downToLow;
-                         i <= propagateSlicing.downToHigh;
-                         i++) {
-                        slicedData.bits[i - propagateSlicing.downToLow] = outputData.bits[i];
-                    }
-                } else {
-                    slicedData.bits[0] = outputData.bits[propagateSlicing.onlyWhich];
+    outputData = calculateOutput();
+    for (auto &[nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
+        if (!propagateSlicing.isTrivial()) {
+            CircuitData slicedData{propagateSlicing};
+            if (propagateSlicing.isDownTo) {
+                for (auto i = propagateSlicing.downToLow;
+                     i <= propagateSlicing.downToHigh && i < outputData.bits.size();
+                     i++) {
+                    slicedData.bits[i - propagateSlicing.downToLow] = outputData.bits[i];
                 }
-                nextSymbol->propagate(nextPos, slicedData);
             } else {
-                nextSymbol->propagate(nextPos, outputData);
+                slicedData.bits[0] = outputData.bits[propagateSlicing.onlyWhich];
             }
+            nextSymbol->propagate(nextPos, slicedData);
+        } else {
+            nextSymbol->propagate(nextPos, outputData);
         }
     }
 }
 
 std::string CircuitSymbol::getIdentifier() const {
     return identifier;
-}
-
-int CircuitSymbol::getReadyInputs() const {
-    int counter = 0;
-    for (const auto ready: inputReadyVec) {
-        if (ready) {
-            counter++;
-        }
-    }
-    return counter;
-}
-
-void CircuitSymbol::resetReadyInputs() {
-    for (std::size_t i = 0; i < inputReadyVec.size(); i++) {
-        inputReadyVec[i] = false;
-    }
 }
 
 CircuitData CircuitSymbol::getOutputData() {
@@ -175,7 +154,6 @@ std::size_t CircuitSymbolWire::registerInput(const std::shared_ptr<CircuitSymbol
         }
     }
     inputDataVec.emplace_back(CircuitData{slicing}, destSlicing);
-    inputReadyVec.push_back(false);
     backwardSymbols.emplace_back(symbol, inputSlicing, destSlicing);
     symbol->propagateTargets.emplace_back(currentPos, this, inputSlicing);
     return currentPos;
@@ -227,7 +205,6 @@ std::size_t CircuitSymbolReg::registerClock(const std::shared_ptr<CircuitSymbol>
         throw std::runtime_error("Cannot bind more input ports!");
     }
     inputDataVec.emplace_back(CircuitData{clockSlicing}, clockSlicing);
-    inputReadyVec.push_back(false);
     backwardSymbols.emplace_back(symbol, clockSlicing, PortSlicingAST{-1, -1});
     symbol->propagateTargets.emplace_back(currentPos, this, clockSlicing);
     return currentPos;
@@ -259,7 +236,6 @@ void ModuleIOPort::registerForInput() {
     if (direction == PortDirection::Input) {
         inputDataVec.clear();
         inputDataVec.emplace_back(CircuitData{slicing}, slicing);
-        inputReadyVec.push_back(false);
     }
 }
 

@@ -81,7 +81,6 @@ protected:
     std::string identifier;
     PortSlicingAST slicing;
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
-    std::vector<bool> inputReadyVec;
     /* backward symbol, input slicing, dest slicing */
     std::vector<std::tuple<std::shared_ptr<CircuitSymbol>, PortSlicingAST, PortSlicingAST>> backwardSymbols;
     CircuitData outputData{PortSlicingAST{0, 0}};
@@ -91,11 +90,7 @@ protected:
 
     virtual int getMaxInputs() = 0;
 
-    [[nodiscard]] int getReadyInputs() const;
-
     CircuitData getInputCircuitData(std::size_t which);
-
-    void resetReadyInputs();
 
     friend class CircuitSymbolWire;
 
@@ -190,7 +185,6 @@ public:
             slicing = PortSlicingAST{width - 1, 0};
         }
         inputDataVec.emplace_back(CircuitData{slicing}, slicing);
-        inputReadyVec.push_back(false);
     }
 
     [[nodiscard]] decltype(value) getValue() const { return value; }
@@ -211,7 +205,6 @@ public:
             direction(direction) {
         if (direction == PortDirection::Input) {
             inputDataVec.emplace_back(CircuitData{slicing}, slicing);
-            inputReadyVec.push_back(false);
         }
     }
 
@@ -222,7 +215,6 @@ public:
         slicing = slicingAST;
         if (direction == PortDirection::Input) {
             inputDataVec.emplace_back(CircuitData{slicing}, slicing);
-            inputReadyVec.push_back(false);
         }
     }
 
