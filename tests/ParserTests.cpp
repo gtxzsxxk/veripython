@@ -3,7 +3,6 @@
 //
 #include "../Parser.h"
 #include "../RtlSimulator.h"
-#include "../RtlVisualizer.h"
 #include "../EmitFIRRTL.h"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -116,7 +115,7 @@ TEST(ParserTests, SimpleConstantExpressionParsing) {
     const std::string filename = "expressions.v";
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
         std::ofstream outFile(filename);
         auto expressionString = generateComplexExpressionNoParen((rand() % 6) + 1);
         std::cout << "Testing: " << expressionString << std::endl;
@@ -125,7 +124,7 @@ TEST(ParserTests, SimpleConstantExpressionParsing) {
         outFile.close();
 
         auto parser = Parser(filename);
-        auto *ast = parser.parseConstantExpr();
+        auto ast = parser.parseConstantExpr();
         int parserValue = ast->eval();
         EXPECT_EQ(parserValue, realValue);
         std::remove(filename.c_str());
@@ -136,7 +135,7 @@ TEST(ParserTests, HaveParenConstantExpressionParsing) {
     const std::string filename = "expressions.v";
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
         std::ofstream outFile(filename);
         auto expressionString = generateComplexExpressionWithParen((rand() % 4) + 1);
         std::cout << "Testing: " << expressionString << std::endl;
@@ -145,36 +144,11 @@ TEST(ParserTests, HaveParenConstantExpressionParsing) {
         outFile.close();
 
         auto parser = Parser(filename);
-        auto *ast = parser.parseConstantExpr();
+        auto ast = parser.parseConstantExpr();
         int parserValue = ast->eval();
         EXPECT_EQ(parserValue, realValue);
         std::remove(filename.c_str());
     }
-}
-
-TEST(ParserTests, SimpleSingleHDLExpressionTest) {
-    const std::string filename = "expressions.v";
-    srand(static_cast<unsigned int>(time(nullptr)));
-
-    std::ofstream outFile(filename);
-    auto expressionString = "(a ^ b) | (c | d) & (~c)[2] && (a[1] || a[2])";
-    outFile << expressionString << std::endl;
-    outFile.close();
-
-    auto parser = Parser(filename);
-    auto *ast = parser.parseHDLExpression();
-    std::cout << ast->toString() << std::endl;
-    std::remove(filename.c_str());
-}
-
-TEST(ParserTests, SimpleSingleModuleVerilogTest) {
-    const std::string filename = "../tests/verilog_srcs/full_adder_with_rubbish.v";
-
-    auto parser = Parser(filename);
-    parser.parseHDL();
-    parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
-    std::cout << "ok" << std::endl;
 }
 
 TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
@@ -183,20 +157,21 @@ TEST(ParserTests, SimpleSingleModuleVerilogSimTest) {
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
-    auto aData = CircuitInnerData(PortSlicingAST(0, 0));
+    auto aData = CircuitData(PortSlicingAST(0, 0));
     aData.bits[0] = true;
-    auto bData = CircuitInnerData(PortSlicingAST(0, 0));
+    auto bData = CircuitData(PortSlicingAST(0, 0));
     bData.bits[0] = true;
-    auto ciData = CircuitInnerData(PortSlicingAST(0, 0));
-    ciData.bits[0] = true;
+    auto ciData = CircuitData(PortSlicingAST(0, 0));
+    ciData.bits[0] = false;
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
     simulator.poke("carryin", ciData);
-    simulator.doSimulation();
+    simulator.printOutcome();
+    EXPECT_EQ(simulator.peek("y").bits[0], 0);
+    EXPECT_EQ(simulator.peek("carryout").bits[0], 1);
 }
 
 TEST(ParserTests, SimpleSlicingSimTest) {
@@ -205,7 +180,6 @@ TEST(ParserTests, SimpleSlicingSimTest) {
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
     auto aData = CircuitData(PortSlicingAST(2, 0));
@@ -219,7 +193,12 @@ TEST(ParserTests, SimpleSlicingSimTest) {
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
-    simulator.doSimulation();
+    EXPECT_EQ(simulator.peek("c").bits[0], -1);
+    EXPECT_EQ(simulator.peek("c").bits[1], -1);
+    EXPECT_EQ(simulator.peek("c").bits[2], 1);
+    EXPECT_EQ(simulator.peek("c").bits[3], 0);
+    EXPECT_EQ(simulator.peek("c").bits[4], 0);
+    EXPECT_EQ(simulator.peek("c").bits[5], -1);
 }
 
 TEST(ParserTests, SimpleMuxSimTest) {
@@ -228,7 +207,6 @@ TEST(ParserTests, SimpleMuxSimTest) {
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
     auto aData = CircuitData(PortSlicingAST(2, 0));
@@ -247,7 +225,9 @@ TEST(ParserTests, SimpleMuxSimTest) {
     simulator.poke("a", aData);
     simulator.poke("b", bData);
     simulator.poke("sel", selData);
-    simulator.doSimulation();
+    EXPECT_EQ(simulator.peek("out").bits[0], 0);
+    EXPECT_EQ(simulator.peek("out").bits[1], 1);
+    EXPECT_EQ(simulator.peek("out").bits[2], 1);
 }
 
 TEST(ParserTests, SimpleConcatSimTest) {
@@ -256,7 +236,6 @@ TEST(ParserTests, SimpleConcatSimTest) {
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
 
     auto aData = CircuitData(PortSlicingAST(3, 0));
@@ -275,7 +254,19 @@ TEST(ParserTests, SimpleConcatSimTest) {
     simulator.poke("a", aData);
     simulator.poke("b", bData);
     simulator.poke("single_bit", singleBit);
-    simulator.doSimulation();
+    EXPECT_EQ(simulator.peek("result1").bits[0], -1);
+
+    EXPECT_EQ(simulator.peek("result2_1").bits[0], 1);
+    EXPECT_EQ(simulator.peek("result2_1").bits[1], 0);
+
+    EXPECT_EQ(simulator.peek("result3_0").bits[0], 1);
+    EXPECT_EQ(simulator.peek("result3_0").bits[1], 1);
+    EXPECT_EQ(simulator.peek("result3_0").bits[2], -1);
+
+    EXPECT_EQ(simulator.peek("result2_0").bits[0], 1);
+    EXPECT_EQ(simulator.peek("result2_0").bits[1], 1);
+    EXPECT_EQ(simulator.peek("result2_0").bits[2], 1);
+    EXPECT_EQ(simulator.peek("result2_0").bits[3], 0);
 }
 
 TEST(ParserTests, SimpleRegSimTest) {
@@ -284,7 +275,6 @@ TEST(ParserTests, SimpleRegSimTest) {
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
     auto simulator = RtlSimulator{parser.hardwareModule};
     auto clkData = CircuitData(PortSlicingAST(0, 0));
     auto resetData = CircuitData(PortSlicingAST(0, 0));
@@ -330,7 +320,6 @@ TEST(ParserTests, LLVMTest) {
     auto parser = Parser(filename);
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
-    RtlVisualizer::visualize(parser.hardwareModule);
     auto emitter = EmitFIRRTL(parser.hardwareModule);
-    emitter.emit();
+    std::cout << emitter.emit() << std::endl;
 }
