@@ -275,9 +275,13 @@ void RtlModule::buildCircuit() {
 
     for (auto &blk: alwaysBlocks) {
         const auto &sensitiveList = blk->getSensitiveList();
+        if (sensitiveList.size() != 1) {
+            throw std::runtime_error("Only support one element in sensitive list");
+        }
         for (const auto &child: blk->children) {
             auto body = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(child.get()));
             for (auto &conn: body) {
+                conn.clocking = sensitiveList[0];
                 circuitConnections.push_back(std::move(conn));
             }
         }
@@ -286,6 +290,13 @@ void RtlModule::buildCircuit() {
     for (auto &conn: circuitConnections) {
         auto *ast = conn.getHDLExpressionAST();
         auto symbol = genCircuitSymbolByHDLExprAST(ast);
+        std::shared_ptr<CircuitSymbol> clockSignal = nullptr;
+        auto triggerType = conn.clocking.first;
+        if (!conn.clocking.second.empty() && conn.clocking.second != "*") {
+            /* is register, add clock signal */
+            clockSignal = getPortOrSymbolById(conn.clocking.second);
+        }
+
         int inputSlicingNextStart = 0;
         for (auto &[destIdentifier, destSlicing]: conn.getDestIdentifiers()) {
             auto destSymbol = getPortOrSymbolById(destIdentifier);
@@ -297,6 +308,16 @@ void RtlModule::buildCircuit() {
             inputSlicingInTotal.downToHigh += inputSlicingNextStart;
             inputSlicingInTotal.downToLow += inputSlicingNextStart;
             inputSlicingNextStart += destWidth;
+
+            if (clockSignal != nullptr) {
+                auto destRegSymbol = std::static_pointer_cast<CircuitSymbolReg>(destSymbol);
+                if (destRegSymbol) {
+                    destRegSymbol->setTriggerType(triggerType);
+                    destRegSymbol->registerClock(clockSignal);
+                } else {
+                    throw std::runtime_error("Cannot set clock signal");
+                }
+            }
 
             if (destSlicing.isTrivial()) {
                 destSymbol->registerInput(symbol, inputSlicingInTotal);

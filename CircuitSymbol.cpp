@@ -214,9 +214,45 @@ void CircuitSymbolWire::propagate(std::size_t pos, const CircuitData &data) {
 }
 
 CircuitData CircuitSymbolReg::calculateOutput() {
-    auto ret = lastOutputData;
-    lastOutputData = CircuitSymbolWire::calculateOutput();
-    return ret;
+    return storedData;
+}
+
+int CircuitSymbolReg::getMaxInputs() {
+    return 2;
+}
+
+std::size_t CircuitSymbolReg::registerClock(const std::shared_ptr<CircuitSymbol> &symbol) {
+    int currentPos = static_cast<int>(inputDataVec.size());
+    if (currentPos >= getMaxInputs()) {
+        throw std::runtime_error("Cannot bind more input ports!");
+    }
+    inputDataVec.emplace_back(CircuitData{clockSlicing}, clockSlicing);
+    inputReadyVec.push_back(false);
+    backwardSymbols.emplace_back(symbol, clockSlicing, PortSlicingAST{-1, -1});
+    symbol->propagateTargets.emplace_back(currentPos, this, clockSlicing);
+    return currentPos;
+}
+
+void CircuitSymbolReg::propagate(std::size_t pos, const CircuitData &data) {
+    if (pos == 0) {
+        if (triggerType == TriggerEdgeType::POSITIVE_EDGE) {
+            if (prevClockSignal.bits[0] == false && data.bits[0] == true) {
+                storedData = getInputCircuitData(1);
+            }
+        } else if (triggerType == TriggerEdgeType::NEGATIVE_EDGE) {
+            if (prevClockSignal.bits[0] == true && data.bits[0] == false) {
+                storedData = getInputCircuitData(1);
+            }
+        } else {
+            throw std::runtime_error("The trigger type is not specified");
+        }
+    } else {
+        CircuitSymbolWire::propagate(pos, data);
+    }
+}
+
+void CircuitSymbolReg::setTriggerType(TriggerEdgeType type) {
+    triggerType = type;
 }
 
 void ModuleIOPort::registerForInput() {

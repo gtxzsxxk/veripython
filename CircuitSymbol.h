@@ -12,24 +12,19 @@
 #include <utility>
 #include <vector>
 
-enum class PortDirection {
-    Input,
-    Output,
-    Unspecified
-};
-
 class CircuitConnection {
     std::vector<std::pair<std::string, PortSlicingAST>> destIdentifiers;
 public:
+    std::pair<TriggerEdgeType, std::string> clocking{TriggerEdgeType::NOT_SPECIFIED, {}};
     std::unique_ptr<HDLExpressionAST> ast;
 
-    CircuitConnection(std::string dest,
+    CircuitConnection(const std::string &dest,
                       std::unique_ptr<HDLExpressionAST> connAST) :
             ast(std::move(connAST)) {
         destIdentifiers.emplace_back(dest, PortSlicingAST{-1, -1});
     }
 
-    CircuitConnection(std::string dest, const PortSlicingAST &destSlicing,
+    CircuitConnection(const std::string &dest, const PortSlicingAST &destSlicing,
                       std::unique_ptr<HDLExpressionAST> connAST) :
             ast(std::move(connAST)) {
         destIdentifiers.emplace_back(dest, destSlicing);
@@ -43,11 +38,13 @@ public:
 
     CircuitConnection(CircuitConnection &&conn) {
         destIdentifiers = conn.destIdentifiers;
+        clocking = conn.clocking;
         ast = std::move(conn.ast);
     }
 
     CircuitConnection &operator=(CircuitConnection &&conn) {
         destIdentifiers = conn.destIdentifiers;
+        clocking = conn.clocking;
         ast = std::move(conn.ast);
         return *this;
     }
@@ -85,10 +82,10 @@ protected:
     PortSlicingAST slicing;
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
     std::vector<bool> inputReadyVec;
-    std::vector<std::tuple<std::size_t, CircuitSymbol *, PortSlicingAST>> propagateTargets;
     /* backward symbol, input slicing, dest slicing */
     std::vector<std::tuple<std::shared_ptr<CircuitSymbol>, PortSlicingAST, PortSlicingAST>> backwardSymbols;
     CircuitData outputData{PortSlicingAST{0, 0}};
+    std::vector<std::tuple<std::size_t, CircuitSymbol *, PortSlicingAST>> propagateTargets;
 
     virtual CircuitData calculateOutput() = 0;
 
@@ -101,6 +98,8 @@ protected:
     void resetReadyInputs();
 
     friend class CircuitSymbolWire;
+
+    friend class CircuitSymbolReg;
 
 public:
     explicit CircuitSymbol(std::string identifier) :
@@ -146,15 +145,26 @@ public:
 };
 
 class CircuitSymbolReg : public CircuitSymbolWire {
-    CircuitData lastOutputData;
+    PortSlicingAST clockSlicing{0, 0};
+    CircuitData storedData;
+    CircuitData prevClockSignal{clockSlicing};
+    TriggerEdgeType triggerType{TriggerEdgeType::NOT_SPECIFIED};
 protected:
     CircuitData calculateOutput() override;
+
+    int getMaxInputs() override;
 
 public:
     explicit CircuitSymbolReg(std::string identifier,
                               const PortSlicingAST &slicingAst) :
             CircuitSymbolWire(std::move(identifier), slicingAst),
-            lastOutputData(slicingAst) {}
+            storedData(slicingAst) {}
+
+    std::size_t registerClock(const std::shared_ptr<CircuitSymbol> &symbol);
+
+    void propagate(std::size_t pos, const CircuitData &data) override;
+
+    void setTriggerType(TriggerEdgeType type);
 };
 
 class CircuitSymbolConstant : public CircuitSymbolWire {
@@ -220,10 +230,5 @@ public:
 
     void setPortDirection(PortDirection newDirection);
 };
-
-//class CircuitSymbolReg : public CircuitSymbol {
-//public:
-//    explicit CircuitSymbolReg(std::string identifier) : CircuitSymbol(std::move(identifier)) {}
-//};
 
 #endif //VERIPYTHON_CIRCUITSYMBOL_H
