@@ -71,8 +71,6 @@ add_executable(veripython
         RtlVisualizer.h
         RtlSimulator.cpp
         RtlSimulator.h
-        SequentialLogics.cpp
-        SequentialLogics.h
         Lexer.cpp
         EmitFIRRTL.cpp
         EmitFIRRTL.h
@@ -104,8 +102,6 @@ if (NOT RELEASE_CODE_MODE)
             RtlVisualizer.h
             RtlSimulator.cpp
             RtlSimulator.h
-            SequentialLogics.cpp
-            SequentialLogics.h
             EmitFIRRTL.cpp
             EmitFIRRTL.h
     )

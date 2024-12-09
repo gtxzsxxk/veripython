@@ -6,7 +6,6 @@
 #define VERIPYTHON_AST_H
 
 #include "Lexer.h"
-#include "SequentialLogics.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -14,6 +13,18 @@
 #include <cstring>
 
 class HDLExpressionAST;
+
+enum class PortDirection {
+    Input,
+    Output,
+    Unspecified
+};
+
+enum class TriggerEdgeType {
+    NOT_SPECIFIED,
+    POSITIVE_EDGE,
+    NEGATIVE_EDGE
+};
 
 class AST {
 public:
