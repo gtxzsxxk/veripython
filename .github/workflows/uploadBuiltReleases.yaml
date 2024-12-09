@@ -1,4 +1,4 @@
-name: Generate Submission Zip
+name: Build and Upload Release Artifacts
 
 on:
   push:
@@ -44,7 +44,9 @@ jobs:
           mkdir -p build
           mkdir -p ${SUBMIT_FOLDER}/exe
           cd build
-          cmake .. -DRELEASE_CODE_MODE=ON
+          wget https://github.com/llvm/circt/releases/download/firtool-1.93.1/circt-full-static-linux-x64.tar.gz
+          tar -xf circt-full-static-linux-x64.tar.gz
+          cmake .. -DCMAKE_BUILD_TYPE=release -DFIRTOOL_LIB_PATH=$(pwd)/firtool-1.93.1/lib
           make -j
           cd ..
           cp build/veripython ${SUBMIT_FOLDER}/exe
