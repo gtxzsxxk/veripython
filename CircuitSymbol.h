@@ -78,6 +78,7 @@ public:
 
 class CircuitSymbol {
 protected:
+    bool isRegister = false;
     std::string identifier;
     PortSlicingAST slicing;
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
@@ -116,6 +117,8 @@ public:
 
     [[nodiscard]] const decltype(backwardSymbols) &getBackwardSymbols() const;
 
+    [[nodiscard]] bool isRegisterSymbol() const;
+
     virtual ~CircuitSymbol() = default;
 };
 
@@ -153,11 +156,15 @@ public:
     explicit CircuitSymbolReg(std::string identifier,
                               const PortSlicingAST &slicingAst) :
             CircuitSymbolWire(std::move(identifier), slicingAst),
-            storedData(slicingAst) {}
+            storedData(slicingAst) {
+        isRegister = true;
+    }
 
     std::size_t registerClock(const std::shared_ptr<CircuitSymbol> &symbol);
 
     void propagate(std::size_t pos, const CircuitData &data) override;
+
+    void propagateStoredData();
 
     void setTriggerType(TriggerEdgeType type);
 };

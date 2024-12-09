@@ -98,6 +98,10 @@ const decltype(CircuitSymbol::backwardSymbols) &CircuitSymbol::getBackwardSymbol
     return backwardSymbols;
 }
 
+bool CircuitSymbol::isRegisterSymbol() const {
+    return isRegister;
+}
+
 CircuitData CircuitSymbolConstant::calculateOutput() {
     CircuitData data{slicing};
     int tmpValue = value;
@@ -223,8 +227,41 @@ void CircuitSymbolReg::propagate(std::size_t pos, const CircuitData &data) {
         } else {
             throw std::runtime_error("The trigger type is not specified");
         }
+
+        prevClockSignal.bits[0] = data.bits[0];
     } else {
-        CircuitSymbolWire::propagate(pos, data);
+        auto destSlicing = inputDataVec[pos].second;
+        auto inputData = inputDataVec[1].first;
+        if (destSlicing.isDownTo) {
+            for (auto i = destSlicing.downToLow;
+                 i <= destSlicing.downToHigh && i - destSlicing.downToLow <= data.slicing.downToHigh; i++) {
+                inputData.bits[i] = data.bits[i - destSlicing.downToLow];
+            }
+        } else {
+            inputData.bits[destSlicing.onlyWhich] = data.bits[0];
+        }
+        inputDataVec[1] = std::make_pair(inputData, destSlicing);
+    }
+}
+
+void CircuitSymbolReg::propagateStoredData() {
+    outputData = calculateOutput();
+    for (auto &[nextPos, nextSymbol, propagateSlicing]: propagateTargets) {
+        if (!propagateSlicing.isTrivial()) {
+            CircuitData slicedData{propagateSlicing};
+            if (propagateSlicing.isDownTo) {
+                for (auto i = propagateSlicing.downToLow;
+                     i <= propagateSlicing.downToHigh;
+                     i++) {
+                    slicedData.bits[i - propagateSlicing.downToLow] = outputData.bits[i];
+                }
+            } else {
+                slicedData.bits[0] = outputData.bits[propagateSlicing.onlyWhich];
+            }
+            nextSymbol->propagate(nextPos, slicedData);
+        } else {
+            nextSymbol->propagate(nextPos, outputData);
+        }
     }
 }
 
