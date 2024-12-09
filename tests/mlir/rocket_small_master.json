@@ -1,0 +1,946 @@
+[
+  {
+    "name": "RocketSystem",
+    "numStateBytes": 13780,
+    "initialFnSym": "",
+    "finalFnSym": "",
+    "states": [
+      {
+        "name": "clock",
+        "offset": 0,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "reset",
+        "offset": 1,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "resetctrl_hartIsInReset_0",
+        "offset": 2,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_clock",
+        "offset": 3,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_reset",
+        "offset": 4,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_req_valid",
+        "offset": 5,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_req_bits_addr",
+        "offset": 6,
+        "numBits": 7,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_req_bits_data",
+        "offset": 8,
+        "numBits": 32,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_req_bits_op",
+        "offset": 12,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_resp_ready",
+        "offset": 13,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmiClock",
+        "offset": 14,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_clockeddmi_dmiReset",
+        "offset": 15,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "debug_dmactiveAck",
+        "offset": 16,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_aw_ready",
+        "offset": 17,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_w_ready",
+        "offset": 18,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_b_valid",
+        "offset": 19,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_b_bits_id",
+        "offset": 20,
+        "numBits": 4,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_b_bits_resp",
+        "offset": 21,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_ar_ready",
+        "offset": 22,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_r_valid",
+        "offset": 23,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_r_bits_id",
+        "offset": 24,
+        "numBits": 4,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_r_bits_data",
+        "offset": 32,
+        "numBits": 64,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_r_bits_resp",
+        "offset": 40,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "mem_axi4_0_r_bits_last",
+        "offset": 41,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_aw_ready",
+        "offset": 42,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_w_ready",
+        "offset": 43,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_b_valid",
+        "offset": 44,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_b_bits_id",
+        "offset": 45,
+        "numBits": 4,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_b_bits_resp",
+        "offset": 46,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_ar_ready",
+        "offset": 47,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_r_valid",
+        "offset": 48,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_r_bits_id",
+        "offset": 49,
+        "numBits": 4,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_r_bits_data",
+        "offset": 56,
+        "numBits": 64,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_r_bits_resp",
+        "offset": 64,
+        "numBits": 2,
+        "type": "input"
+      },
+      {
+        "name": "mmio_axi4_0_r_bits_last",
+        "offset": 65,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "subsystem_sbus/system_bus_xbar/monitor/plusarg_reader/out",
+        "offset": 68,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_sbus/system_bus_xbar/monitor/plusarg_reader_1/out",
+        "offset": 72,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_sbus/fixer/monitor/plusarg_reader/out",
+        "offset": 912,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_sbus/fixer/monitor/plusarg_reader_1/out",
+        "offset": 916,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_sbus/coupler_to_port_named_mmio_port_axi4/tl2axi4/monitor/plusarg_reader/out",
+        "offset": 1116,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_sbus/coupler_to_port_named_mmio_port_axi4/tl2axi4/monitor/plusarg_reader_1/out",
+        "offset": 1120,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/fixer/monitor/plusarg_reader/out",
+        "offset": 1156,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/fixer/monitor/plusarg_reader_1/out",
+        "offset": 1160,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/out_xbar/monitor/plusarg_reader/out",
+        "offset": 1340,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/out_xbar/monitor/plusarg_reader_1/out",
+        "offset": 1344,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/buffer/monitor/plusarg_reader/out",
+        "offset": 1380,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/buffer/monitor/plusarg_reader_1/out",
+        "offset": 1384,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/atomics/monitor/plusarg_reader/out",
+        "offset": 1568,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/atomics/monitor/plusarg_reader_1/out",
+        "offset": 1572,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/wrapped_error_device/error/monitor/plusarg_reader/out",
+        "offset": 1612,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/wrapped_error_device/error/monitor/plusarg_reader_1/out",
+        "offset": 1616,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/wrapped_error_device/buffer/monitor/plusarg_reader/out",
+        "offset": 1728,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/wrapped_error_device/buffer/monitor/plusarg_reader_1/out",
+        "offset": 1732,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_plic/fragmenter/monitor/plusarg_reader/out",
+        "offset": 1768,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_plic/fragmenter/monitor/plusarg_reader_1/out",
+        "offset": 1772,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_clint/fragmenter/monitor/plusarg_reader/out",
+        "offset": 1812,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_clint/fragmenter/monitor/plusarg_reader_1/out",
+        "offset": 1816,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_debug/fragmenter/monitor/plusarg_reader/out",
+        "offset": 1844,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_debug/fragmenter/monitor/plusarg_reader_1/out",
+        "offset": 1848,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_bootrom/fragmenter/monitor/plusarg_reader/out",
+        "offset": 1876,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_cbus/coupler_to_bootrom/fragmenter/monitor/plusarg_reader_1/out",
+        "offset": 1880,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_mbus/fixer/monitor/plusarg_reader/out",
+        "offset": 1904,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_mbus/fixer/monitor/plusarg_reader_1/out",
+        "offset": 1908,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_mbus/picker/monitor/plusarg_reader/out",
+        "offset": 1964,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_mbus/picker/monitor/plusarg_reader_1/out",
+        "offset": 1968,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_mbus/coupler_to_memory_controller_port_named_axi4/tl2axi4/monitor/plusarg_reader/out",
+        "offset": 2020,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_mbus/coupler_to_memory_controller_port_named_axi4/tl2axi4/monitor/plusarg_reader_1/out",
+        "offset": 2024,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_l2_wrapper/broadcast_1/monitor/plusarg_reader/out",
+        "offset": 2604,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_l2_wrapper/broadcast_1/monitor/plusarg_reader_1/out",
+        "offset": 2608,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_l2_wrapper/binder/monitor/plusarg_reader/out",
+        "offset": 2652,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "subsystem_l2_wrapper/binder/monitor/plusarg_reader_1/out",
+        "offset": 2656,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/tile_reset_domain/tile/tlMasterXbar/monitor/plusarg_reader/out",
+        "offset": 2708,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/tile_reset_domain/tile/tlMasterXbar/monitor/plusarg_reader_1/out",
+        "offset": 2712,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/tile_reset_domain/tile/tlMasterXbar/monitor_1/plusarg_reader/out",
+        "offset": 2924,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/tile_reset_domain/tile/tlMasterXbar/monitor_1/plusarg_reader_1/out",
+        "offset": 2928,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/tile_reset_domain/tile/core/PlusArgTimeout/plusarg_reader/out",
+        "offset": 12716,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/buffer/monitor/plusarg_reader/out",
+        "offset": 12756,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tile_prci_domain/buffer/monitor/plusarg_reader_1/out",
+        "offset": 12760,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "plicDomainWrapper/plic/monitor/plusarg_reader/out",
+        "offset": 12812,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "plicDomainWrapper/plic/monitor/plusarg_reader_1/out",
+        "offset": 12816,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "clint/monitor/plusarg_reader/out",
+        "offset": 12940,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "clint/monitor/plusarg_reader_1/out",
+        "offset": 12944,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmiXbar/monitor/plusarg_reader/out",
+        "offset": 13068,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmiXbar/monitor/plusarg_reader_1/out",
+        "offset": 13072,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmOuter/monitor/plusarg_reader/out",
+        "offset": 13120,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmOuter/monitor/plusarg_reader_1/out",
+        "offset": 13124,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmiBypass/bar/monitor/plusarg_reader/out",
+        "offset": 13160,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmiBypass/bar/monitor/plusarg_reader_1/out",
+        "offset": 13164,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmiBypass/error/monitor/plusarg_reader/out",
+        "offset": 13192,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/dmiBypass/error/monitor/plusarg_reader_1/out",
+        "offset": 13196,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/asource/monitor/plusarg_reader/out",
+        "offset": 13224,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmOuter/asource/monitor/plusarg_reader_1/out",
+        "offset": 13228,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmInner/dmInner/monitor/plusarg_reader/out",
+        "offset": 13332,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmInner/dmInner/monitor/plusarg_reader_1/out",
+        "offset": 13336,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmInner/dmInner/monitor_1/plusarg_reader/out",
+        "offset": 13376,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "tlDM/dmInner/dmInner/monitor_1/plusarg_reader_1/out",
+        "offset": 13380,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "bootROMDomainWrapper/bootrom/monitor/plusarg_reader/out",
+        "offset": 13584,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "bootROMDomainWrapper/bootrom/monitor/plusarg_reader_1/out",
+        "offset": 13588,
+        "numBits": 32,
+        "type": "register"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_req_ready",
+        "offset": 13676,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_resp_valid",
+        "offset": 13677,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_resp_bits_data",
+        "offset": 13680,
+        "numBits": 32,
+        "type": "output"
+      },
+      {
+        "name": "debug_clockeddmi_dmi_resp_bits_resp",
+        "offset": 13684,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "debug_ndreset",
+        "offset": 13685,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "debug_dmactive",
+        "offset": 13686,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_valid",
+        "offset": 13687,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_id",
+        "offset": 13688,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_addr",
+        "offset": 13692,
+        "numBits": 32,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_len",
+        "offset": 13696,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_size",
+        "offset": 13697,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_burst",
+        "offset": 13698,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_lock",
+        "offset": 13699,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_cache",
+        "offset": 13700,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_prot",
+        "offset": 13701,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_aw_bits_qos",
+        "offset": 13702,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_w_valid",
+        "offset": 13703,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_w_bits_data",
+        "offset": 13704,
+        "numBits": 64,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_w_bits_strb",
+        "offset": 13712,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_w_bits_last",
+        "offset": 13713,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_b_ready",
+        "offset": 13714,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_valid",
+        "offset": 13715,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_id",
+        "offset": 13716,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_addr",
+        "offset": 13720,
+        "numBits": 32,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_len",
+        "offset": 13724,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_size",
+        "offset": 13725,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_burst",
+        "offset": 13726,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_lock",
+        "offset": 13727,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_cache",
+        "offset": 13728,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_prot",
+        "offset": 13729,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_ar_bits_qos",
+        "offset": 13730,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mem_axi4_0_r_ready",
+        "offset": 13731,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_valid",
+        "offset": 13732,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_id",
+        "offset": 13733,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_addr",
+        "offset": 13736,
+        "numBits": 31,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_len",
+        "offset": 13740,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_size",
+        "offset": 13741,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_burst",
+        "offset": 13742,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_lock",
+        "offset": 13743,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_cache",
+        "offset": 13744,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_prot",
+        "offset": 13745,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_aw_bits_qos",
+        "offset": 13746,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_w_valid",
+        "offset": 13747,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_w_bits_data",
+        "offset": 13752,
+        "numBits": 64,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_w_bits_strb",
+        "offset": 13760,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_w_bits_last",
+        "offset": 13761,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_b_ready",
+        "offset": 13762,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_valid",
+        "offset": 13763,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_id",
+        "offset": 13764,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_addr",
+        "offset": 13768,
+        "numBits": 31,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_len",
+        "offset": 13772,
+        "numBits": 8,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_size",
+        "offset": 13773,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_burst",
+        "offset": 13774,
+        "numBits": 2,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_lock",
+        "offset": 13775,
+        "numBits": 1,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_cache",
+        "offset": 13776,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_prot",
+        "offset": 13777,
+        "numBits": 3,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_ar_bits_qos",
+        "offset": 13778,
+        "numBits": 4,
+        "type": "output"
+      },
+      {
+        "name": "mmio_axi4_0_r_ready",
+        "offset": 13779,
+        "numBits": 1,
+        "type": "output"
+      }
+    ]
+  }
+]
