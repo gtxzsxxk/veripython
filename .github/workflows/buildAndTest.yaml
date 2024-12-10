@@ -2,11 +2,9 @@ name: Build and Test
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main", "ci_fix" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,6 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfl-dev
 
       - name: Download Firtool Static Libraries
         run: |
@@ -23,10 +26,16 @@ jobs:
           tar -xf circt-full-static-linux-x64.tar.gz
 
       - name: Configure CMake
-        run: cmake .. -DCMAKE_BUILD_TYPE=release -DFIRTOOL_LIB_PATH=$(pwd)/firtool-1.93.1/lib
+        run: |
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=release -DFIRTOOL_LIB_PATH=$(pwd)/firtool-1.93.1/lib
 
       - name: Build
-        run: make -j
+        run: |
+          cd build
+          make -j
 
       - name: Test
-        run: ctest
+        run: |
+          cd build
+          ctest
