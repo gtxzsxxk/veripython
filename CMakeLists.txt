@@ -10,7 +10,7 @@ if (build_type STREQUAL "release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else ()
     message(STATUS "We are in Debug Mode, gtest is enabled")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -Wno-error=missing-requires")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
     add_compile_options("-fsanitize=address")
     link_libraries("-fsanitize=address")
 
@@ -38,15 +38,17 @@ add_custom_command(
 )
 add_library(lexer OBJECT ${FLEX_OUT})
 
-set(FIRTOOL_LIB_PATH "/root/circt/firtool-1.93.1/lib")
+if (NOT FIRTOOL_LIB_PATH)
+    set(FIRTOOL_LIB_PATH "/root/circt/firtool-1.93.1/lib")
+endif ()
 set(FIRTOOL_INSTALL_PATH "${FIRTOOL_LIB_PATH}/cmake")
 message(STATUS "FIRTOOL_LIB_PATH is ${FIRTOOL_LIB_PATH}")
 find_package(CIRCT REQUIRED CONFIG
-             HINTS "${FIRTOOL_INSTALL_PATH}/circt")
+        HINTS "${FIRTOOL_INSTALL_PATH}/circt")
 find_package(MLIR REQUIRED CONFIG
-             HINTS "${FIRTOOL_INSTALL_PATH}/mlir")
+        HINTS "${FIRTOOL_INSTALL_PATH}/mlir")
 find_package(LLVM REQUIRED CONFIG
-             HINTS "${FIRTOOL_INSTALL_PATH}/llvm")
+        HINTS "${FIRTOOL_INSTALL_PATH}/llvm")
 message(STATUS "Found CIRCT include dir ${CIRCT_INCLUDE_DIRS}")
 
 include_directories(${CIRCT_INCLUDE_DIRS})
