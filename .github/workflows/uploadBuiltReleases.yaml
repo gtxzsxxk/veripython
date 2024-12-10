@@ -23,8 +23,8 @@ jobs:
 
       - name: Set DOC_PATH and SUBMIT_FOLDER
         run: |
-          mkdir -p front_end_submission
-          echo "SUBMIT_FOLDER=front_end_submission" >> $GITHUB_ENV
+          mkdir -p final_submission
+          echo "SUBMIT_FOLDER=final_submission" >> $GITHUB_ENV
 
       - name: Generate Report PDF
         run: |
@@ -39,7 +39,7 @@ jobs:
           cp $(pwd)/verilog.l ${SUBMIT_FOLDER}/src
           cp $(pwd)/CMakeLists.txt ${SUBMIT_FOLDER}/src
 
-      - name: Copy Executable
+      - name: Build and Copy Executable
         run: |
           mkdir -p build
           mkdir -p ${SUBMIT_FOLDER}/exe
@@ -60,8 +60,8 @@ jobs:
           cp doc/full_adder.png ${SUBMIT_FOLDER}/exe
           cp doc/reg_simple_test2.png ${SUBMIT_FOLDER}/exe
 
-      - name: Generate Frontend Submission
+      - name: Generate Final Submission
         uses: actions/upload-artifact@v3
         with:
-          name: 杨之凡_徐浩然_赵涵远_杨憬晗_编译小组作业_前端
-          path: front_end_submission
+          name: 杨之凡_徐浩然_赵涵远_杨憬晗_编译小组作业
+          path: final_submission

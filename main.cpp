@@ -10,7 +10,7 @@ const auto usageString = "Usage\n"
                          "=====\n\n"
                          "veripython [OPTION]... [FILE]...\n"
                          "Another implementation for Verilator with Python target\n\n"
-                         "Currently only the frontend is implemented. Supported arguments:\n"
+                         "This program supports parsing a subset of verilog and generate IR in FIRRTL. Supported arguments:\n"
                          "  -o           Specify the output filename\n"
                          "  -ast         Output the AST in Json format.\n"
                          "  -vis         Use graphviz to generate the RTL view. Your system must support the 'dot' command\n"
@@ -18,7 +18,8 @@ const auto usageString = "Usage\n"
                          "  -firrtl      Parse the verilog source file and emit IR in FIRRTL\n"
                          "\n"
                          "Example:\n"
-                         "veripython full_adder.v -o full_adder.json -ast\n";
+                         "veripython full_adder.v -o full_adder.json -ast\n"
+                         "veripython mux_test.v -firrtl\n";
 
 enum class FrontendTask {
     NOT_SPECIFIED,
