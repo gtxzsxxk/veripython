@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Firtool Static Libraries
+        run: |
+          mkdir -p build
+          cd build
+          wget https://github.com/llvm/circt/releases/download/firtool-1.93.1/circt-full-static-linux-x64.tar.gz
+          tar -xf circt-full-static-linux-x64.tar.gz
+
+      - name: Configure CMake
+        run: cmake .. -DCMAKE_BUILD_TYPE=release -DFIRTOOL_LIB_PATH=$(pwd)/firtool-1.93.1/lib
+
+      - name: Build
+        run: make -j
+
+      - name: Test
+        run: ctest
