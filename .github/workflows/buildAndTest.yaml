@@ -2,7 +2,7 @@ name: Build and Test
 
 on:
   push:
-    branches: [ "main", "ci_fix" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -28,7 +28,7 @@ jobs:
       - name: Configure CMake
         run: |
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=release -DFIRTOOL_LIB_PATH=$(pwd)/firtool-1.93.1/lib
+          cmake .. -DCMAKE_BUILD_TYPE=debug -DFIRTOOL_LIB_PATH=$(pwd)/firtool-1.93.1/lib
 
       - name: Build
         run: |
