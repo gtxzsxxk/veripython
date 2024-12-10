@@ -3,7 +3,9 @@ project(veripython)
 
 set(CMAKE_CXX_STANDARD 20)
 
-if (CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
+
+if (build_type STREQUAL "release")
     message(STATUS "We are in Release Mode")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else ()
@@ -38,6 +40,7 @@ add_library(lexer OBJECT ${FLEX_OUT})
 
 set(FIRTOOL_LIB_PATH "/root/circt/firtool-1.93.1/lib")
 set(FIRTOOL_INSTALL_PATH "${FIRTOOL_LIB_PATH}/cmake")
+message(STATUS "FIRTOOL_LIB_PATH is ${FIRTOOL_LIB_PATH}")
 find_package(CIRCT REQUIRED CONFIG
              HINTS "${FIRTOOL_INSTALL_PATH}/circt")
 find_package(MLIR REQUIRED CONFIG
@@ -83,7 +86,7 @@ target_link_libraries(veripython PRIVATE
         MLIRIR
 )
 
-if (NOT (CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release")))
+if (NOT (build_type STREQUAL "release"))
     enable_testing()
     add_executable(ParserTests
             tests/ParserTests.cpp
