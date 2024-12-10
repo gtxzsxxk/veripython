@@ -47,19 +47,26 @@ Verilog 编译器的核心任务：生成正确的硬件电路，而不是处理
 ```bash
 # 编译，代码路径不能出现中文
 $ mkdir build && cd build
-$ cmake .. -DRELEASE_CODE_MODE=ON
+# 需要手动下载 CIRCT 发布的依赖库。为了让程序能够四处运行，我们选择了链接静态库
+# 下载链接：https://github.com/llvm/circt/releases/download/
+# firtool-1.93.1/circt-full-static-linux-x64.tar.gz
+# 解压后就是 firtool-1.93.1 目录
+$ cmake .. -DCMAKE_BUILD_TYPE=release -DFIRTOOL_LIB_PATH=path/to/firtool-1.93.1/lib
 $ make -j
 
 # exe 目录内提供 veripython 的二进制（在 Ubuntu 22.04 下编译），
 # 如果测试机器的c库满足条件，或者系统大于22.04，可以直接执行
 $ veripython ../tests/verilog_srcs/full_adder.v -o full_adder.json -ast -vis
+# 生成 FIRRTL 的中间表示
+$ veripython ../tests/verilog_srcs/mux_test.v -firrtl
 ```
 
-目前提交的代码仅包含前端部分。支持的参数有：
+支持的参数有：
 - `-o`：指定输出文件名
 - `-ast`：将语法分析树以`json`格式进行输出
 - `-vis`：使用`graphviz`生成 HDL 的 RTL 视图到 `rtl_view.png`中
 - `-token`：仅生成 `token` 流
+- `-firrtl`：解析 Verilog 源文件，并且以 `FIRRTL` 作为 IR 输出
 
 ## 实现
 
@@ -178,7 +185,7 @@ b                  c
 `CombLogics.h` 使用 c++20 的模板功能批量构建了 `CombLogicLogicalOr`（逻辑或） 等能够执行对应计算功能的 `class`，并且编写了一个
 工厂函数，根据对应的 operator 属性，生成对应的组合逻辑 `class`。事实上，这里的 operator 就是 `token`。例如有一个 AST：
 
-```test
+```text
  token_op_add
 /            \
 a            b
@@ -187,9 +194,59 @@ a            b
 这里，operator 就是 `token_op_add`。`CombLogicFactory::create` 函数会自动根据 `token_op_add`，以 unique_ptr 形式
 返回对应的加法器组合逻辑。
 
-### 时序逻辑与LLVM
+### 支持时序逻辑
 
-WIP。不在前端作业提交的范围内。
+数字电路的灵魂是时序逻辑，而该功能主要依赖于寄存器的实现。上述文档已经描述了组合逻辑下电路计算图应该如何生成，因此要使我们的电路计算图
+支持时序逻辑，只需要正确处理计算图中的寄存器节点即可。
+
+```text
+       |
+  +---------+
+  |   CLK   |
+--| D     Q |--
+  |   RST   |
+  +---------+
+       |
+```
+
+1. 寄存器需要支持敏感列表，也就是实现clock信号的处理。前端会解析这个寄存器的触发边沿。寄存器在时钟上升/下降沿到来前会一直输出它之前采样到的数据。
+并且在计算图中，当时钟信号变化时，才对寄存器的输入采样，并且将采样到的数据作为之后的输出。
+
+2. 在我们的模型下，我们的寄存器仅支持同步复位。同步复位指的是，当 CLK 信号到达上升/下降沿时，寄存器对 RST 进行采样。如果 RST 为 active 
+的信号，那么就对复位值进行采样，将其作为之后的输出。
+
+3. 在电路中，组合逻辑的回环是被禁止的，但是寄存器的输入输出端口是可以回环的，所以此时这张图变成了一张有向有环图。但是我们通过一些特殊的处理，
+例如只在最后对寄存器的输出进行前向传播，实际上还是实现了一个DAG，用于输出信号的计算。
+
+所以我们利用了面向对象的思想，让寄存器继承了普通的导线，但是重写了前向传播与节点绑定的函数，就实现了时序逻辑。
+
+### 利用 LLVM 框架的 MLIR 子项目生成 FIRRTL 中间表示
+
+LLVM 的 MLIR（Multi-Level Intermediate Representation）是一个通用的编译框架，通过支持多层次的中间表示来简化和优化编译器设计。
+MLIR 提供了灵活的基础设施，可以自定义领域特定的中间表示（DSL IR）以及在多层抽象间进行转换和优化。
+这种灵活性使其非常适合硬件设计与验证领域中的复杂场景，如处理硬件描述语言和硬件专用优化。
+
+CIRCT 是基于 MLIR 的项目，专为硬件描述设计服务，提供了对 FIRRTL 等硬件相关中间表示的支持。
+FIRRTL（Flexible Intermediate Representation for RTL）是一种中间表示（IR），专为数字硬件设计领域创建，是 MLIR 的一种方言，
+用于描述 RTL（寄存器传输级）电路。它是 Chisel（一种基于 Scala 的硬件描述语言）的核心组件之一，通过提供对硬件结构的灵活描述和分析能力，
+支持从高层设计到低层 Verilog 的转换和优化。FIRRTL 的设计注重硬件特性，例如时序逻辑、组合逻辑和特定的硬件约束。
+
+要利用 MLIR 与 CIRCT 生成 FIRRTL 表示，需要结合 MLIR、CIRCT 提供的基础设施与 FIRRTL 的方言特性。在 CIRCT 的支持下，
+我们的代码通过 `circt::firrtl` 命名空间提供的类和操作符完成对电路结构的描述与生成。
+关键部分包括使用 `circt::firrtl::CircuitOp` 和 `circt::firrtl::FModuleOp` 创建电路的层次化结构，
+前者表示整个电路的顶层容器，后者用于定义模块及其端口信息。端口定义中，`circt::firrtl::PortInfo` 被用来存储端口名、方向、类型等元信息，
+并通过 `circt::firrtl::UIntType` 等类型系统实现对位宽的精确描述。对于具体的电路操作，代码通过 FIRRTL 提供的原语操作符，
+例如 `circt::firrtl::MuxPrimOp` 用于多路复用器，`circt::firrtl::ConstantOp` 用于常量值，
+以及 `circt::firrtl::BitsPrimOp` 实现对位选的支持。这些操作符不仅描述了硬件逻辑，同时通过类型推导函数
+（如 `MuxPrimOp::inferReturnType` 和 `BitsPrimOp::inferReturnType`）确保了类型系统的安全性。
+
+在符号管理方面，代码依赖符号表 `symbolTable` 维护 FIRRTL 操作与高层电路符号的映射，避免重复生成操作，
+同时通过 `circt::firrtl::emitConnect` 实现符号间的信号连接。MLIR 的构建器 `circt::OpBuilder` 和 `mlir::ImplicitLocOpBuilder`
+被用于管理操作的插入点和生成上下文，结合 `mlir::APInt` 和 `mlir::IntegerAttr` 等 LLVM 中的基础数据结构， 支持常量和属性的定义。
+
+利用 LLVM 的基础设施，我们的程序不仅能高效地生成符合硬件设计规范的中间表示，还能提供强大的分析和优化能力，
+MLIR 的基础设施可以对生成的 FIRRTL 进行硬件级优化，例如消除冗余逻辑、优化时序路径等。最后，使用 LLVM 等基础设施提供的转换能力，
+可以将 FIRRTL 表示进一步转换为 Verilog 或其他后端格式，以支持硬件综合和仿真。
 
 ## 运行结果
 
