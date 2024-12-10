@@ -142,7 +142,7 @@ void Parser::parseModulePort() {
     }
     if (idOrInOut.first == TOKEN_identifier) {
         auto [_, identifierToken] = nextToken();
-        hardwareModule.ioPorts.emplace_back(new ModuleIOPort{identifierToken.second});
+        hardwareModule.ioPorts.push_back(std::make_shared<ModuleIOPort>(identifierToken.second));
     } else if (idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
         nextToken();
         auto [_, wireOrRegOrOther] = lookAhead();
@@ -160,11 +160,12 @@ void Parser::parseModulePort() {
         auto direction = idOrInOut.first == TOKEN_input ? PortDirection::Input : PortDirection::Output;
         if (idOrPortSlicing.first == TOKEN_identifier) {
             auto [_, identifierToken] = nextToken();
-            hardwareModule.ioPorts.emplace_back(new ModuleIOPort{direction, identifierToken.second});
+            hardwareModule.ioPorts.push_back(std::make_shared<ModuleIOPort>(direction, identifierToken.second));
         } else if (idOrPortSlicing.first == TOKEN_lbracket) {
             auto slicing = parsePortSlicing();
             auto [_, identifierToken] = nextToken();
-            hardwareModule.ioPorts.emplace_back(new ModuleIOPort{direction, slicing, identifierToken.second});
+            hardwareModule.ioPorts.push_back(
+                    std::make_shared<ModuleIOPort>(direction, slicing, identifierToken.second));
         } else {
             errorParsing("Unexpected Token after input/output");
         }

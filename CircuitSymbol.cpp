@@ -68,7 +68,7 @@ void CircuitSymbol::propagate(std::size_t pos, const CircuitData &data) {
             CircuitData slicedData{propagateSlicing};
             if (propagateSlicing.isDownTo) {
                 for (auto i = propagateSlicing.downToLow;
-                     i <= propagateSlicing.downToHigh && i < outputData.bits.size();
+                     i <= propagateSlicing.downToHigh && i < (int) outputData.bits.size();
                      i++) {
                     slicedData.bits[i - propagateSlicing.downToLow] = outputData.bits[i];
                 }

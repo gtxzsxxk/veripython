@@ -11,8 +11,6 @@ if (build_type STREQUAL "release")
 else ()
     message(STATUS "We are in Debug Mode, gtest is enabled")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
-    add_compile_options("-fsanitize=address")
-    link_libraries("-fsanitize=address")
 
     include(FetchContent)
     FetchContent_Declare(

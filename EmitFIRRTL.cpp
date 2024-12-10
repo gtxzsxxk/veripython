@@ -163,6 +163,7 @@ std::string EmitFIRRTL::emit() {
     std::string irStr;
     llvm::raw_string_ostream outs{irStr};
     mlirModule.print(outs);
+    mlirModule.erase();
 
     return irStr;
 }
