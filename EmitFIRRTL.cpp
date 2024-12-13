@@ -259,9 +259,19 @@ std::string EmitFIRRTL::emit() {
                     &context,
                     circt::StringRef{rtlModule.moduleName}));
 
+    std::unordered_map<std::string, bool> isClockSignal;
+    for (const auto &reg: rtlModule.registers) {
+        isClockSignal[reg->clockSymbolName] = true;
+    }
+
     for (const auto &ioPort: rtlModule.ioPorts) {
         auto name = circt::StringAttr::get(&context, circt::StringRef{ioPort->getIdentifier()});
-        auto type = circt::firrtl::UIntType::get(&context, ioPort->getSlicing().getWidth());
+        circt::firrtl::FIRRTLType type;
+        if (isClockSignal[ioPort->getIdentifier()]) {
+            type = circt::firrtl::ClockType::get(&context);
+        } else {
+            type = circt::firrtl::UIntType::get(&context, ioPort->getSlicing().getWidth());
+        }
         auto direction = circt::firrtl::direction::get(ioPort->getPortDirection() == PortDirection::Output);
         ports.push_back({name, type, direction, {}});
     }
