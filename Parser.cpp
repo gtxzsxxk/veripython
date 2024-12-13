@@ -333,7 +333,9 @@ void Parser::parseCombAssignStatement() {
         auto [_1, slicingOrEqualToken] = lookAhead();
         PortSlicingAST slicingAst{-1, -1};
         if (slicingOrEqualToken.first == TOKEN_lbracket) {
-            slicingAst = parsePortSlicing();
+            errorParsing("The parser supports sub-word assignment but the backend does not. "
+                         "The verilog subset supported by this tool has deprecated that feature, "
+                         "which is not a good style. Please try using concat.");
         }
         VERIFY_NEXT_TOKEN(single_eq);
         auto hdlExpr = parseHDLExpression();
@@ -352,13 +354,9 @@ void Parser::parseCombAssignStatement() {
             auto [_2, slicingOrCommaOrRbraceToken] = lookAhead();
             PortSlicingAST slicingAst{-1, -1};
             if (slicingOrCommaOrRbraceToken.first == TOKEN_lbracket) {
-                slicingAst = parsePortSlicing();
-                auto [_3, commaOrRbraceToken] = nextToken();
-                if (commaOrRbraceToken.first == TOKEN_rbrace) {
-                    break;
-                } else if (commaOrRbraceToken.first != TOKEN_comma) {
-                    errorParsing("Unexpected token");
-                }
+                errorParsing("The parser supports sub-word assignment but the backend does not. "
+                             "The verilog subset supported by this tool has deprecated that feature, "
+                             "which is not a good style. Please try using concat.");
             } else if (slicingOrCommaOrRbraceToken.first == TOKEN_comma) {
                 nextToken();
             } else if (slicingOrCommaOrRbraceToken.first == TOKEN_rbrace) {
@@ -625,11 +623,10 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBodyStatement() {
     auto [_, lookAheadToken] = lookAhead();
     if (lookAheadToken.first == TOKEN_if) {
         return parseIfBlock();
-    }
-//    else if (lookAheadToken.first == TOKEN_case) {
-//        parseCaseBlock();
-//    }
-    else {
+    } else if (lookAheadToken.first == TOKEN_case || lookAheadToken.first == TOKEN_casez ||
+               lookAheadToken.first == TOKEN_casex) {
+        errorParsing("The verilog subset supported by this tool does not support this. Try using if instead.");
+    } else {
         auto ptr = static_cast<AlwaysBlockBodyAST *>(new NonBlockingAssignAST{parseNonBlockingAssignment()});
         return std::unique_ptr<AlwaysBlockBodyAST>(ptr);
     }
@@ -671,10 +668,6 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
     }
 
     return ast;
-}
-
-void Parser::parseCaseBlock() {
-
 }
 
 /*

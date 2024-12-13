@@ -56,8 +56,6 @@ class Parser {
 
     std::unique_ptr<AlwaysBlockBodyAST> parseIfBlock();
 
-    void parseCaseBlock();
-
     CircuitConnection parseNonBlockingAssignment();
 
     std::vector<std::pair<TriggerEdgeType, std::string>> parseSensitiveList();
