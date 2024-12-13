@@ -310,10 +310,12 @@ std::string EmitFIRRTL::emit() {
     mlir::PassManager pm(&context);
     circt::firtool::FirtoolOptions opt{};
     if (mlir::failed(circt::firtool::populatePreprocessTransforms(pm, opt))) {
+        mlirModule.dump();
         throw std::runtime_error("Unable to populate preprocess passes for MLIR");
     }
 
     if (mlir::failed(pm.run(mlirModule))) {
+        mlirModule.dump();
         throw std::runtime_error("Unable to run preprocess passes");
     }
 
