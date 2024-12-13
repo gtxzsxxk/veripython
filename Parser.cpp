@@ -399,6 +399,7 @@ void Parser::parseRegWireStatement() {
     }
     if (wireOrRegToken.first == TOKEN_wire) {
         auto wire = std::make_shared<CircuitSymbolWire>(identifierToken.second, slicing);
+        wire->setIsWire();
         hardwareModule.circuitSymbols.push_back(wire);
         auto [_2, equalOrSemicolonToken] = nextToken();
         if (equalOrSemicolonToken.first == TOKEN_single_eq) {
