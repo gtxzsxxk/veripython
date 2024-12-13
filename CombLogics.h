@@ -23,14 +23,23 @@ protected:
 
     static std::tuple<bool, std::size_t> generateUnsignedIntegerFromData(CircuitData *data);
 
+    std::string derivedType{"Null"};
+
+    VeriPythonTokens symbolOperator;
+
 public:
     explicit CombLogic(VeriPythonTokens _operator) : CircuitSymbol("") {
+        symbolOperator = _operator;
         if (HDLExpressionAST::canParseToCombLogics(_operator)) {
             identifier = "__comb_" + Parser::operatorName[_operator] + "__" + std::to_string(counter++);
         } else {
             throw std::runtime_error("Unsupported operator type");
         }
     }
+
+    [[nodiscard]] const std::string &getDerivedType() const { return derivedType; }
+
+    [[nodiscard]] VeriPythonTokens getOperator() const { return symbolOperator; }
 
     virtual ~CombLogic() = default;
 };
@@ -71,7 +80,7 @@ protected:
     }
 
 public:
-    CombNormalBinary() : CombLogic(Op::token) {}
+    CombNormalBinary() : CombLogic(Op::token) { derivedType = "normalBinary"; }
 };
 
 #define GEN_LOGICAL_OP_DEF_BEGIN(camel, underline)          struct combOperator##camel { \
@@ -135,7 +144,7 @@ protected:
     }
 
 public:
-    CombCompareBinary() : CombLogic(Op::token) {}
+    CombCompareBinary() : CombLogic(Op::token) { derivedType = "compareBinary"; }
 };
 
 #define GEN_COMPARE_OP_DEF_BEGIN(camel, underline)          struct combOperator##camel { \
@@ -211,7 +220,7 @@ protected:
     }
 
 public:
-    CombShiftLeft() : CombLogic(Op::token) {}
+    CombShiftLeft() : CombLogic(Op::token) { derivedType = "shiftLeft"; }
 };
 
 struct combOperatorShiftLeftArith {
@@ -270,7 +279,7 @@ protected:
     }
 
 public:
-    CombShiftRight() : CombLogic(Op::token) {}
+    CombShiftRight() : CombLogic(Op::token) { derivedType = "shiftRight"; }
 };
 
 struct combOperatorShiftRightArith {
@@ -332,7 +341,7 @@ protected:
     }
 
 public:
-    CombArithmeticBinary() : CombLogic(Op::token) {}
+    CombArithmeticBinary() : CombLogic(Op::token) { derivedType = "arithBinary"; }
 };
 
 #define GEN_ARITH_OP_DEF_BEGIN(camel, underline)          struct combOperator##camel { \
@@ -398,7 +407,7 @@ protected:
     }
 
 public:
-    CombUnary() : CombLogic(Op::token) {}
+    CombUnary() : CombLogic(Op::token) { derivedType = "unary"; }
 };
 
 struct combUnaryLogicalNot {
@@ -476,7 +485,7 @@ protected:
     }
 
 public:
-    CombLogicMultiplexer() : CombLogic(TOKEN_question) {}
+    CombLogicMultiplexer() : CombLogic(TOKEN_question) { derivedType = "mux"; }
 };
 
 class CombLogicConcat : public CombLogic {
@@ -508,7 +517,7 @@ protected:
     }
 
 public:
-    CombLogicConcat() : CombLogic(TOKEN_lbrace) {}
+    CombLogicConcat() : CombLogic(TOKEN_lbrace) { derivedType = "concat"; }
 };
 
 class CombLogicFactory {

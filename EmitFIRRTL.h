@@ -21,17 +21,21 @@ class EmitFIRRTL {
 
     const circt::ArrayAttr emptyArrayAttr{mlir::ArrayAttr::get(&context, {})};
 
-    circt::Value
-    emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const PortSlicingAST &inputSlicing = {-1, -1});
+    circt::Value combToCirctOpValue(const std::shared_ptr<CircuitSymbol> &symbol);
 
-    circt::ImplicitLocOpBuilder implicitLocOpBuilder{mlir::UnknownLoc::get(&context), &context};
+    circt::Value concatFromRange(const std::vector<circt::Value> &values, int start, int end);
 
     [[nodiscard]] bool isOutputPort(std::string &identifier) const;
 
 public:
     explicit EmitFIRRTL(const RtlModule &module) : rtlModule(module) {}
 
+    circt::ImplicitLocOpBuilder implicitLocOpBuilder{mlir::UnknownLoc::get(&context), &context};
+
     std::string emit();
+
+    circt::Value
+    emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const PortSlicingAST &inputSlicing = {-1, -1});
 };
 
 
