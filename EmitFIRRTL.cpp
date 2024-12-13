@@ -171,6 +171,10 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
 //            implicitLocOpBuilder.setInsertionPoint(savedIP.getBlock(), savedIP.getPoint());
 //        }
     } else {
+        if (backward.empty()) {
+            return {};
+        }
+
         circt::firrtl::NodeOp node;
         circt::Value next = emitFromSymbol(std::get<0>(backward[0]), std::get<1>(backward[0]));
 
@@ -255,6 +259,9 @@ std::string EmitFIRRTL::emit() {
         if (ioPort->getPortDirection() == PortDirection::Output) {
             auto rhs = emitFromSymbol(ioPort);
             /* 进行连接 */
+            if (rhs.getImpl() == nullptr) {
+                continue;
+            }
             circt::firrtl::emitConnect(implicitLocOpBuilder, symbolTable[ioPort->getIdentifier()], rhs);
         }
     }
