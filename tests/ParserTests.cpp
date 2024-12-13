@@ -193,12 +193,9 @@ TEST(ParserTests, SimpleSlicingSimTest) {
 
     simulator.poke("a", aData);
     simulator.poke("b", bData);
-    EXPECT_EQ(simulator.peek("c").bits[0], -1);
-    EXPECT_EQ(simulator.peek("c").bits[1], -1);
-    EXPECT_EQ(simulator.peek("c").bits[2], 1);
-    EXPECT_EQ(simulator.peek("c").bits[3], 0);
-    EXPECT_EQ(simulator.peek("c").bits[4], 0);
-    EXPECT_EQ(simulator.peek("c").bits[5], -1);
+    EXPECT_EQ(simulator.peek("c").bits[0], 1);
+    EXPECT_EQ(simulator.peek("c").bits[1], 0);
+    EXPECT_EQ(simulator.peek("c").bits[2], 0);
 }
 
 TEST(ParserTests, SimpleMuxSimTest) {
@@ -261,7 +258,6 @@ TEST(ParserTests, SimpleConcatSimTest) {
 
     EXPECT_EQ(simulator.peek("result3_0").bits[0], 1);
     EXPECT_EQ(simulator.peek("result3_0").bits[1], 1);
-    EXPECT_EQ(simulator.peek("result3_0").bits[2], -1);
 
     EXPECT_EQ(simulator.peek("result2_0").bits[0], 1);
     EXPECT_EQ(simulator.peek("result2_0").bits[1], 1);
@@ -316,6 +312,26 @@ TEST(ParserTests, SimpleRegSimTest) {
 
 TEST(ParserTests, LLVMTest) {
     const std::string filename = "../tests/verilog_srcs/mux_test.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    auto emitter = EmitFIRRTL(parser.hardwareModule);
+    std::cout << emitter.emit() << std::endl;
+}
+
+TEST(ParserTests, LLVMConcatTest) {
+    const std::string filename = "../tests/verilog_srcs/concat.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    auto emitter = EmitFIRRTL(parser.hardwareModule);
+    std::cout << emitter.emit() << std::endl;
+}
+
+TEST(ParserTests, LLVMRegTest) {
+    const std::string filename = "../tests/verilog_srcs/reg_simple_test0.v";
 
     auto parser = Parser(filename);
     parser.parseHDL();
