@@ -138,7 +138,8 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
     auto &backward = symbol->getBackwardSymbols();
     auto symbolIdentifier = symbol->getIdentifier();
     bool isOutput = isOutputPort(symbolIdentifier);
-    circt::Value returnValue{};
+    circt::Value returnValue{}, regOrWireOp;
+    bool needConnect = false;
 
     if (!isOutput && symbolTable.count(symbolIdentifier)) {
         returnValue = symbolTable[symbolIdentifier];
@@ -149,27 +150,52 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
         auto width = symbol->getSlicing().getWidth();
         auto constantSymbol = std::static_pointer_cast<CircuitSymbolConstant>(symbol);
         mlir::APInt value{(unsigned) width, (uint64_t) constantSymbol->getValue()};
-
-//        auto *parentOp = implicitLocOpBuilder.getInsertionPoint()->getParentOp();
-//        parentOp->dump();
-//        if (!llvm::isa<circt::firrtl::FModuleLike>(parentOp)) {
-//            savedIP = implicitLocOpBuilder.saveInsertionPoint();
-//            while (!llvm::isa<circt::firrtl::FModuleLike>(parentOp)) {
-//                implicitLocOpBuilder.setInsertionPoint(parentOp);
-//                parentOp = implicitLocOpBuilder.getInsertionPoint()->getParentOp();
-//            }
-//        }
-
         auto type = circt::firrtl::IntType::get(implicitLocOpBuilder.getContext(), false, width, true);
         auto attrType = mlir::IntegerType::get(implicitLocOpBuilder.getContext(), value.getBitWidth(),
                                                mlir::IntegerType::Unsigned);
         auto attr = implicitLocOpBuilder.getIntegerAttr(attrType, value);
 
-        returnValue = implicitLocOpBuilder.create<circt::firrtl::ConstantOp>(type, attr);
+        returnValue = implicitLocOpBuilder.create<circt::firrtl::ConstantOp>(type, attr).getResult();
+    } else if (symbol->isWireSymbol()) {
+        if (backward.size() != 1) {
+            return {};
+        }
 
-//        if (savedIP.isSet()) {
-//            implicitLocOpBuilder.setInsertionPoint(savedIP.getBlock(), savedIP.getPoint());
-//        }
+        needConnect = true;
+        auto width = symbol->getSlicing().getWidth();
+        auto type = circt::firrtl::IntType::get(implicitLocOpBuilder.getContext(), false, width, false);
+        regOrWireOp = implicitLocOpBuilder.create<circt::firrtl::WireOp>(type, circt::StringRef{symbolIdentifier},
+                                                                         circt::firrtl::NameKindEnum::InterestingName,
+                                                                         emptyArrayAttr,
+                                                                         circt::StringAttr{}).getResult();
+        if (symbolTable.count(symbolIdentifier) == 0) {
+            symbolTable[symbolIdentifier] = regOrWireOp;
+        }
+        returnValue = emitFromSymbol(std::get<0>(backward[0]), std::get<1>(backward[0]));
+    } else if (symbol->isRegisterSymbol()) {
+        if (backward.size() != 2) {
+            return {};
+        }
+
+        needConnect = true;
+        circt::Value clock;
+        auto clockSym = std::get<0>(backward[0])->getIdentifier();
+        if (symbolTable.count(clockSym)) {
+            clock = symbolTable[clockSym];
+        } else {
+            throw std::runtime_error("Cannot found clock signal " + clockSym);
+        }
+
+        auto width = symbol->getSlicing().getWidth();
+        auto type = circt::firrtl::IntType::get(implicitLocOpBuilder.getContext(), false, width, false);
+        regOrWireOp = implicitLocOpBuilder.create<circt::firrtl::RegOp>(type, clock, circt::StringRef{symbolIdentifier},
+                                                                        circt::firrtl::NameKindEnum::InterestingName,
+                                                                        emptyArrayAttr,
+                                                                        circt::StringAttr{}).getResult();
+        if (symbolTable.count(symbolIdentifier) == 0) {
+            symbolTable[symbolIdentifier] = regOrWireOp;
+        }
+        returnValue = emitFromSymbol(std::get<0>(backward[1]), std::get<1>(backward[1]));
     } else {
         if (backward.empty()) {
             return {};
@@ -191,7 +217,7 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
         }
     }
 
-    if (!isOutput && symbolTable.count(symbolIdentifier) == 0) {
+    if (!isOutput && symbolTable.count(symbolIdentifier) == 0 && !needConnect) {
         symbolTable[symbolIdentifier] = returnValue;
     }
 
@@ -209,6 +235,11 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
                 circt::firrtl::NameKindEnum::InterestingName,
                 emptyArrayAttr, circt::StringAttr{});
         returnValue = nextNode.getResult();
+    }
+
+    if (needConnect) {
+        circt::firrtl::emitConnect(implicitLocOpBuilder, regOrWireOp, returnValue);
+        return regOrWireOp;
     }
 
     return returnValue;

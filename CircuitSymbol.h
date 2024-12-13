@@ -79,6 +79,7 @@ public:
 class CircuitSymbol {
 protected:
     bool isRegister = false;
+    bool isWire = false;
     std::string identifier;
     PortSlicingAST slicing;
     std::vector<std::pair<CircuitData, PortSlicingAST>> inputDataVec;
@@ -119,6 +120,8 @@ public:
 
     [[nodiscard]] bool isRegisterSymbol() const;
 
+    [[nodiscard]] bool isWireSymbol() const;
+
     virtual ~CircuitSymbol() = default;
 };
 
@@ -140,6 +143,8 @@ public:
                               const PortSlicingAST &inputSlicing = {-1, -1});
 
     void propagate(std::size_t pos, const CircuitData &data) override;
+
+    void setIsWire() { isWire = true; }
 };
 
 class CircuitSymbolReg : public CircuitSymbolWire {
@@ -153,6 +158,8 @@ protected:
     int getMaxInputs() override;
 
 public:
+    std::string clockSymbolName;
+
     explicit CircuitSymbolReg(std::string identifier,
                               const PortSlicingAST &slicingAst) :
             CircuitSymbolWire(std::move(identifier), slicingAst),

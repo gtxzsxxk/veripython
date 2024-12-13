@@ -102,6 +102,10 @@ bool CircuitSymbol::isRegisterSymbol() const {
     return isRegister;
 }
 
+bool CircuitSymbol::isWireSymbol() const {
+    return isWire;
+}
+
 CircuitData CircuitSymbolConstant::calculateOutput() {
     CircuitData data{slicing};
     int tmpValue = value;
@@ -211,6 +215,7 @@ std::size_t CircuitSymbolReg::registerClock(const std::shared_ptr<CircuitSymbol>
     inputDataVec.emplace_back(CircuitData{clockSlicing}, clockSlicing);
     backwardSymbols.emplace_back(symbol, clockSlicing, PortSlicingAST{-1, -1});
     symbol->propagateTargets.emplace_back(currentPos, this, clockSlicing);
+    clockSymbolName = symbol->getIdentifier();
     return currentPos;
 }
 
