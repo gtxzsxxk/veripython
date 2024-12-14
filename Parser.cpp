@@ -628,7 +628,7 @@ std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList(
         } else if (tkEnum == TOKEN_negedge) {
             triggerType = TriggerEdgeType::NEGATIVE_EDGE;
         } else if (tkEnum == TOKEN_op_mul) {
-            triggerType = TriggerEdgeType::COMBINATORIAL;
+            triggerType = TriggerEdgeType::NOT_SPECIFIED;
             lists.emplace_back(triggerType, "*");
             break;
         } else {
