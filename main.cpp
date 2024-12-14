@@ -89,31 +89,36 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    auto parser = Parser(inputFiles[0]);
-    parser.parseHDL();
-    parser.hardwareModule.buildCircuit();
-    if (visualization) {
-        RtlVisualizer::visualize(parser.hardwareModule);
-    }
+    try {
+        auto parser = Parser(inputFiles[0]);
+        parser.parseHDL();
+        parser.hardwareModule.buildCircuit();
+        if (visualization) {
+            RtlVisualizer::visualize(parser.hardwareModule);
+        }
 
-    std::string outputData;
+        std::string outputData;
 
-    if (task == FrontendTask::AST) {
-        outputData = parser.hardwareModule.toString();
-    } else if (task == FrontendTask::EMIT_FIRRTL) {
-        auto emitter = EmitFIRRTL{parser.hardwareModule};
-        outputData = emitter.emit();
-    } else if (!visualization) {
-        usage();
+        if (task == FrontendTask::AST) {
+            outputData = parser.hardwareModule.toString();
+        } else if (task == FrontendTask::EMIT_FIRRTL) {
+            auto emitter = EmitFIRRTL{parser.hardwareModule};
+            outputData = emitter.emit();
+        } else if (!visualization) {
+            usage();
+            return 1;
+        }
+
+        if (outputFileName.empty()) {
+            std::cout << outputData << std::endl;
+        } else {
+            std::ofstream out{outputFileName};
+            out << outputData << std::endl;
+            out.close();
+        }
+    } catch (const std::runtime_error &e) {
+        std::cerr << e.what() << std::endl;
         return 1;
-    }
-
-    if (outputFileName.empty()) {
-        std::cout << outputData << std::endl;
-    } else {
-        std::ofstream out{outputFileName};
-        out << outputData << std::endl;
-        out.close();
     }
 
     return 0;

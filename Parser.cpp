@@ -4,6 +4,7 @@
 
 #include "Parser.h"
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <exception>
 #include <vector>
@@ -15,6 +16,8 @@ extern "C" {
 int yylex();
 extern char *yytext;
 extern FILE *yyin;
+extern int yy_lineno;
+extern int yycolumn;
 }
 
 union LEXER_VALUE yylval;
@@ -72,7 +75,13 @@ std::unordered_map<VeriPythonTokens, std::string> Parser::operatorName = {
         {TOKEN_bitwise_not,    "bitwise_not"}
 };
 
-Parser::Parser(const std::string &filename) {
+Parser::Parser(const std::string &filename) : sourceFileName(filename) {
+    std::ifstream src(filename);
+    std::string line;
+    while (std::getline(src, line)) {
+        sourceFileLines.push_back(line);
+    }
+    src.close();
     yyin = fopen(filename.c_str(), "r");
 }
 
@@ -84,11 +93,11 @@ void Parser::parseHDL() {
     if (!tokenReady) {
         return;
     }
-    if (tokenData.first == TOKEN_module) {
+    if (std::get<0>(tokenData) == TOKEN_module) {
         parseModule();
         parseHDL();
     } else {
-        errorParsing("Unexpected lookahead at parseHDL", "module");
+        errorParsing(tokenData, "Unexpected lookahead at parseHDL", "module");
     }
 }
 
@@ -98,7 +107,7 @@ void Parser::parseHDL() {
 void Parser::parseModule() {
     VERIFY_NEXT_TOKEN(module);
     auto [_, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
-    hardwareModule.moduleName = identifierToken.second;
+    hardwareModule.moduleName = std::get<1>(identifierToken);
     VERIFY_NEXT_TOKEN(lparen);
     parseModulePortList();
     VERIFY_NEXT_TOKEN(rparen);
@@ -113,20 +122,24 @@ void Parser::parseModule() {
 void Parser::parseModulePortList() {
     auto [tokenReady, rparenOrId] = lookAhead();
     if (!tokenReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(rparenOrId) = -1;
+        std::get<3>(rparenOrId) = -1;
+        errorParsing(rparenOrId, "Unexpected EOF");
     }
     parseModulePort();
     auto [commaTokenReady, commaOrRparen] = lookAhead();
     if (!commaTokenReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(commaOrRparen) = -1;
+        std::get<3>(commaOrRparen) = -1;
+        errorParsing(commaOrRparen, "Unexpected EOF");
     }
-    if (commaOrRparen.first == TOKEN_comma) {
+    if (std::get<0>(commaOrRparen) == TOKEN_comma) {
         nextToken();
         parseModulePortList();
-    } else if (commaOrRparen.first == TOKEN_rparen) {
+    } else if (std::get<0>(commaOrRparen) == TOKEN_rparen) {
         return;
     } else {
-        errorParsing("Unexpected Token after parseModulePort");
+        errorParsing(commaOrRparen, "Unexpected Token after parseModulePort");
     }
 }
 
@@ -138,36 +151,43 @@ void Parser::parseModulePortList() {
 void Parser::parseModulePort() {
     auto [tokenReady, idOrInOut] = lookAhead();
     if (!tokenReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(idOrInOut) = -1;
+        std::get<3>(idOrInOut) = -1;
+        errorParsing(idOrInOut, "Unexpected EOF");
     }
-    if (idOrInOut.first == TOKEN_identifier) {
+    auto idOrInOutTkEnum = std::get<0>(idOrInOut);
+    if (idOrInOutTkEnum == TOKEN_identifier) {
         auto [_, identifierToken] = nextToken();
-        hardwareModule.ioPorts.push_back(std::make_shared<ModuleIOPort>(identifierToken.second));
-    } else if (idOrInOut.first == TOKEN_input || idOrInOut.first == TOKEN_output) {
+        hardwareModule.ioPorts.push_back(std::make_shared<ModuleIOPort>(std::get<1>(identifierToken)));
+    } else if (idOrInOutTkEnum == TOKEN_input || idOrInOutTkEnum == TOKEN_output) {
         nextToken();
         auto [_, wireOrRegOrOther] = lookAhead();
         decltype(wireOrRegOrOther) idOrPortSlicing;
-        if (wireOrRegOrOther.first == TOKEN_wire) {
+        auto wireOrRegOrOtherTkEnum = std::get<0>(wireOrRegOrOther);
+        if (wireOrRegOrOtherTkEnum == TOKEN_wire) {
             nextToken();
             idOrPortSlicing = std::get<1>(lookAhead());
-        } else if (wireOrRegOrOther.first == TOKEN_reg) {
+        } else if (wireOrRegOrOtherTkEnum == TOKEN_reg) {
             nextToken();
             idOrPortSlicing = std::get<1>(lookAhead());
-            errorParsing("Not supported");
+            warningParsing(wireOrRegOrOther, "Marking a port as register is not supported by this tool "
+                                             "and will finally built as a wire. Keep it if you make sure "
+                                             "the related circuit is combinatorial.");
         } else {
             idOrPortSlicing = wireOrRegOrOther;
         }
-        auto direction = idOrInOut.first == TOKEN_input ? PortDirection::Input : PortDirection::Output;
-        if (idOrPortSlicing.first == TOKEN_identifier) {
+        auto direction = idOrInOutTkEnum == TOKEN_input ? PortDirection::Input : PortDirection::Output;
+        auto idOrPortSlicingTkEnum = std::get<0>(idOrPortSlicing);
+        if (idOrPortSlicingTkEnum == TOKEN_identifier) {
             auto [_, identifierToken] = nextToken();
-            hardwareModule.ioPorts.push_back(std::make_shared<ModuleIOPort>(direction, identifierToken.second));
-        } else if (idOrPortSlicing.first == TOKEN_lbracket) {
+            hardwareModule.ioPorts.push_back(std::make_shared<ModuleIOPort>(direction, std::get<1>(identifierToken)));
+        } else if (idOrPortSlicingTkEnum == TOKEN_lbracket) {
             auto slicing = parsePortSlicing();
             auto [_, identifierToken] = nextToken();
             hardwareModule.ioPorts.push_back(
-                    std::make_shared<ModuleIOPort>(direction, slicing, identifierToken.second));
+                    std::make_shared<ModuleIOPort>(direction, slicing, std::get<1>(identifierToken)));
         } else {
-            errorParsing("Unexpected Token after input/output");
+            errorParsing(idOrPortSlicing, "Unexpected Token after input/output");
         }
     }
 }
@@ -181,11 +201,13 @@ PortSlicingAST Parser::parsePortSlicing() {
     auto firstValAST = parseConstantExpr();
     auto [lookAheadReady, lookAheadToken] = nextToken();
     if (!lookAheadReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(lookAheadToken) = -1;
+        std::get<3>(lookAheadToken) = -1;
+        errorParsing(lookAheadToken, "Unexpected EOF");
     }
 
     PortSlicingAST portSlicing{0};
-    if (lookAheadToken.first == TOKEN_rbracket) {
+    if (std::get<0>(lookAheadToken) == TOKEN_rbracket) {
         portSlicing = PortSlicingAST{firstValAST->eval()};
     } else {
         auto secondValAST = parseConstantExpr();
@@ -200,6 +222,7 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
     /* a+b*c/2-1+(d+e)*c+2 */
     std::vector<std::unique_ptr<ConstantExpressionAST>> astStack;
     std::vector<std::pair<VeriPythonTokens, int>> operatorStack;
+    LexTokenType outToken;
     while (true) {
         int currentPrecedence = 0;
         if (!operatorStack.empty()) {
@@ -207,9 +230,12 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
         }
         auto [tokenReady, lookAheadToken] = lookAhead();
         if (!tokenReady) {
-            goto out;
+            outToken = lookAheadToken;
+            std::get<2>(outToken) = -1;
+            std::get<3>(outToken) = -1;
+            break;
         }
-        if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_lparen) {
+        if (std::get<0>(lookAheadToken) == TOKEN_const_number || std::get<0>(lookAheadToken) == TOKEN_lparen) {
             auto ast = parseConstantPrimary();
             astStack.push_back(std::move(ast));
 
@@ -230,6 +256,7 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
                     astStack.push_back(std::move(merge_ast));
 
                     if (currentPrecedence == nextPrecedence) {
+                        outToken = nextOperator;
                         break;
                     }
                 }
@@ -237,16 +264,16 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
         } else {
             int precedence = getConstantOperatorPrecedence(lookAheadToken);
             if (precedence == -1) {
-                goto out;
+                outToken = lookAheadToken;
+                break;
             }
             nextToken();
-            operatorStack.emplace_back(lookAheadToken.first, precedence);
+            operatorStack.emplace_back(std::get<0>(lookAheadToken), precedence);
         }
     }
 
-    out:
     if (!operatorStack.empty() || astStack.size() != 1) {
-        errorParsing("Failed to parse constant expression");
+        errorParsing(outToken, "Failed to parse constant expression");
     }
     return std::move(astStack[0]);
 }
@@ -257,14 +284,17 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantExpr() {
 std::unique_ptr<ConstantExpressionAST> Parser::parseConstantPrimary() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
     if (!lookAheadReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(lookAheadTokenData) = -1;
+        std::get<3>(lookAheadTokenData) = -1;
+        errorParsing(lookAheadTokenData, "Unexpected EOF");
     }
     decltype(parseConstantPrimary()) primaryAST;
-    if (lookAheadTokenData.first == TOKEN_const_number) {
+    if (std::get<0>(lookAheadTokenData) == TOKEN_const_number) {
         nextToken();
-        auto ast = static_cast<ConstantExpressionAST *>(new ConstantNumberAST{std::stoi(lookAheadTokenData.second)});
+        auto ast = static_cast<ConstantExpressionAST *>(new ConstantNumberAST{
+                std::stoi(std::get<1>(lookAheadTokenData))});
         primaryAST = std::unique_ptr<ConstantExpressionAST>{ast};
-    } else if (lookAheadTokenData.first == TOKEN_lparen) {
+    } else if (std::get<0>(lookAheadTokenData) == TOKEN_lparen) {
         nextToken();
         primaryAST = parseConstantExpr();
         VERIFY_NEXT_TOKEN(rparen);
@@ -278,21 +308,24 @@ std::unique_ptr<ConstantExpressionAST> Parser::parseConstantPrimary() {
 void Parser::parseModuleBody() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
     if (!lookAheadReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(lookAheadTokenData) = -1;
+        std::get<3>(lookAheadTokenData) = -1;
+        errorParsing(lookAheadTokenData, "Unexpected EOF");
     }
-    if (lookAheadTokenData.first == TOKEN_input || lookAheadTokenData.first == TOKEN_output) {
+    auto tkEnum = std::get<0>(lookAheadTokenData);
+    if (tkEnum == TOKEN_input || tkEnum == TOKEN_output) {
         parseInputOutputStatement();
-    } else if (lookAheadTokenData.first == TOKEN_assign) {
+    } else if (tkEnum == TOKEN_assign) {
         parseCombAssignStatement();
-    } else if (lookAheadTokenData.first == TOKEN_wire || lookAheadTokenData.first == TOKEN_reg) {
+    } else if (tkEnum == TOKEN_wire || tkEnum == TOKEN_reg) {
         parseRegWireStatement();
-    } else if (lookAheadTokenData.first == TOKEN_always) {
+    } else if (tkEnum == TOKEN_always) {
         hardwareModule.addAlwaysBlock(parseAlwaysBlock());
     } else {
-        if (lookAheadTokenData.first == TOKEN_endmodule) {
+        if (tkEnum == TOKEN_endmodule) {
             return;
         }
-        errorParsing("Unexpected token");
+        errorParsing(lookAheadTokenData, "Unexpected token");
     }
     parseModuleBody();
 }
@@ -303,20 +336,20 @@ void Parser::parseModuleBody() {
 void Parser::parseInputOutputStatement() {
     auto [_, inOutToken] = nextToken();
     PortDirection direction{};
-    if (inOutToken.first == TOKEN_input) {
+    if (std::get<0>(inOutToken) == TOKEN_input) {
         direction = PortDirection::Input;
-    } else if (inOutToken.first == TOKEN_output) {
+    } else if (std::get<0>(inOutToken) == TOKEN_output) {
         direction = PortDirection::Output;
     }
     while (true) {
         auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
-        auto port = hardwareModule.getModuleIOPortByName(identifierToken.second);
+        auto port = hardwareModule.getModuleIOPortByName(std::get<1>(identifierToken));
         port->setPortDirection(direction);
         auto [_2, commaOrSemicolonToken] = nextToken();
-        if (commaOrSemicolonToken.first == TOKEN_semicolon) {
+        if (std::get<0>(commaOrSemicolonToken) == TOKEN_semicolon) {
             return;
-        } else if (commaOrSemicolonToken.first != TOKEN_comma) {
-            errorParsing("Expecting comma");
+        } else if (std::get<0>(commaOrSemicolonToken) != TOKEN_comma) {
+            errorParsing(commaOrSemicolonToken, "Unexpected token", "comma");
         }
     }
 }
@@ -328,12 +361,13 @@ void Parser::parseInputOutputStatement() {
 void Parser::parseCombAssignStatement() {
     VERIFY_NEXT_TOKEN(assign);
     auto [_, identifierOrLbraceToken] = nextToken();
-    if (identifierOrLbraceToken.first == TOKEN_identifier) {
+    if (std::get<0>(identifierOrLbraceToken) == TOKEN_identifier) {
         auto identifierToken = identifierOrLbraceToken;
         auto [_1, slicingOrEqualToken] = lookAhead();
         PortSlicingAST slicingAst{-1, -1};
-        if (slicingOrEqualToken.first == TOKEN_lbracket) {
-            errorParsing("The parser supports sub-word assignment but the backend does not. "
+        if (std::get<0>(slicingOrEqualToken) == TOKEN_lbracket) {
+            errorParsing(slicingOrEqualToken,
+                         "The parser supports sub-word assignment but the backend does not. "
                          "The verilog subset supported by this tool has deprecated that feature, "
                          "which is not a good style. Please try using concat.");
         }
@@ -342,31 +376,32 @@ void Parser::parseCombAssignStatement() {
         VERIFY_NEXT_TOKEN(semicolon);
 
         if (slicingAst.isTrivial()) {
-            hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
+            hardwareModule.addCircuitConnection(CircuitConnection{std::get<1>(identifierToken), std::move(hdlExpr)});
         } else {
             hardwareModule.addCircuitConnection(
-                    CircuitConnection{identifierToken.second, slicingAst, std::move(hdlExpr)});
+                    CircuitConnection{std::get<1>(identifierToken), slicingAst, std::move(hdlExpr)});
         }
-    } else if (identifierOrLbraceToken.first == TOKEN_lbrace) {
+    } else if (std::get<0>(identifierOrLbraceToken) == TOKEN_lbrace) {
         std::vector<std::pair<std::string, PortSlicingAST>> lhsIdentifiers;
         while (true) {
             auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
             auto [_2, slicingOrCommaOrRbraceToken] = lookAhead();
             PortSlicingAST slicingAst{-1, -1};
-            if (slicingOrCommaOrRbraceToken.first == TOKEN_lbracket) {
-                errorParsing("The parser supports sub-word assignment but the backend does not. "
+            if (std::get<0>(slicingOrCommaOrRbraceToken) == TOKEN_lbracket) {
+                errorParsing(slicingOrCommaOrRbraceToken,
+                             "The parser supports sub-word assignment but the backend does not. "
                              "The verilog subset supported by this tool has deprecated that feature, "
                              "which is not a good style. Please try using concat.");
-            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_comma) {
+            } else if (std::get<0>(slicingOrCommaOrRbraceToken) == TOKEN_comma) {
                 nextToken();
-            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_rbrace) {
+            } else if (std::get<0>(slicingOrCommaOrRbraceToken) == TOKEN_rbrace) {
                 nextToken();
-                lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+                lhsIdentifiers.emplace_back(std::get<1>(identifierToken), slicingAst);
                 break;
             } else {
-                errorParsing("Unexpected token");
+                errorParsing(slicingOrCommaOrRbraceToken, "Unexpected token");
             }
-            lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+            lhsIdentifiers.emplace_back(std::get<1>(identifierToken), slicingAst);
         }
         VERIFY_NEXT_TOKEN(single_eq);
         auto hdlExpr = parseHDLExpression();
@@ -390,30 +425,30 @@ void Parser::parseRegWireStatement() {
     auto [_1, identifierOrSlicingToken] = lookAhead();
     decltype(identifierOrSlicingToken) identifierToken;
     PortSlicingAST slicing{0, 0};
-    if (identifierOrSlicingToken.first == TOKEN_lbracket) {
+    if (std::get<0>(identifierOrSlicingToken) == TOKEN_lbracket) {
         slicing = parsePortSlicing();
         identifierToken = std::get<1>(nextToken());
     } else {
         identifierToken = identifierOrSlicingToken;
         nextToken();
     }
-    if (wireOrRegToken.first == TOKEN_wire) {
-        auto wire = std::make_shared<CircuitSymbolWire>(identifierToken.second, slicing);
+    if (std::get<0>(wireOrRegToken) == TOKEN_wire) {
+        auto wire = std::make_shared<CircuitSymbolWire>(std::get<1>(identifierToken), slicing);
         wire->setIsWire();
         hardwareModule.circuitSymbols.push_back(wire);
         auto [_2, equalOrSemicolonToken] = nextToken();
-        if (equalOrSemicolonToken.first == TOKEN_single_eq) {
+        if (std::get<0>(equalOrSemicolonToken) == TOKEN_single_eq) {
             auto hdlExpr = parseHDLExpression();
-            hardwareModule.addCircuitConnection(CircuitConnection{identifierToken.second, std::move(hdlExpr)});
+            hardwareModule.addCircuitConnection(CircuitConnection{std::get<1>(identifierToken), std::move(hdlExpr)});
             VERIFY_NEXT_TOKEN(semicolon);
         }
-    } else if (wireOrRegToken.first == TOKEN_reg) {
-        auto reg = std::make_shared<CircuitSymbolReg>(identifierToken.second, slicing);
+    } else if (std::get<0>(wireOrRegToken) == TOKEN_reg) {
+        auto reg = std::make_shared<CircuitSymbolReg>(std::get<1>(identifierToken), slicing);
         hardwareModule.circuitSymbols.push_back(reg);
         hardwareModule.registers.push_back(reg);
         VERIFY_NEXT_TOKEN(semicolon);
     } else {
-        errorParsing("Expecting wire or reg");
+        errorParsing(wireOrRegToken, "Expecting wire or reg");
     }
 }
 
@@ -421,6 +456,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
     /* (a ^ b) | (c | d) & (~c)[2] && (a[1] || a[2]) */
     std::vector<std::unique_ptr<HDLExpressionAST>> astStack;
     std::vector<std::pair<VeriPythonTokens, int>> operatorStack;
+    LexTokenType outToken;
     while (true) {
         int currentPrecedence = 0;
         if (!operatorStack.empty()) {
@@ -428,11 +464,15 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
         }
         auto [tokenReady, lookAheadToken] = lookAhead();
         if (!tokenReady) {
-            goto out;
+            outToken = lookAheadToken;
+            std::get<2>(outToken) = -1;
+            std::get<3>(outToken) = -1;
+            break;
         }
-        if (lookAheadToken.first == TOKEN_const_number || lookAheadToken.first == TOKEN_sized_number ||
-            lookAheadToken.first == TOKEN_identifier || lookAheadToken.first == TOKEN_lparen ||
-            lookAheadToken.first == TOKEN_lbrace) {
+        auto tkEnum = std::get<0>(lookAheadToken);
+        if (tkEnum == TOKEN_const_number || tkEnum == TOKEN_sized_number ||
+            tkEnum == TOKEN_identifier || tkEnum == TOKEN_lparen ||
+            tkEnum == TOKEN_lbrace) {
             auto ast = parseHDLPrimary();
             astStack.push_back(std::move(ast));
 
@@ -468,6 +508,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
                         astStack.push_back(std::move(merge_ast));
                     }
                     if (currentPrecedence == nextPrecedence) {
+                        outToken = nextOperator;
                         break;
                     }
                 }
@@ -475,16 +516,16 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
         } else {
             int precedence = getHDLOperatorPrecedence(lookAheadToken);
             if (precedence == -1) {
-                goto out;
+                outToken = lookAheadToken;
+                break;
             }
             nextToken();
-            operatorStack.emplace_back(lookAheadToken.first, precedence);
+            operatorStack.emplace_back(tkEnum, precedence);
         }
     }
 
-    out:
     if (!operatorStack.empty() || astStack.size() != 1) {
-        errorParsing("Failed to parse HDL expression");
+        errorParsing(outToken, "Failed to parse HDL expression");
     }
     return std::move(astStack[0]);
 }
@@ -495,17 +536,21 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLExpression() {
 std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
     auto [lookAheadReady, lookAheadTokenData] = lookAhead();
     if (!lookAheadReady) {
-        errorParsing("Unexpected EOF");
+        std::get<2>(lookAheadTokenData) = -1;
+        std::get<3>(lookAheadTokenData) = -1;
+        errorParsing(lookAheadTokenData, "Unexpected EOF");
     }
     decltype(parseHDLPrimary()) primaryAST;
-    if (lookAheadTokenData.first == TOKEN_const_number) {
+    auto tkEnum = std::get<0>(lookAheadTokenData);
+    auto tkData = std::get<1>(lookAheadTokenData);
+    if (tkEnum == TOKEN_const_number) {
         nextToken();
-        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{std::stoi(lookAheadTokenData.second)});
+        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{std::stoi(tkData)});
         primaryAST = std::unique_ptr<HDLExpressionAST>(ast);
-    } else if (lookAheadTokenData.first == TOKEN_sized_number) {
+    } else if (tkEnum == TOKEN_sized_number) {
         nextToken();
         /* 4'd8000_0000 */
-        std::string sizedNumberString = lookAheadTokenData.second;
+        const std::string &sizedNumberString = tkData;
         char *sizedNumberCstr = strdup(sizedNumberString.c_str());
 
         char *widthStr = strtok(sizedNumberCstr, "'");
@@ -524,25 +569,25 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
         auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{data, width, base});
         primaryAST = std::unique_ptr<HDLExpressionAST>(ast);
         free(sizedNumberCstr);
-    } else if (lookAheadTokenData.first == TOKEN_identifier) {
+    } else if (tkEnum == TOKEN_identifier) {
         nextToken();
-        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{lookAheadTokenData.second});
+        auto ast = static_cast<HDLExpressionAST *>(new HDLPrimaryAST{tkData});
         primaryAST = std::unique_ptr<HDLExpressionAST>(ast);
-    } else if (lookAheadTokenData.first == TOKEN_lparen) {
+    } else if (tkEnum == TOKEN_lparen) {
         nextToken();
         primaryAST = parseHDLExpression();
         VERIFY_NEXT_TOKEN(rparen);
-    } else if (lookAheadTokenData.first == TOKEN_lbrace) {
+    } else if (tkEnum == TOKEN_lbrace) {
         nextToken();
         auto ast = std::make_unique<HDLConcatAST>();
         while (true) {
             auto hdlExpr = parseHDLExpression();
             ast->children.push_back(std::move(hdlExpr));
             auto [_, commaOrRbraceToken] = nextToken();
-            if (commaOrRbraceToken.first == TOKEN_rbrace) {
+            if (std::get<0>(commaOrRbraceToken) == TOKEN_rbrace) {
                 break;
-            } else if (commaOrRbraceToken.first != TOKEN_comma) {
-                errorParsing("Expecting comma");
+            } else if (std::get<0>(commaOrRbraceToken) != TOKEN_comma) {
+                errorParsing(commaOrRbraceToken, "Unexpected token", "comma");
             }
         }
         std::reverse(ast->children.begin(), ast->children.end());
@@ -550,7 +595,7 @@ std::unique_ptr<HDLExpressionAST> Parser::parseHDLPrimary() {
     }
 
     auto [_, isLBracket] = lookAhead();
-    if (isLBracket.first == TOKEN_lbracket) {
+    if (std::get<0>(isLBracket) == TOKEN_lbracket) {
         primaryAST->setExprSlicing(parsePortSlicing());
     }
 
@@ -577,23 +622,28 @@ std::vector<std::pair<TriggerEdgeType, std::string>> Parser::parseSensitiveList(
     while (true) {
         auto [_, posedgeOrNegedgeOrStarToken] = nextToken();
         auto triggerType = TriggerEdgeType::NOT_SPECIFIED;
-        if (posedgeOrNegedgeOrStarToken.first == TOKEN_posedge) {
+        auto tkEnum = std::get<0>(posedgeOrNegedgeOrStarToken);
+        if (tkEnum == TOKEN_posedge) {
             triggerType = TriggerEdgeType::POSITIVE_EDGE;
-        } else if (posedgeOrNegedgeOrStarToken.first == TOKEN_negedge) {
+        } else if (tkEnum == TOKEN_negedge) {
             triggerType = TriggerEdgeType::NEGATIVE_EDGE;
-        } else if (posedgeOrNegedgeOrStarToken.first != TOKEN_op_mul) {
-            errorParsing("Expecting posedge or negedge or *");
-        }
-        auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
-        lists.emplace_back(triggerType, identifierToken.second);
-        auto [_2, lookAheadToken] = lookAhead();
-        if (lookAheadToken.first == TOKEN_senslist_or) {
-            nextToken();
-            continue;
-        } else if (lookAheadToken.first == TOKEN_rparen) {
+        } else if (tkEnum == TOKEN_op_mul) {
+            triggerType = TriggerEdgeType::COMBINATORIAL;
+            lists.emplace_back(triggerType, "*");
             break;
         } else {
-            errorParsing("Expecting 'or' or ')'");
+            errorParsing(posedgeOrNegedgeOrStarToken, "Expecting posedge or negedge or *");
+        }
+        auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
+        lists.emplace_back(triggerType, std::get<1>(identifierToken));
+        auto [_2, lookAheadToken] = lookAhead();
+        if (std::get<0>(lookAheadToken) == TOKEN_senslist_or) {
+            nextToken();
+            continue;
+        } else if (std::get<0>(lookAheadToken) == TOKEN_rparen) {
+            break;
+        } else {
+            errorParsing(lookAheadToken, "Expecting 'or' or ')'");
         }
     }
 
@@ -607,7 +657,7 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBody() {
     auto ast = std::make_unique<AlwaysBlockBodyAST>(nullptr);
     while (true) {
         auto [_, lookAheadToken] = lookAhead();
-        if (lookAheadToken.first == TOKEN_end) {
+        if (std::get<0>(lookAheadToken) == TOKEN_end) {
             break;
         } else {
             ast->children.push_back(parseAlwaysBlockBodyStatement());
@@ -622,15 +672,19 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBody() {
  * */
 std::unique_ptr<AlwaysBlockBodyAST> Parser::parseAlwaysBlockBodyStatement() {
     auto [_, lookAheadToken] = lookAhead();
-    if (lookAheadToken.first == TOKEN_if) {
+    auto tkEnum = std::get<0>(lookAheadToken);
+    if (tkEnum == TOKEN_if) {
         return parseIfBlock();
-    } else if (lookAheadToken.first == TOKEN_case || lookAheadToken.first == TOKEN_casez ||
-               lookAheadToken.first == TOKEN_casex) {
-        errorParsing("The verilog subset supported by this tool does not support this. Try using if instead.");
+    } else if (tkEnum == TOKEN_case || tkEnum == TOKEN_casez ||
+               tkEnum == TOKEN_casex) {
+        errorParsing(lookAheadToken,
+                     "The verilog subset supported by this tool does not support case. Try using if instead.");
     } else {
         auto ptr = static_cast<AlwaysBlockBodyAST *>(new NonBlockingAssignAST{parseNonBlockingAssignment()});
         return std::unique_ptr<AlwaysBlockBodyAST>(ptr);
     }
+    errorParsing(lookAheadToken, "The HDL block cannot be recognized by this tool");
+    return nullptr;
 }
 
 std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
@@ -643,9 +697,9 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
     ast->nodeType = "__hw_always_block_body_if_block__";
 
     auto [_1, beginOrOtherToken] = lookAhead();
-    if (beginOrOtherToken.first != TOKEN_begin) {
+    if (std::get<0>(beginOrOtherToken) != TOKEN_begin) {
         /* 只能有一个表达式 */
-        if (beginOrOtherToken.first == TOKEN_if) {
+        if (std::get<0>(beginOrOtherToken) == TOKEN_if) {
             ast->children.push_back(parseIfBlock());
         } else {
             ast->children.push_back(parseAlwaysBlockBodyStatement());
@@ -656,10 +710,10 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
         VERIFY_NEXT_TOKEN(end);
     }
     auto [_2, elseOrOtherToken] = lookAhead();
-    if (elseOrOtherToken.first == TOKEN_else) {
+    if (std::get<0>(elseOrOtherToken) == TOKEN_else) {
         nextToken();
         auto [_3, beginOrOtherTokenElse] = lookAhead();
-        if (beginOrOtherTokenElse.first == TOKEN_begin) {
+        if (std::get<0>(beginOrOtherTokenElse) == TOKEN_begin) {
             nextToken();
             ast->children.push_back(parseAlwaysBlockBody());
             VERIFY_NEXT_TOKEN(end);
@@ -677,11 +731,11 @@ std::unique_ptr<AlwaysBlockBodyAST> Parser::parseIfBlock() {
  * */
 CircuitConnection Parser::parseNonBlockingAssignment() {
     auto [_, identifierOrLbraceToken] = nextToken();
-    if (identifierOrLbraceToken.first == TOKEN_identifier) {
+    if (std::get<0>(identifierOrLbraceToken) == TOKEN_identifier) {
         auto identifierToken = identifierOrLbraceToken;
         auto [_1, slicingOrEqualToken] = lookAhead();
         PortSlicingAST slicingAst{-1, -1};
-        if (slicingOrEqualToken.first == TOKEN_lbracket) {
+        if (std::get<0>(slicingOrEqualToken) == TOKEN_lbracket) {
             slicingAst = parsePortSlicing();
         }
         VERIFY_NEXT_TOKEN(cond_le);
@@ -689,34 +743,34 @@ CircuitConnection Parser::parseNonBlockingAssignment() {
         VERIFY_NEXT_TOKEN(semicolon);
 
         if (slicingAst.isTrivial()) {
-            return {identifierToken.second, std::move(hdlExpr)};
+            return {std::get<1>(identifierToken), std::move(hdlExpr)};
         } else {
-            return {identifierToken.second, slicingAst, std::move(hdlExpr)};
+            return {std::get<1>(identifierToken), slicingAst, std::move(hdlExpr)};
         }
-    } else if (identifierOrLbraceToken.first == TOKEN_lbrace) {
+    } else if (std::get<0>(identifierOrLbraceToken) == TOKEN_lbrace) {
         std::vector<std::pair<std::string, PortSlicingAST>> lhsIdentifiers;
         while (true) {
             auto [_1, identifierToken] = VERIFY_NEXT_TOKEN(identifier);
             auto [_2, slicingOrCommaOrRbraceToken] = lookAhead();
             PortSlicingAST slicingAst{-1, -1};
-            if (slicingOrCommaOrRbraceToken.first == TOKEN_lbracket) {
+            if (std::get<0>(slicingOrCommaOrRbraceToken) == TOKEN_lbracket) {
                 slicingAst = parsePortSlicing();
                 auto [_3, commaOrRbraceToken] = nextToken();
-                if (commaOrRbraceToken.first == TOKEN_rbrace) {
+                if (std::get<0>(commaOrRbraceToken) == TOKEN_rbrace) {
                     break;
-                } else if (commaOrRbraceToken.first != TOKEN_comma) {
-                    errorParsing("Unexpected token");
+                } else if (std::get<0>(commaOrRbraceToken) != TOKEN_comma) {
+                    errorParsing(commaOrRbraceToken, "Unexpected token", "comma");
                 }
-            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_comma) {
+            } else if (std::get<0>(slicingOrCommaOrRbraceToken) == TOKEN_comma) {
                 nextToken();
-            } else if (slicingOrCommaOrRbraceToken.first == TOKEN_rbrace) {
+            } else if (std::get<0>(slicingOrCommaOrRbraceToken) == TOKEN_rbrace) {
                 nextToken();
-                lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+                lhsIdentifiers.emplace_back(std::get<1>(identifierToken), slicingAst);
                 break;
             } else {
-                errorParsing("Unexpected token");
+                errorParsing(slicingOrCommaOrRbraceToken, "Unexpected token");
             }
-            lhsIdentifiers.emplace_back(identifierToken.second, slicingAst);
+            lhsIdentifiers.emplace_back(std::get<1>(identifierToken), slicingAst);
         }
         VERIFY_NEXT_TOKEN(cond_le);
         auto hdlExpr = parseHDLExpression();
@@ -726,7 +780,7 @@ CircuitConnection Parser::parseNonBlockingAssignment() {
 
         return {std::move(lhsIdentifiers), std::move(hdlExpr)};
     }
-    errorParsing("Unexpected token");
+    errorParsing(identifierOrLbraceToken, "Unexpected token");
     return {"error", std::make_unique<HDLExpressionAST>(TOKEN_lbrace)};
 }
 
@@ -734,7 +788,7 @@ Parser::~Parser() {
     fclose(yyin);
 }
 
-std::tuple<bool, LexTokenType> Parser::lookAhead() {
+std::tuple<bool, Parser::LexTokenType> Parser::lookAhead() {
     if (tokenBuffer.empty()) {
         auto [tokenRdy, tokenData] = nextToken();
         if (tokenRdy) {
@@ -748,7 +802,7 @@ std::tuple<bool, LexTokenType> Parser::lookAhead() {
     }
 }
 
-std::tuple<bool, LexTokenType> Parser::nextToken() {
+std::tuple<bool, Parser::LexTokenType> Parser::nextToken() {
     if (tokenBuffer.empty()) {
         int ret = yylex();
         while (ret == TOKEN_single_line_comment_end ||
@@ -766,15 +820,11 @@ std::tuple<bool, LexTokenType> Parser::nextToken() {
             ret = yylex();
         }
         if (ret == 0) {
-            return {false, {TOKEN_assign, ""}};
+            return {false, {TOKEN_assign, "", -1, -1}};
         }
         std::string data{yylval.str};
         free(yylval.str);
-        LexTokenType tokenData = {VeriPythonTokens(ret), data};
-        tokenFetched.push(tokenData);
-        if (tokenFetched.size() > TOKEN_FETCHED_SIZE) {
-            tokenFetched.pop();
-        }
+        LexTokenType tokenData = {VeriPythonTokens(ret), data, yy_lineno, yycolumn};
         return {true, tokenData};
     } else {
         auto tokenData = tokenBuffer.front();
@@ -783,39 +833,55 @@ std::tuple<bool, LexTokenType> Parser::nextToken() {
     }
 }
 
-std::tuple<bool, LexTokenType>
+std::tuple<bool, Parser::LexTokenType>
 Parser::nextToken(enum VeriPythonTokens expectedTokenEnum, const std::string &expectTokenName) {
     auto tokenTuple = nextToken();
-    if (std::get<0>(tokenTuple) && std::get<1>(tokenTuple).first != expectedTokenEnum) {
-        errorParsing("Unexpected token", expectTokenName);
+    if (std::get<0>(tokenTuple) && std::get<0>(std::get<1>(tokenTuple)) != expectedTokenEnum) {
+        errorParsing(std::get<1>(tokenTuple), "Unexpected token", expectTokenName);
     }
     return tokenTuple;
 }
 
-void Parser::errorParsing(const std::string &message, const std::string &expectTokenName) {
-    std::cerr << "Verilog parsing error: " << message << "\n";
-    std::cerr << "Expecting token: " << expectTokenName << "\n";
-    std::cerr << "Fetched Tokens: " << "\n";
-    while (!tokenFetched.empty()) {
-        auto tokenData = tokenFetched.front();
-        tokenFetched.pop();
-        std::cerr << tokenData.second << " ";
+void Parser::printErrorToken(std::ostream &out, const LexTokenType &errorToken, const std::string &msg) {
+    int lineNumber = std::get<2>(errorToken);
+    int columnNumber = std::get<3>(errorToken);
+    if (lineNumber == -1 || columnNumber == -1) {
+        return;
     }
-    std::cerr << std::endl;
+    out << sourceFileName << ":" << lineNumber << ":"
+        << columnNumber << ": " << msg << "\n";
+    if (lineNumber && lineNumber > (int) sourceFileLines.size()) {
+        throw std::range_error("Line number invalid");
+    }
+    out << sourceFileLines[lineNumber - 1] << "\n";
+    for (int i = 1; i < columnNumber; i++) {
+        out << " ";
+    }
+    out << "^" << std::endl;
+}
+
+void Parser::warningParsing(const LexTokenType &errorToken, const std::string &message) {
+    printErrorToken(std::cout, errorToken, "warning: " + message);
+}
+
+void Parser::errorParsing(const LexTokenType &errorToken,
+                          const std::string &message,
+                          const std::string &expectTokenName) {
+    printErrorToken(std::cerr, errorToken, "error: " + message + ". Expecting: " + expectTokenName);
     throw std::runtime_error("Code syntax error");
 }
 
 int Parser::getConstantOperatorPrecedence(LexTokenType &token) {
-    if (operatorPrecedence.count(token.first) == 0) {
+    if (operatorPrecedence.count(std::get<0>(token)) == 0) {
         return -1;
     }
-    auto pred = operatorPrecedence[token.first];
+    auto pred = operatorPrecedence[std::get<0>(token)];
     return pred >= 10 ? pred : -1;
 }
 
 int Parser::getHDLOperatorPrecedence(LexTokenType &token) {
-    if (operatorPrecedence.count(token.first) == 0) {
+    if (operatorPrecedence.count(std::get<0>(token)) == 0) {
         return -1;
     }
-    return operatorPrecedence[token.first];
+    return operatorPrecedence[std::get<0>(token)];
 }

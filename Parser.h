@@ -14,12 +14,13 @@
 #include <queue>
 #include <unordered_map>
 
-typedef std::pair<enum VeriPythonTokens, std::string> LexTokenType;
-
 class Parser {
+    using LexTokenType = std::tuple<enum VeriPythonTokens, std::string, int, int>;
+
     const std::size_t TOKEN_FETCHED_SIZE = 100;
     std::queue<LexTokenType> tokenBuffer;
-    std::queue<LexTokenType> tokenFetched;
+    std::string sourceFileName;
+    std::vector<std::string> sourceFileLines;
 
     static int getConstantOperatorPrecedence(LexTokenType &token);
 
@@ -32,7 +33,14 @@ class Parser {
     std::tuple<bool, LexTokenType> nextToken(enum VeriPythonTokens expectedTokenEnum,
                                              const std::string &expectTokenName);
 
-    void errorParsing(const std::string &message, const std::string &expectTokenName = "");
+    void printErrorToken(std::ostream &out, const LexTokenType &errorToken, const std::string &msg);
+
+    void errorParsing(const LexTokenType &errorToken,
+                      const std::string &message,
+                      const std::string &expectTokenName = "");
+
+    void warningParsing(const LexTokenType &errorToken,
+                        const std::string &message);
 
     void parseModule();
 
