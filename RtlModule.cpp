@@ -310,23 +310,25 @@ void RtlModule::buildCircuit() {
             inputSlicingNextStart += destWidth;
 
             if (clockSignal != nullptr) {
-                auto destRegSymbol = std::static_pointer_cast<CircuitSymbolReg>(destSymbol);
+                auto destRegSymbol = std::dynamic_pointer_cast<CircuitSymbolReg>(destSymbol);
                 if (destRegSymbol) {
                     destRegSymbol->setTriggerType(triggerType);
                     destRegSymbol->registerClock(clockSignal);
                 } else {
-                    throw std::runtime_error("Cannot set clock signal");
+                    throw std::runtime_error("Failed to convert a circuit symbol into a register symbol. "
+                                             "Cannot set clock signal.");
                 }
             }
 
             if (destSlicing.isTrivial()) {
                 destSymbol->registerInput(symbol, inputSlicingInTotal);
             } else {
-                auto destWireSymbol = std::static_pointer_cast<CircuitSymbolWire>(destSymbol);
+                auto destWireSymbol = std::dynamic_pointer_cast<CircuitSymbolWire>(destSymbol);
                 if (destWireSymbol) {
                     destWireSymbol->registerInput(symbol, destSlicing, inputSlicingInTotal);
                 } else {
-                    throw std::runtime_error("Cannot set slicing");
+                    throw std::runtime_error("Failed to convert a circuit symbol into a wire symbol. "
+                                             "Cannot set bits slicing.");
                 }
             }
         }

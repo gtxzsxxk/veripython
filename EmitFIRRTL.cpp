@@ -46,7 +46,10 @@ circt::Value EmitFIRRTL::concatFromRange(const std::vector<circt::Value> &values
 
 circt::Value EmitFIRRTL::combToCirctOpValue(const std::shared_ptr<CircuitSymbol> &symbol) {
     auto &backward = symbol->getBackwardSymbols();
-    const auto combSymbol = std::static_pointer_cast<CombLogic>(symbol);
+    const auto combSymbol = std::dynamic_pointer_cast<CombLogic>(symbol);
+    if (!combSymbol) {
+        throw std::runtime_error("Cannot convert a symbol into combinatorial symbol");
+    }
     auto derivedType = combSymbol->getDerivedType();
 
     if (derivedType == "mux") {
@@ -148,7 +151,10 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
     } else if (symbol->getIdentifier().starts_with("__hwconst_")) {
         circt::OpBuilder::InsertPoint savedIP;
         auto width = symbol->getSlicing().getWidth();
-        auto constantSymbol = std::static_pointer_cast<CircuitSymbolConstant>(symbol);
+        auto constantSymbol = std::dynamic_pointer_cast<CircuitSymbolConstant>(symbol);
+        if (!constantSymbol) {
+            throw std::runtime_error("Cannot convert a symbol into constant symbol");
+        }
         mlir::APInt value{(unsigned) width, (uint64_t) constantSymbol->getValue()};
         auto type = circt::firrtl::IntType::get(implicitLocOpBuilder.getContext(), false, width, true);
         auto attrType = mlir::IntegerType::get(implicitLocOpBuilder.getContext(), value.getBitWidth(),
