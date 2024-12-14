@@ -2,8 +2,11 @@
     #include <stdio.h>
     #include <string.h>
     #include "Lexer.h"
-    #define RET_TOKEN(name)         { yylval.str = strdup(yytext); return TOKEN_##name; }
+    #define RET_TOKEN(name)         { yylval.str = strdup(yytext); yycolumn = yycolumn_last; yycolumn_last += yyleng; return TOKEN_##name; }
 
+    int yy_lineno = 1;
+    int yycolumn = 1;
+    int yycolumn_last = 1;
     void yyerror(const char *s);
 %}
 
@@ -68,8 +71,9 @@
 "//"                                    RET_TOKEN(single_line_comment)
 "/*"                                    RET_TOKEN(multi_line_comment_start)
 "*/"                                    RET_TOKEN(multi_line_comment_end)
-
-[\n]                                    { return TOKEN_single_line_comment_end; }
+[\ \t\r]+                               { yycolumn = yycolumn_last; yycolumn_last += yyleng; }
+[\n]                                    { yy_lineno++; yycolumn = 1; yycolumn_last = 1; return TOKEN_single_line_comment_end; }
+.                                       { yycolumn = yycolumn_last; yycolumn_last += yyleng; }
 %%
 
 void yyerror(const char *s) {
