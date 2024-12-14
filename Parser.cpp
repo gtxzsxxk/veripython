@@ -751,6 +751,20 @@ std::tuple<bool, LexTokenType> Parser::lookAhead() {
 std::tuple<bool, LexTokenType> Parser::nextToken() {
     if (tokenBuffer.empty()) {
         int ret = yylex();
+        while (ret == TOKEN_single_line_comment_end ||
+               ret == TOKEN_single_line_comment ||
+               ret == TOKEN_multi_line_comment_start) {
+            if (ret == TOKEN_single_line_comment) {
+                while (ret != TOKEN_single_line_comment_end) {
+                    ret = yylex();
+                }
+            } else if (ret == TOKEN_multi_line_comment_start) {
+                while (ret != TOKEN_multi_line_comment_end) {
+                    ret = yylex();
+                }
+            }
+            ret = yylex();
+        }
         if (ret == 0) {
             return {false, {TOKEN_assign, ""}};
         }

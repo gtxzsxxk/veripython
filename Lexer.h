@@ -59,6 +59,7 @@ enum VeriPythonTokens {
     TOKEN_logical_not,
     TOKEN_at,
     TOKEN_single_line_comment,
+    TOKEN_single_line_comment_end,
     TOKEN_multi_line_comment_start,
     TOKEN_multi_line_comment_end,
 };

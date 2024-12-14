@@ -68,8 +68,8 @@
 "//"                                    RET_TOKEN(single_line_comment)
 "/*"                                    RET_TOKEN(multi_line_comment_start)
 "*/"                                    RET_TOKEN(multi_line_comment_end)
-[\ \t\r\n]+                             {}
 
+[\n]                                    { return TOKEN_single_line_comment_end; }
 %%
 
 void yyerror(const char *s) {
