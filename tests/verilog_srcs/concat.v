@@ -5,7 +5,7 @@ module concat_test(
     input single_bit,
     output [7:0] result1,
     output [3:0] result2_0,
-    output [1:0] result3_0,
+    output [1:0] result3_0, /* 不支持 sub-word 赋值，所以改回去了 */
     output [1:0] result2_1,
 );
     assign {result2_0, result3_0, result2_1} = {a[3:1], b, single_bit};
