@@ -6,8 +6,8 @@
 #define VERIPYTHON_CIRCUITSYMBOL_H
 
 #include "AST.h"
+#include "Exceptions.h"
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -191,10 +191,10 @@ public:
             CircuitSymbolWire("__hwconst_" + std::to_string(counter++), PortSlicingAST{ast->width - 1, 0}),
             value(ast->value), width(ast->width) {
         if (ast->isIdentifier()) {
-            throw std::runtime_error("The ast can't be an identifier");
+            throw CircuitException("The ast can't be an identifier");
         }
         if (width == 0) {
-            throw std::runtime_error("Bad width");
+            throw CircuitException("Bad width");
         } else if (width > 1) {
             slicing = PortSlicingAST{width - 1, 0};
         }

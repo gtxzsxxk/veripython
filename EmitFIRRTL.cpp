@@ -15,6 +15,13 @@
 #include <llvm/Support/raw_ostream.h>
 #include <iostream>
 
+static void checkType(circt::firrtl::FIRRTLType &firrtlType) {
+    if (firrtlType.getImpl() == nullptr) {
+        throw CircuitException("Cannot infer return type. "
+                               "You might want to check for design errors like using a clock signal where it shouldn't be used.");
+    }
+}
+
 template<class MlirOp>
 class CombNormalBinaryBuildOp {
 public:
@@ -25,6 +32,7 @@ public:
         auto type = MlirOp::inferReturnType(
                 llvm::cast<circt::firrtl::FIRRTLType>(operand1.getType()),
                 llvm::cast<circt::firrtl::FIRRTLType>(operand2.getType()), {});
+        checkType(type);
         auto op = emit->implicitLocOpBuilder.create<MlirOp>(type, operand1, operand2);
         return op.getResult();
     }
@@ -40,6 +48,7 @@ circt::Value EmitFIRRTL::concatFromRange(const std::vector<circt::Value> &values
     auto type = circt::firrtl::CatPrimOp::inferReturnType(
             llvm::cast<circt::firrtl::FIRRTLType>(leftValue.getType()),
             llvm::cast<circt::firrtl::FIRRTLType>(rightValue.getType()), {});
+    checkType(type);
     auto op = implicitLocOpBuilder.create<circt::firrtl::CatPrimOp>(type, leftValue, rightValue);
     return op.getResult();
 }
@@ -48,7 +57,7 @@ circt::Value EmitFIRRTL::combToCirctOpValue(const std::shared_ptr<CircuitSymbol>
     auto &backward = symbol->getBackwardSymbols();
     const auto combSymbol = std::dynamic_pointer_cast<CombLogic>(symbol);
     if (!combSymbol) {
-        throw std::runtime_error("Cannot convert a symbol into combinatorial symbol");
+        throw CircuitException("Cannot convert a symbol into combinatorial symbol");
     }
     auto derivedType = combSymbol->getDerivedType();
 
@@ -60,6 +69,7 @@ circt::Value EmitFIRRTL::combToCirctOpValue(const std::shared_ptr<CircuitSymbol>
                 llvm::cast<circt::firrtl::FIRRTLType>(cond.getType()),
                 llvm::cast<circt::firrtl::FIRRTLType>(branch1.getType()),
                 llvm::cast<circt::firrtl::FIRRTLType>(branch2.getType()), {});
+        checkType(type);
         auto op = implicitLocOpBuilder.create<circt::firrtl::MuxPrimOp>(type, cond, branch1, branch2);
         return op.getResult();
     } else if (derivedType == "normalBinary" || derivedType == "compareBinary" || derivedType == "arithBinary") {
@@ -107,12 +117,14 @@ circt::Value EmitFIRRTL::combToCirctOpValue(const std::shared_ptr<CircuitSymbol>
             auto operand2 = emitFromSymbol(std::get<0>(backward[1]), std::get<1>(backward[1]));
             auto opType = circt::firrtl::CvtPrimOp::inferReturnType(
                     llvm::cast<circt::firrtl::FIRRTLType>(operand1.getType()), {});
+            checkType(opType);
             auto signedOp = implicitLocOpBuilder.create<circt::firrtl::CvtPrimOp>(opType, operand1);
             auto signedOperand = signedOp.getResult();
 
             auto type = circt::firrtl::DShrPrimOp::inferReturnType(
                     llvm::cast<circt::firrtl::FIRRTLType>(signedOperand.getType()),
                     llvm::cast<circt::firrtl::FIRRTLType>(operand2.getType()), {});
+            checkType(type);
             auto op = implicitLocOpBuilder.create<circt::firrtl::DShrPrimOp>(type, signedOperand, operand2);
             return op.getResult();
         } else {
@@ -122,6 +134,7 @@ circt::Value EmitFIRRTL::combToCirctOpValue(const std::shared_ptr<CircuitSymbol>
         auto operand = emitFromSymbol(std::get<0>(backward[0]), std::get<1>(backward[0]));
         auto type = circt::firrtl::NotPrimOp::inferReturnType(
                 llvm::cast<circt::firrtl::FIRRTLType>(operand.getType()), {});
+        checkType(type);
         auto op = implicitLocOpBuilder.create<circt::firrtl::NotPrimOp>(type, operand);
         return op.getResult();
     } else if (derivedType == "concat") {
@@ -132,7 +145,7 @@ circt::Value EmitFIRRTL::combToCirctOpValue(const std::shared_ptr<CircuitSymbol>
         return concatFromRange(values, 0, (int) (backward.size() - 1));
     }
 
-    throw std::runtime_error("Unsupported combinatorial operator");
+    throw CircuitException("Unsupported combinatorial operator");
 }
 
 circt::Value
@@ -153,7 +166,7 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
         auto width = symbol->getSlicing().getWidth();
         auto constantSymbol = std::dynamic_pointer_cast<CircuitSymbolConstant>(symbol);
         if (!constantSymbol) {
-            throw std::runtime_error("Cannot convert a symbol into constant symbol");
+            throw CircuitException("Cannot convert a symbol into constant symbol");
         }
         mlir::APInt value{(unsigned) width, (uint64_t) constantSymbol->getValue()};
         auto type = circt::firrtl::IntType::get(implicitLocOpBuilder.getContext(), false, width, true);
@@ -189,7 +202,7 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
         if (symbolTable.count(clockSym)) {
             clock = symbolTable[clockSym];
         } else {
-            throw std::runtime_error("Cannot found clock signal " + clockSym);
+            throw CircuitException("Cannot found clock signal " + clockSym);
         }
 
         auto width = symbol->getSlicing().getWidth();
@@ -235,6 +248,7 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
                 llvm::cast<circt::firrtl::FIRRTLType>(returnValue.getType()),
                 hi,
                 lo, {});
+        checkType(type);
         auto bitsRhs = implicitLocOpBuilder.create<circt::firrtl::BitsPrimOp>(type, returnValue, hi, lo);
         auto nextNode = implicitLocOpBuilder.create<circt::firrtl::NodeOp>(
                 bitsRhs, circt::StringRef{tmpId},
@@ -317,12 +331,12 @@ std::string EmitFIRRTL::emit() {
     circt::firtool::FirtoolOptions opt{};
     if (mlir::failed(circt::firtool::populatePreprocessTransforms(pm, opt))) {
         mlirModule.dump();
-        throw std::runtime_error("Unable to populate preprocess passes for MLIR");
+        throw CircuitException("Unable to populate preprocess passes for MLIR");
     }
 
     if (mlir::failed(pm.run(mlirModule))) {
         mlirModule.dump();
-        throw std::runtime_error("Unable to run preprocess passes");
+        throw CircuitException("Unable to run preprocess passes");
     }
 
     std::string irStr;

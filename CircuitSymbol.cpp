@@ -48,7 +48,7 @@ std::size_t CircuitSymbol::registerInput(const std::shared_ptr<CircuitSymbol> &s
                                          const PortSlicingAST &inputSlicing) {
     int currentPos = static_cast<int>(inputDataVec.size());
     if (currentPos >= getMaxInputs()) {
-        throw std::runtime_error("Cannot bind more input ports!");
+        throw CircuitException("Cannot bind more input ports!");
     }
     inputDataVec.emplace_back(CircuitData{slicing}, slicing);
     backwardSymbols.emplace_back(symbol, inputSlicing, PortSlicingAST{-1, -1});
@@ -138,24 +138,24 @@ std::size_t CircuitSymbolWire::registerInput(const std::shared_ptr<CircuitSymbol
                 if (existSlicing.isDownTo) {
                     if (i >= existSlicing.downToLow && i <= existSlicing.downToHigh &&
                         i >= destSlicing.downToLow && i <= destSlicing.downToHigh) {
-                        throw std::runtime_error("Assignment overlapping");
+                        throw CircuitException("Assignment overlapping");
                     }
                 } else {
                     if (i >= existSlicing.downToLow && i <= existSlicing.downToHigh &&
                         i == destSlicing.onlyWhich) {
-                        throw std::runtime_error("Assignment overlapping");
+                        throw CircuitException("Assignment overlapping");
                     }
                 }
             } else {
                 if (destSlicing.isDownTo) {
                     if (i == existSlicing.onlyWhich &&
                         i >= destSlicing.downToLow && i <= destSlicing.downToHigh) {
-                        throw std::runtime_error("Assignment overlapping");
+                        throw CircuitException("Assignment overlapping");
                     }
                 } else {
                     if (i == existSlicing.onlyWhich &&
                         i == destSlicing.onlyWhich) {
-                        throw std::runtime_error("Assignment overlapping");
+                        throw CircuitException("Assignment overlapping");
                     }
                 }
             }
@@ -210,7 +210,7 @@ int CircuitSymbolReg::getMaxInputs() {
 std::size_t CircuitSymbolReg::registerClock(const std::shared_ptr<CircuitSymbol> &symbol) {
     int currentPos = static_cast<int>(inputDataVec.size());
     if (currentPos >= getMaxInputs()) {
-        throw std::runtime_error("Cannot bind more input ports!");
+        throw CircuitException("Cannot bind more input ports!");
     }
     inputDataVec.emplace_back(CircuitData{clockSlicing}, clockSlicing);
     backwardSymbols.emplace_back(symbol, clockSlicing, PortSlicingAST{-1, -1});
@@ -230,7 +230,7 @@ void CircuitSymbolReg::propagate(std::size_t pos, const CircuitData &data) {
                 storedData = getInputCircuitData(1);
             }
         } else {
-            throw std::runtime_error("The trigger type is not specified");
+            throw CircuitException("The trigger type is not specified");
         }
 
         prevClockSignal.bits[0] = data.bits[0];
@@ -283,7 +283,7 @@ void ModuleIOPort::registerForInput() {
 
 void ModuleIOPort::setPortDirection(PortDirection newDirection) {
     if (direction != PortDirection::Unspecified) {
-        throw std::runtime_error("This port's direction has been specified");
+        throw CircuitException("This port's direction has been specified");
     }
     direction = newDirection;
     registerForInput();

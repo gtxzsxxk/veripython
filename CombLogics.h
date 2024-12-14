@@ -7,9 +7,9 @@
 
 #include "RtlModule.h"
 #include "Parser.h"
+#include "Exceptions.h"
 #include <tuple>
 #include <vector>
-#include <stdexcept>
 #include <memory>
 
 class CombLogic : public CircuitSymbol {
@@ -33,7 +33,7 @@ public:
         if (HDLExpressionAST::canParseToCombLogics(_operator)) {
             identifier = "__comb_" + Parser::operatorName[_operator] + "__" + std::to_string(counter++);
         } else {
-            throw std::runtime_error("Unsupported operator type");
+            throw CircuitException("Unsupported operator type");
         }
     }
 
@@ -63,7 +63,7 @@ protected:
         checkInputDataSlicing(&data0, &data1);
         if constexpr (Op::token == TOKEN_logical_or || Op::token == TOKEN_logical_and) {
             if (data0.getBitWidth() != 1) {
-                throw std::runtime_error("Logical operation should only work with bit width 1");
+                throw CircuitException("Logical operation should only work with bit width 1");
             }
         }
         auto width = data0.getBitWidth();
@@ -389,7 +389,7 @@ protected:
 
         if constexpr (Op::token == TOKEN_logical_not) {
             if (data0.getBitWidth() != 1) {
-                throw std::runtime_error("Logical operation should only work with bit width 1");
+                throw CircuitException("Logical operation should only work with bit width 1");
             }
         }
 

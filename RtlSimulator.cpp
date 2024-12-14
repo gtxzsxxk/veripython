@@ -3,8 +3,8 @@
 //
 
 #include "RtlSimulator.h"
+#include "Exceptions.h"
 #include <iostream>
-#include <stdexcept>
 
 void RtlSimulatorEndSymbol::propagate(std::size_t pos, const CircuitData &data) {
     inputDataVec[pos] = std::make_pair(data, inputDataVec[pos].second);
@@ -47,7 +47,7 @@ void RtlSimulator::poke(std::string idName, const CircuitData &data) {
     }
 
     if (port == nullptr) {
-        throw std::runtime_error("No such an input port");
+        throw CircuitException("No such an input port");
     }
 
     port->propagate(0, data);
@@ -68,7 +68,7 @@ CircuitData RtlSimulator::peek(std::string idName) {
         }
     }
 
-    throw std::runtime_error("No such an output port");
+    throw CircuitException("No such an output port");
 }
 
 void RtlSimulator::printOutcome() {

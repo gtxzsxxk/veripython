@@ -3,7 +3,6 @@
 //
 
 #include "CombLogics.h"
-#include <stdexcept>
 
 int CombLogic::counter = 0;
 
@@ -11,7 +10,7 @@ void CombLogic::checkInputDataSlicing(CircuitData *s1, CircuitData *s2) {
     auto slicing1 = s1->getBitWidth();
     auto slicing2 = s2->getBitWidth();
     if (slicing1 != slicing2) {
-        throw std::runtime_error("Width mismatched");
+        throw CircuitException("Width mismatched");
     }
 }
 
@@ -84,6 +83,6 @@ std::unique_ptr<CombLogic> CombLogicFactory::create(VeriPythonTokens token) {
         case TOKEN_lbrace:
             return std::make_unique<CombLogicConcat>();
         default:
-            throw std::runtime_error("Unknown operator");
+            throw CircuitException("Unknown operator");
     }
 }

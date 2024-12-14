@@ -14,7 +14,7 @@
 void RtlVisualizer::visualize(const RtlModule &hardwareModel, const std::string &filename) {
     std::ofstream outputStream(filename + ".txt");
     if (!outputStream) {
-        throw std::runtime_error("Unable to open the file");
+        throw std::runtime_error("Unable to open " + filename + ".txt");
     }
 
     outputStream << "digraph RtlView {\n"

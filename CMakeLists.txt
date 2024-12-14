@@ -77,6 +77,7 @@ add_executable(veripython
         Lexer.cpp
         EmitFIRRTL.cpp
         EmitFIRRTL.h
+        Exceptions.h
 )
 
 target_link_libraries(veripython PRIVATE lexer -lfl)
@@ -107,6 +108,7 @@ if (NOT (build_type STREQUAL "release"))
             RtlSimulator.h
             EmitFIRRTL.cpp
             EmitFIRRTL.h
+            Exceptions.h
     )
     target_link_libraries(ParserTests PRIVATE GTest::gtest_main)
     target_link_libraries(ParserTests PRIVATE lexer -lfl)

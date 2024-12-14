@@ -5,7 +5,6 @@
 #include "RtlModule.h"
 #include "CombLogics.h"
 #include <sstream>
-#include <stdexcept>
 
 std::shared_ptr<ModuleIOPort> RtlModule::getModuleIOPortByName(const std::string &name) {
     for (auto port: ioPorts) {
@@ -14,7 +13,7 @@ std::shared_ptr<ModuleIOPort> RtlModule::getModuleIOPortByName(const std::string
         }
     }
 
-    throw std::runtime_error("No such an I/O port");
+    throw CircuitException("No such an I/O port");
 }
 
 void RtlModule::addCircuitConnection(CircuitConnection &&connection) {
@@ -38,7 +37,7 @@ std::shared_ptr<CircuitSymbol> RtlModule::getPortOrSymbolById(const std::string 
         }
     }
 
-    throw std::runtime_error("No such an identifier when lookup the circuit");
+    throw CircuitException("No such an identifier when lookup the circuit");
     return nullptr;
 }
 
@@ -51,7 +50,7 @@ std::shared_ptr<CircuitSymbol> RtlModule::genCircuitSymbolByHDLExprAST(HDLExpres
         return getPortOrSymbolById(dynamic_cast<HDLPrimaryAST *>(ast)->getIdentifier());
     } else {
         if (!HDLExpressionAST::canParseToCombLogics(ast->_operator)) {
-            throw std::runtime_error("AST is not an operator");
+            throw CircuitException("AST is not an operator");
         }
         auto combLogic = CombLogicFactory::create(ast->_operator);
         if (ast->nodeType.starts_with("multiplexer")) {
@@ -89,7 +88,7 @@ std::vector<CircuitConnection> RtlModule::genByAlwaysBlockBody(AlwaysBlockBodyAS
         if (ast->children.size() == 2) {
             auto branch2 = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(ast->children[1].get()));
             if (branch1.size() != branch2.size()) {
-                throw std::runtime_error("Latch is inferred");
+                throw CircuitException("Latch is inferred");
             }
             for (auto &conn: branch2) {
                 for (auto &connBranch1: branch1) {
@@ -127,7 +126,7 @@ std::vector<CircuitConnection> RtlModule::genByAlwaysBlockBody(AlwaysBlockBodyAS
                             _idx++;
                         }
                         if (index == -1) {
-                            throw std::runtime_error("Latch inferred");
+                            throw CircuitException("Latch inferred");
                         }
                         CircuitConnection alreadyHadConn = std::move(connections[index]);
                         connections.erase(connections.begin() + index);
@@ -145,7 +144,7 @@ std::vector<CircuitConnection> RtlModule::genByAlwaysBlockBody(AlwaysBlockBodyAS
         return connections;
     }
 
-    throw std::runtime_error("Not supported always block body");
+    throw CircuitException("Not supported always block body");
     return {};
 }
 
@@ -276,7 +275,7 @@ void RtlModule::buildCircuit() {
     for (auto &blk: alwaysBlocks) {
         const auto &sensitiveList = blk->getSensitiveList();
         if (sensitiveList.size() != 1) {
-            throw std::runtime_error("Only support one element in sensitive list");
+            throw CircuitException("Only support one element in sensitive list");
         }
         for (const auto &child: blk->children) {
             auto body = genByAlwaysBlockBody(dynamic_cast<AlwaysBlockBodyAST *>(child.get()));
@@ -315,7 +314,7 @@ void RtlModule::buildCircuit() {
                     destRegSymbol->setTriggerType(triggerType);
                     destRegSymbol->registerClock(clockSignal);
                 } else {
-                    throw std::runtime_error("Failed to convert a circuit symbol into a register symbol. "
+                    throw CircuitException("Failed to convert a circuit symbol into a register symbol. "
                                              "Cannot set clock signal.");
                 }
             }
@@ -327,7 +326,7 @@ void RtlModule::buildCircuit() {
                 if (destWireSymbol) {
                     destWireSymbol->registerInput(symbol, destSlicing, inputSlicingInTotal);
                 } else {
-                    throw std::runtime_error("Failed to convert a circuit symbol into a wire symbol. "
+                    throw CircuitException("Failed to convert a circuit symbol into a wire symbol. "
                                              "Cannot set bits slicing.");
                 }
             }

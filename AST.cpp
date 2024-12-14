@@ -3,7 +3,7 @@
 //
 #include "AST.h"
 #include "Parser.h"
-#include <stdexcept>
+#include "Exceptions.h"
 #include <string>
 #include <sstream>
 
@@ -34,7 +34,7 @@ std::string AST::toString() {
 
 int ConstantExpressionAST::eval() {
     if (children.size() != 2) {
-        throw std::runtime_error("Cannot eval an expression node");
+        throw ParsingException("Cannot eval an expression node");
     }
     int lhsValue = dynamic_cast<ConstantExpressionAST *>(children[0].get())->eval();
     int rhsValue = dynamic_cast<ConstantExpressionAST *>(children[1].get())->eval();
@@ -53,7 +53,7 @@ int ConstantExpressionAST::eval() {
             answer = lhsValue / rhsValue;
             break;
         default:
-            throw std::runtime_error("Unsupported operator");
+            throw ParsingException("Unsupported operator");
             break;
     }
     return answer;

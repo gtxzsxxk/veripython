@@ -77,6 +77,9 @@ std::unordered_map<VeriPythonTokens, std::string> Parser::operatorName = {
 
 Parser::Parser(const std::string &filename) : sourceFileName(filename) {
     std::ifstream src(filename);
+    if (!src) {
+        throw ParsingException("Unable to open " + filename);
+    }
     std::string line;
     while (std::getline(src, line)) {
         sourceFileLines.push_back(line);
@@ -851,7 +854,7 @@ void Parser::printErrorToken(std::ostream &out, const LexTokenType &errorToken, 
     out << sourceFileName << ":" << lineNumber << ":"
         << columnNumber << ": " << msg << "\n";
     if (lineNumber && lineNumber > (int) sourceFileLines.size()) {
-        throw std::range_error("Line number invalid");
+        throw ParsingException("Line number invalid");
     }
     out << sourceFileLines[lineNumber - 1] << "\n";
     for (int i = 1; i < columnNumber; i++) {
@@ -868,7 +871,7 @@ void Parser::errorParsing(const LexTokenType &errorToken,
                           const std::string &message,
                           const std::string &expectTokenName) {
     printErrorToken(std::cerr, errorToken, "error: " + message + ". Expecting: " + expectTokenName);
-    throw std::runtime_error("Code syntax error");
+    throw ParsingException("Code syntax error");
 }
 
 int Parser::getConstantOperatorPrecedence(LexTokenType &token) {

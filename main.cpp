@@ -3,23 +3,26 @@
 #include "EmitFIRRTL.h"
 #include <iostream>
 #include <fstream>
-#include <cstring>
 #include <vector>
+#include <cstring>
+#include <cstdlib>
+#include <csignal>
 
-const auto usageString = "Usage\n"
-                         "=====\n\n"
-                         "veripython [OPTION]... [FILE]...\n"
-                         "Another implementation for Verilator with Python target\n\n"
-                         "This program supports parsing a subset of verilog and generate IR in FIRRTL. Supported arguments:\n"
-                         "  -o           Specify the output filename\n"
-                         "  -ast         Output the AST in Json format.\n"
-                         "  -vis         Use graphviz to generate the RTL view. Your system must support the 'dot' command\n"
-                         "  -token       Only output the token stream\n"
-                         "  -firrtl      Parse the verilog source file and emit IR in FIRRTL\n"
-                         "\n"
-                         "Example:\n"
-                         "veripython full_adder.v -o full_adder.json -ast\n"
-                         "veripython mux_test.v -firrtl\n";
+static const auto usageString =
+        "Usage\n"
+        "=====\n\n"
+        "veripython [OPTION]... [FILE]...\n"
+        "Another implementation for Verilator with Python target\n\n"
+        "This program supports parsing a subset of verilog and generate IR in FIRRTL. Supported arguments:\n"
+        "  -o           Specify the output filename\n"
+        "  -ast         Output the AST in Json format.\n"
+        "  -vis         Use graphviz to generate the RTL view. Your system must support the 'dot' command\n"
+        "  -token       Only output the token stream\n"
+        "  -firrtl      Parse the verilog source file and emit IR in FIRRTL\n"
+        "\n"
+        "Example:\n"
+        "veripython full_adder.v -o full_adder.json -ast\n"
+        "veripython mux_test.v -firrtl\n";
 
 enum class FrontendTask {
     NOT_SPECIFIED,
@@ -30,11 +33,19 @@ enum class FrontendTask {
 
 std::string getAllTokens(const std::string &filename);
 
-void usage() {
+static void usage() {
     std::cerr << usageString << std::endl;
 }
 
+static void signalHandler(int signal) {
+    if (signal == SIGSEGV) {
+        std::cerr << "Fatal internal compiler (might be circt) error occurred." << std::endl;
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv) {
+    std::signal(SIGSEGV, signalHandler);
     std::string outputFileName;
     std::vector<std::string> inputFiles;
     auto task = FrontendTask::NOT_SPECIFIED;
@@ -82,10 +93,13 @@ int main(int argc, char **argv) {
             std::cout << tokenStream << std::endl;
         } else {
             std::ofstream out{outputFileName};
+            if (!out) {
+                std::cerr << "Unable to open " << outputFileName << std::endl;
+                return 1;
+            }
             out << tokenStream << std::endl;
             out.close();
         }
-
         return 0;
     }
 
@@ -113,9 +127,19 @@ int main(int argc, char **argv) {
             std::cout << outputData << std::endl;
         } else {
             std::ofstream out{outputFileName};
+            if (!out) {
+                std::cerr << "Unable to open " << outputFileName << std::endl;
+                return 1;
+            }
             out << outputData << std::endl;
             out.close();
         }
+    } catch (const ParsingException &e) {
+        std::cerr << "Parser error: " << e.what() << std::endl;
+        return 1;
+    } catch (const CircuitException &e) {
+        std::cerr << "Internal circuit error: " << e.what() << std::endl;
+        return 1;
     } catch (const std::runtime_error &e) {
         std::cerr << e.what() << std::endl;
         return 1;
