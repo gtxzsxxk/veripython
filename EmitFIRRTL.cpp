@@ -38,6 +38,10 @@ public:
     }
 };
 
+EmitFIRRTL::EmitFIRRTL(const RtlModule &module) : rtlModule(module) {
+    circt::firrtl::registerPasses();
+}
+
 circt::Value EmitFIRRTL::concatFromRange(const std::vector<circt::Value> &values, int start, int end) {
     if (start == end) {
         return values[start];

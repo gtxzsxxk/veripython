@@ -29,7 +29,7 @@ class EmitFIRRTL {
     [[nodiscard]] bool isOutputPort(std::string &identifier) const;
 
 public:
-    explicit EmitFIRRTL(const RtlModule &module) : rtlModule(module) {}
+    explicit EmitFIRRTL(const RtlModule &module);
 
     circt::ImplicitLocOpBuilder implicitLocOpBuilder{mlir::UnknownLoc::get(&context), &context};
 
