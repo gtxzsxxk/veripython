@@ -265,7 +265,7 @@ EmitFIRRTL::emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const P
     return returnValue;
 }
 
-std::string EmitFIRRTL::emit() {
+mlir::ModuleOp EmitFIRRTL::emitModuleOp() {
     /* 由 output 开始向后推 */
     circt::ArrayAttr layers;
     circt::SmallVector<circt::firrtl::PortInfo, 8> ports;
@@ -339,11 +339,13 @@ std::string EmitFIRRTL::emit() {
         throw CircuitException("Unable to run preprocess passes");
     }
 
+    return mlirModule;
+}
+
+std::string EmitFIRRTL::ModuleToMLIR(mlir::ModuleOp &module) {
     std::string irStr;
     llvm::raw_string_ostream outs{irStr};
-    mlirModule.print(outs);
-    mlirModule.erase();
-
+    module.print(outs);
     return irStr;
 }
 
@@ -354,4 +356,8 @@ bool EmitFIRRTL::isOutputPort(std::string &identifier) const {
         }
     }
     return false;
+}
+
+circt::MLIRContext &EmitFIRRTL::getContext() {
+    return context;
 }

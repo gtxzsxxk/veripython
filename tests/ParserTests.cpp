@@ -4,6 +4,7 @@
 #include "../Parser.h"
 #include "../RtlSimulator.h"
 #include "../EmitFIRRTL.h"
+#include "../FIRToHW.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <filesystem>
@@ -317,7 +318,9 @@ TEST(ParserTests, LLVMTest) {
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
     auto emitter = EmitFIRRTL(parser.hardwareModule);
-    std::cout << emitter.emit() << std::endl;
+    auto module = emitter.emitModuleOp();
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    module.erase();
 }
 
 TEST(ParserTests, LLVMConcatTest) {
@@ -327,7 +330,9 @@ TEST(ParserTests, LLVMConcatTest) {
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
     auto emitter = EmitFIRRTL(parser.hardwareModule);
-    std::cout << emitter.emit() << std::endl;
+    auto module = emitter.emitModuleOp();
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    module.erase();
 }
 
 TEST(ParserTests, LLVMRegTest) {
@@ -337,5 +342,22 @@ TEST(ParserTests, LLVMRegTest) {
     parser.parseHDL();
     parser.hardwareModule.buildCircuit();
     auto emitter = EmitFIRRTL(parser.hardwareModule);
-    std::cout << emitter.emit() << std::endl;
+    auto module = emitter.emitModuleOp();
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    module.erase();
+}
+
+TEST(ParserTests, LowerToHWTest) {
+    const std::string filename = "../tests/verilog_srcs/reg_simple_test1.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    auto emitter = EmitFIRRTL(parser.hardwareModule);
+    auto module = emitter.emitModuleOp();
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    auto converter = FIRToHW(emitter.getContext());
+    converter.convertToHW(module);
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    module.erase();
 }

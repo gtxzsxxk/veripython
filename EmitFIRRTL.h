@@ -10,6 +10,7 @@
 #include <circt/Support/LLVM.h>
 #include <mlir/IR/Value.h>
 #include <mlir/IR/Builders.h>
+#include <mlir/IR/BuiltinOps.h>
 #include <mlir/IR/ImplicitLocOpBuilder.h>
 
 class EmitFIRRTL {
@@ -32,10 +33,14 @@ public:
 
     circt::ImplicitLocOpBuilder implicitLocOpBuilder{mlir::UnknownLoc::get(&context), &context};
 
-    std::string emit();
+    mlir::ModuleOp emitModuleOp();
+
+    static std::string ModuleToMLIR(mlir::ModuleOp &module);
 
     circt::Value
     emitFromSymbol(const std::shared_ptr<CircuitSymbol> &symbol, const PortSlicingAST &inputSlicing = {-1, -1});
+
+    circt::MLIRContext &getContext();
 };
 
 

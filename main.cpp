@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
 
     try {
         auto parser = Parser(inputFiles[0]);
+        mlir::ModuleOp module;
         parser.parseHDL();
         parser.hardwareModule.buildCircuit();
         if (visualization) {
@@ -117,7 +118,8 @@ int main(int argc, char **argv) {
             outputData = parser.hardwareModule.toString();
         } else if (task == FrontendTask::EMIT_FIRRTL) {
             auto emitter = EmitFIRRTL{parser.hardwareModule};
-            outputData = emitter.emit();
+            module = emitter.emitModuleOp();
+            outputData = EmitFIRRTL::ModuleToMLIR(module);
         } else if (!visualization) {
             usage();
             return 1;
@@ -133,6 +135,10 @@ int main(int argc, char **argv) {
             }
             out << outputData << std::endl;
             out.close();
+        }
+
+        if (task == FrontendTask::EMIT_FIRRTL) {
+            module.erase();
         }
     } catch (const ParsingException &e) {
         std::cerr << "Parser error: " << e.what() << std::endl;
