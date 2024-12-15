@@ -121,24 +121,25 @@ class mux_2to1:
       engine_.run_static_constructors()
       return mod_
 
-    engine = create_execution_engine()
-    mod = compile_ir(engine, self.llvm_ir)
+    self.engine = create_execution_engine()
+    self.mod = compile_ir(self.engine, self.llvm_ir)
 
     # Look up the function pointer (a Python int)
-    func_ptr = engine.get_function_address("mux_2to1_eval")
+    self.func_ptr = self.engine.get_function_address("mux_2to1_eval")
 
     # Run the function via ctypes
-    self.__eval_func = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_uint8))(func_ptr)
+    self.__eval_func = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_uint8))(self.func_ptr)
+    self.eval_param = ctypes.cast(ctypes.byref(self.view.storage, 0),
+                                  ctypes.POINTER(ctypes.c_uint8))
 
   def eval(self):
-    self.__eval_func(ctypes.cast(ctypes.byref(self.view.storage, 0),
-                                 ctypes.POINTER(ctypes.c_uint8)))
+    self.__eval_func(self.eval_param)
 
 
 if __name__ == "__main__":
   dut = mux_2to1()
-  dut.view.a.poke(1)
-  dut.view.b.poke(2)
+  dut.view.a.poke(3)
+  dut.view.b.poke(5)
   dut.view.sel.poke(2)
   dut.eval()
   print(dut.view.a.peek())
