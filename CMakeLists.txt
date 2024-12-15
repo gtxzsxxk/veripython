@@ -57,6 +57,29 @@ set(LLVM_ENABLE_EH ON)
 set(BUILD_SHARED_LIBS ON)
 add_definitions(${LLVM_DEFINITIONS})
 
+set(circt_libs
+        CIRCTFIRRTL
+        CIRCTArc
+        CIRCTArcTransforms
+        CIRCTArcToLLVM
+        CIRCTConvertToArcs
+        CIRCTCombToArith
+        CIRCTFirtool
+        CIRCTTransforms
+        MLIRIR
+        MLIRArithDialect
+        MLIRBuiltinToLLVMIRTranslation
+        MLIRControlFlowDialect
+        MLIRDLTIDialect
+        MLIRFuncDialect
+        MLIRFuncInlinerExtension
+        MLIRIndexDialect
+        MLIRLLVMIRTransforms
+        MLIRLLVMToLLVMIRTranslation
+        MLIRSCFDialect
+        MLIRTargetLLVMIRExport
+)
+
 add_executable(veripython
         main.cpp
         Parser.cpp
@@ -80,14 +103,12 @@ add_executable(veripython
         Exceptions.h
         FIRToHW.cpp
         FIRToHW.h
+        ArcBackend.cpp
+        ArcBackend.h
 )
 
 target_link_libraries(veripython PRIVATE lexer -lfl)
-target_link_libraries(veripython PRIVATE
-        CIRCTFIRRTL
-        CIRCTFirtool
-        MLIRIR
-)
+target_link_libraries(veripython PRIVATE ${circt_libs})
 
 if (NOT (build_type STREQUAL "release"))
     enable_testing()
@@ -113,14 +134,12 @@ if (NOT (build_type STREQUAL "release"))
             Exceptions.h
             FIRToHW.cpp
             FIRToHW.h
+            ArcBackend.cpp
+            ArcBackend.h
     )
     target_link_libraries(ParserTests PRIVATE GTest::gtest_main)
     target_link_libraries(ParserTests PRIVATE lexer -lfl)
-    target_link_libraries(ParserTests PRIVATE
-            CIRCTFIRRTL
-            CIRCTFirtool
-            MLIRIR
-    )
+    target_link_libraries(ParserTests PRIVATE ${circt_libs})
     add_executable(AcrilatorHeaderCppTests tests/ArcilatorHeaderCppTests.cpp)
     target_link_libraries(AcrilatorHeaderCppTests PRIVATE GTest::gtest_main)
     include(GoogleTest)
