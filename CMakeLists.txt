@@ -78,6 +78,8 @@ add_executable(veripython
         EmitFIRRTL.cpp
         EmitFIRRTL.h
         Exceptions.h
+        FIRToHW.cpp
+        FIRToHW.h
 )
 
 target_link_libraries(veripython PRIVATE lexer -lfl)
@@ -109,6 +111,8 @@ if (NOT (build_type STREQUAL "release"))
             EmitFIRRTL.cpp
             EmitFIRRTL.h
             Exceptions.h
+            FIRToHW.cpp
+            FIRToHW.h
     )
     target_link_libraries(ParserTests PRIVATE GTest::gtest_main)
     target_link_libraries(ParserTests PRIVATE lexer -lfl)
