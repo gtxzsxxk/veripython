@@ -1,6 +1,7 @@
 #include "Parser.h"
 #include "RtlVisualizer.h"
 #include "EmitFIRRTL.h"
+#include "FIRToHW.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -12,13 +13,14 @@ static const auto usageString =
         "Usage\n"
         "=====\n\n"
         "veripython [OPTION]... [FILE]...\n"
-        "Another implementation for Verilator with Python target\n\n"
+        "Verilog (subset) frontend and Python testbench generator with CIRCT (LLVM) backend\n\n"
         "This program supports parsing a subset of verilog and generate IR in FIRRTL. Supported arguments:\n"
         "  -o           Specify the output filename\n"
         "  -ast         Output the AST in Json format.\n"
         "  -vis         Use graphviz to generate the RTL view. Your system must support the 'dot' command\n"
         "  -token       Only output the token stream\n"
-        "  -firrtl      Parse the verilog source file and emit IR in FIRRTL\n"
+        "  -firrtl      Parse the verilog source file and emit IR in FIRRTL Dialect\n"
+        "  -hw          Parse the verilog source file and emit IR in HW Dialect\n"
         "\n"
         "Example:\n"
         "veripython full_adder.v -o full_adder.json -ast\n"
@@ -28,7 +30,8 @@ enum class FrontendTask {
     NOT_SPECIFIED,
     AST,
     TOKEN_STREAM,
-    EMIT_FIRRTL
+    EMIT_FIRRTL,
+    EMIT_HW
 };
 
 std::string getAllTokens(const std::string &filename);
@@ -77,6 +80,12 @@ int main(int argc, char **argv) {
                 return 1;
             }
             task = FrontendTask::EMIT_FIRRTL;
+        } else if (!strcmp(argv[i], "-hw")) {
+            if (task != FrontendTask::NOT_SPECIFIED) {
+                usage();
+                return 1;
+            }
+            task = FrontendTask::EMIT_HW;
         } else {
             inputFiles.emplace_back(argv[i]);
         }
@@ -105,7 +114,6 @@ int main(int argc, char **argv) {
 
     try {
         auto parser = Parser(inputFiles[0]);
-        mlir::ModuleOp module;
         parser.parseHDL();
         parser.hardwareModule.buildCircuit();
         if (visualization) {
@@ -116,10 +124,15 @@ int main(int argc, char **argv) {
 
         if (task == FrontendTask::AST) {
             outputData = parser.hardwareModule.toString();
-        } else if (task == FrontendTask::EMIT_FIRRTL) {
+        } else if (task == FrontendTask::EMIT_FIRRTL || task == FrontendTask::EMIT_HW) {
             auto emitter = EmitFIRRTL{parser.hardwareModule};
-            module = emitter.emitModuleOp();
+            auto module = emitter.emitModuleOp();
+            if (task == FrontendTask::EMIT_HW) {
+                auto converter = FIRToHW(emitter.getContext());
+                converter.convertToHW(module);
+            }
             outputData = EmitFIRRTL::ModuleToMLIR(module);
+            module.erase();
         } else if (!visualization) {
             usage();
             return 1;
@@ -135,10 +148,6 @@ int main(int argc, char **argv) {
             }
             out << outputData << std::endl;
             out.close();
-        }
-
-        if (task == FrontendTask::EMIT_FIRRTL) {
-            module.erase();
         }
     } catch (const ParsingException &e) {
         std::cerr << "Parser error: " << e.what() << std::endl;
