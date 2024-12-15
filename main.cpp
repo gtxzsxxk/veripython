@@ -2,6 +2,7 @@
 #include "RtlVisualizer.h"
 #include "EmitFIRRTL.h"
 #include "FIRToHW.h"
+#include "ArcBackend.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -21,6 +22,7 @@ static const auto usageString =
         "  -token       Only output the token stream\n"
         "  -firrtl      Parse the verilog source file and emit IR in FIRRTL Dialect\n"
         "  -hw          Parse the verilog source file and emit IR in HW Dialect\n"
+        "  -llvm        Use Arcilator (CIRCT) as backend to emit LLVM IR for verilog simulation\n"
         "\n"
         "Example:\n"
         "veripython full_adder.v -o full_adder.json -ast\n"
@@ -31,7 +33,8 @@ enum class FrontendTask {
     AST,
     TOKEN_STREAM,
     EMIT_FIRRTL,
-    EMIT_HW
+    EMIT_HW,
+    EMIT_LLVM
 };
 
 std::string getAllTokens(const std::string &filename);
@@ -86,6 +89,12 @@ int main(int argc, char **argv) {
                 return 1;
             }
             task = FrontendTask::EMIT_HW;
+        } else if (!strcmp(argv[i], "-llvm")) {
+            if (task != FrontendTask::NOT_SPECIFIED) {
+                usage();
+                return 1;
+            }
+            task = FrontendTask::EMIT_LLVM;
         } else {
             inputFiles.emplace_back(argv[i]);
         }
@@ -124,14 +133,21 @@ int main(int argc, char **argv) {
 
         if (task == FrontendTask::AST) {
             outputData = parser.hardwareModule.toString();
-        } else if (task == FrontendTask::EMIT_FIRRTL || task == FrontendTask::EMIT_HW) {
+        } else if (task == FrontendTask::EMIT_FIRRTL || task == FrontendTask::EMIT_HW ||
+                   task == FrontendTask::EMIT_LLVM) {
             auto emitter = EmitFIRRTL{parser.hardwareModule};
             auto module = emitter.emitModuleOp();
-            if (task == FrontendTask::EMIT_HW) {
+            if (task == FrontendTask::EMIT_HW || task == FrontendTask::EMIT_LLVM) {
                 auto converter = FIRToHW(emitter.getContext());
                 converter.convertToHW(module);
             }
-            outputData = EmitFIRRTL::ModuleToMLIR(module);
+            if (task != FrontendTask::EMIT_LLVM) {
+                outputData = EmitFIRRTL::ModuleToMLIR(module);
+            } else {
+                auto backend = ArcBackend(emitter.getContext());
+                backend.convertHWToArc(module);
+                outputData = backend.convertArcToLLVMIR(module);
+            }
             module.erase();
         } else if (!visualization) {
             usage();
