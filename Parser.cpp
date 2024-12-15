@@ -85,6 +85,8 @@ Parser::Parser(const std::string &filename) : sourceFileName(filename) {
         sourceFileLines.push_back(line);
     }
     src.close();
+    yy_lineno = 1;
+    yycolumn = 1;
     yyin = fopen(filename.c_str(), "r");
 }
 
