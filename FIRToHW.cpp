@@ -16,12 +16,6 @@ void FIRToHW::convertToHW(mlir::ModuleOp &moduleOp) {
 
     mlir::PassManager pm(&context);
     circt::firtool::FirtoolOptions opt{};
-    if (mlir::failed(circt::firtool::populatePreprocessTransforms(pm, opt))) {
-        throw CircuitException("Failed to run preprocess");
-    }
-    if (mlir::failed(circt::firtool::populateCHIRRTLToLowFIRRTL(pm, opt, ""))) {
-        throw CircuitException("Failed to run firrtl to low firrtl");
-    }
     if (mlir::failed(circt::firtool::populateLowFIRRTLToHW(pm, opt))) {
         throw CircuitException("Failed to run low firrtl to hw");
     }
