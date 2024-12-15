@@ -1,5 +1,8 @@
 from enum import Enum, auto
 import ctypes
+import llvmlite
+
+llvmlite.opaque_pointers_enabled = True
 import llvmlite.binding as llvm
 
 
@@ -31,35 +34,37 @@ class mux_2to1Layout:
 
 class mux_2to1View:
   class __io_in_op_uint8:
-    def __init__(self, ptr):
+    def __init__(self, ptr, offset):
       self.__ptr = ptr
+      self.__offset = offset
 
     def poke(self, data: int):
-      self.__ptr.contents = ctypes.c_uint8(data)
+      self.__ptr[self.__offset] = data
 
     def peek(self):
-      return self.__ptr.contents.value
+      return self.__ptr[self.__offset]
 
   class __io_out_op_uint8:
-    def __init__(self, ptr):
+    def __init__(self, ptr, offset):
       self.__ptr = ptr
+      self.__offset = offset
 
     def poke(self, data: int):
       raise TypeError("This port is read-only")
 
     def peek(self):
-      return self.__ptr.contents.value
+      return self.__ptr[self.__offset]
 
   def __init__(self):
     self.storage = ctypes.create_string_buffer(4)
-    self.a = self.__io_in_op_uint8(ctypes.cast(ctypes.byref(self.storage, 0),
-                                               ctypes.POINTER(ctypes.c_uint8)))
-    self.b = self.__io_in_op_uint8(ctypes.cast(ctypes.byref(self.storage, 1),
-                                               ctypes.POINTER(ctypes.c_uint8)))
-    self.sel = self.__io_in_op_uint8(ctypes.cast(ctypes.byref(self.storage, 2),
-                                                 ctypes.POINTER(ctypes.c_uint8)))
-    self.out = self.__io_out_op_uint8(ctypes.cast(ctypes.byref(self.storage, 3),
-                                                  ctypes.POINTER(ctypes.c_uint8)))
+    self.a = self.__io_in_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
+                                               ctypes.POINTER(ctypes.c_uint8)), 0)
+    self.b = self.__io_in_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
+                                               ctypes.POINTER(ctypes.c_uint8)), 1)
+    self.sel = self.__io_in_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
+                                                 ctypes.POINTER(ctypes.c_uint8)), 2)
+    self.out = self.__io_out_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
+                                                  ctypes.POINTER(ctypes.c_uint8)), 3)
 
 
 class mux_2to1:
@@ -87,6 +92,9 @@ class mux_2to1:
     """
 
   def __init__(self):
+    if int(llvmlite.__version__.split('.')[1]) < 44:
+      raise ImportError("The version of llvmlite must greater than or equal to 0.44")
+
     self.view = mux_2to1View()
 
     llvm.initialize()
