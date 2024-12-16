@@ -1,4 +1,4 @@
-# Veripython: another implementation for Verilator with Python target
+# Veripython: Verilog (subset) frontend and Python testbench generator with CIRCT (LLVM) backend
 
 源语言：Verilog，目标语言：LLVM 与 Python。
 
