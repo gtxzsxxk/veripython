@@ -129,14 +129,14 @@ std::string Testbench::emitPythonModule(const std::string &ir) {
     out << "\n\n";
 
     out << "class " << model.name << ":\n"
-        << "  llvm_ir = \"\"\"\n" << ir << "\n    \"\"\"\n";
+        << "  llvm_ir = \"\"\"\n" << ir << "\n    \"\"\"\n\n";
 
-    out << "  def __init__(self):\n"
+    out << "  def __init__(self, vcd_enabled=False):\n"
            "    if int(llvmlite.__version__.split('.')[1]) < 44:\n"
            "      raise ImportError(\"The version of llvmlite must greater than or equal to 0.44\")\n";
     out << "    self.view = " << model.name << "View()\n";
     out << "    self.layout = " << model.name << "Layout()\n";
-    out << "\n"
+    out << "    self.vcd_enabled = vcd_enabled\n\n"
            "    llvm.initialize()\n"
            "    llvm.initialize_native_target()\n"
            "    llvm.initialize_native_asmprinter()\n"
@@ -186,9 +186,9 @@ std::string Testbench::emitPythonModule(const std::string &ir) {
            "\n"
            "    self.timestamp = 0\n"
            "\n"
-           "  def eval(self, vcd_enabled=False):\n"
+           "  def eval(self):\n"
            "    self.__eval_func(self.eval_param)\n"
-           "    if vcd_enabled:\n"
+           "    if self.vcd_enabled:\n"
            "      self.vcd_change()\n"
            "    self.timestamp += 1\n"
            "\n"
@@ -203,7 +203,7 @@ std::string Testbench::emitPythonModule(const std::string &ir) {
            "if __name__ == \"__main__\":\n"
            "  dut = ";
 
-    out << model.name << "()\n";
+    out << model.name << "(True)\n";
 
     return out.str();
 }
