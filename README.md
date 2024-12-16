@@ -21,9 +21,9 @@ Verilator 是一个开源的高性能 Verilog 和 SystemVerilog 模拟器，主�
 和功能验证。
 
 作为编译原理课程的大作业，VeriPython 将实现一个 Verilog Parser（进行词法分析、语法分析）、电路前向传播计算图生成器（语义检查与电路生成）、
-MLIR (LLVM) 生成器与 Arcilator (CIRCT (LLVM)) 中的 Python 后端。为了留出更多时间供我们探索编译原理的核心知识，我们简化了语言支持，
+MLIR (LLVM) 生成器与 基于 Arcilator (LLVM 子项目 CIRCT 的子项目) 的 Python 后端。为了留出更多时间供我们探索编译原理的核心知识，我们简化了语言支持，
 我们只解析了 Verilog 语法的子集，并且只计划支持可综合的代码，也就是 Verilog 的 Initial 等不可综合的代码块是不被支持的，允许我们专注于
-Verilog 编译器的核心任务：生成正确的硬件电路，而不是处理复杂的仿真语法。
+Verilog 编译器的核心任务：生成正确的硬件电路，调用 LLVM 基础设施，完成仿真任务，而不是处理复杂的仿真语法。
 
 本项目不仅符合编译原理课程的要求（包括词法分析、语法分析、IR 生成和目标代码生成），还会深入探索硬件描述语言的编译过程，
 这对编译器设计的理解具有很好的拓展性和研究价值。它能够结合我们对硬件与编译器的兴趣，展示出我们对这两个领域的交叉应用能力。
@@ -34,6 +34,10 @@ Verilog 编译器的核心任务：生成正确的硬件电路，而不是处理
 - 语法分析与 AST：徐浩然
 - 语义检查与组合逻辑电路生成：杨之凡
 - 语法分析、电路生成、时序逻辑与 LLVM：赵涵远
+
+## Overview
+
+![我们的项目以 CIRCT 作为后端，整体的工作流程、调用关系如图所示](doc/overview.png)
 
 ## 编译与运行说明
 
@@ -57,16 +61,28 @@ $ make -j
 # exe 目录内提供 veripython 的二进制（在 Ubuntu 22.04 下编译），
 # 如果测试机器的c库满足条件，或者系统大于22.04，可以直接执行
 $ veripython ../tests/verilog_srcs/full_adder.v -o full_adder.json -ast -vis
-# 生成 FIRRTL 的中间表示
+# 生成 FIRRTL 的中间表示（IR）
 $ veripython ../tests/verilog_srcs/mux_test.v -firrtl
+# 生成以 Python 模块形式封装好的仿真激励模板文件（Testbench）
+$ veripython ../tests/verilog_srcs/birthday.v
 ```
 
 支持的参数有：
-- `-o`：指定输出文件名
-- `-ast`：将语法分析树以`json`格式进行输出
-- `-vis`：使用`graphviz`生成 HDL 的 RTL 视图到 `rtl_view.png`中
-- `-token`：仅生成 `token` 流
-- `-firrtl`：解析 Verilog 源文件，并且以 `FIRRTL` 作为 IR 输出
+- `-o`：指定输出文件名.
+
+- `-ast`：将语法分析树以`json`格式进行输出.
+
+- `-vis`：使用`graphviz`生成 HDL 的 RTL 视图到 `rtl_view.png`中.
+
+- `-token`：仅生成 `token` 流.
+
+- `-firrtl`：解析 Verilog 源文件，并且以 `FIRRTL` 作为 IR 输出.
+
+- `-hw`：基于已有的 `FIRRTL` 方言的 IR，转换为（Lowering into） `HW` 方言的IR.
+- 
+- `-llvm`：调用 `CIRCT` 的 `Arcilator`，将表示电路结构的 IR 转换为为可生成通用计算机机器指令的 LLVM IR.
+
+- `-testbench`：生成上述的 LLVM IR，并且封装为调用 `llvmlite` 进行仿真的 Python module，暴露电路的端口以供激励。
 
 ## 实现
 
@@ -248,7 +264,148 @@ FIRRTL（Flexible Intermediate Representation for RTL）是一种中间表示（
 MLIR 的基础设施可以对生成的 FIRRTL 进行硬件级优化，例如消除冗余逻辑、优化时序路径等。最后，使用 LLVM 等基础设施提供的转换能力，
 可以将 FIRRTL 表示进一步转换为 Verilog 或其他后端格式，以支持硬件综合和仿真。
 
+### 调用 Arcilator 作为后端，生成硬件仿真代码
+
+Arcilator 是一个基于 **CIRCT** 框架开发的硬件仿真工具，旨在提供快速且周期准确的 RTL（寄存器传输级）硬件仿真。
+CIRCT（Circuit IR Compilers and Tools）是一个基于 **LLVM** 基础设施的开源框架，专注于硬件设计的高效表示和优化。
+Arcilator 利用了 CIRCT 提供的硬件特定中间表示（如 HW 和 Comb 方言）以及 LLVM 的优化和代码生成能力，
+将硬件描述从 CIRCT 的 IR 转化为 LLVM IR，再通过 LLVM 的编译工具链生成高效的仿真器代码。
+
+Arcilator 结合了 CIRCT 的硬件建模能力和 LLVM 的优化能力，因此我们选择以 Arcilator 作为编译器的后端。要将我们的电路结构转换为
+Arcilator 能够识别的 `Arc` 方言，首先需要将电路转换为 `FIRRTL` 表示，再利用管线 `populateLowFIRRTLToHW` 将 `FIRRTL` 转换为
+`HW` 方言表示。接着需要进行 `populateHwModuleToArcPipeline` 管线，该管线转换端口类型、转换电路状态并且时不时进行一些冗余优化，
+最终生成了 `Arc` 表示。再使用以 `createLowerArcToLLVMPass` 为主的 Pass 将 `Arc` 表示 "Lowering into" LLVM IR。此时我们就
+得到了硬件仿真代码。这一流程可以在图1中完全体现。
+
+例如如下的 verilog 代码：
+
+```verilog
+module mux_2to1(
+    input [2:0] a,
+    input [3:0] b,
+    input [1:0] sel,
+    output [2:0] out
+);
+    assign out = sel[0] ? b[3:1] : (sel[1] ? a : 3'd2);
+endmodule
+```
+
+生成的 `FIRRTL` 表示：
+
+```asm
+module {
+  firrtl.circuit "mux_2to1" {
+    firrtl.module @mux_2to1(in %a: !firrtl.uint<3>, in %b: !firrtl.uint<4>, 
+    in %sel: !firrtl.uint<2>, out %out: !firrtl.uint<3>) {
+      %0 = firrtl.bits %sel 0 to 0 : (!firrtl.uint<2>) -> !firrtl.uint<1>
+      %_sel__0 = firrtl.node interesting_name %0 : !firrtl.uint<1>
+      %1 = firrtl.bits %b 3 to 1 : (!firrtl.uint<4>) -> !firrtl.uint<3>
+      %_b__1 = firrtl.node interesting_name %1 : !firrtl.uint<3>
+      %2 = firrtl.bits %sel 1 to 1 : (!firrtl.uint<2>) -> !firrtl.uint<1>
+      %_sel__2 = firrtl.node interesting_name %2 : !firrtl.uint<1>
+      %c2_ui3 = firrtl.constant 2 : !firrtl.const.uint<3>
+      %3 = firrtl.mux(%_sel__2, %a, %c2_ui3) : (!firrtl.uint<1>, !firrtl.uint<3>, 
+      !firrtl.const.uint<3>) -> !firrtl.uint<3>
+      %4 = firrtl.mux(%_sel__0, %_b__1, %3) : (!firrtl.uint<1>, !firrtl.uint<3>, 
+      !firrtl.uint<3>) -> !firrtl.uint<3>
+      %5 = firrtl.bits %4 2 to 0 : (!firrtl.uint<3>) -> !firrtl.uint<3>
+      %___comb_multiplexer__0__3 = firrtl.node interesting_name %5 : !firrtl.uint<3>
+      firrtl.matchingconnect %out, %___comb_multiplexer__0__3 : !firrtl.uint<3>
+    }
+  }
+}
+```
+
+生成的 `HW` 方言：
+
+```asm
+module {
+  hw.module @mux_2to1(in %a : i3, in %b : i4, in %sel : i2, out out : i3) {
+    %c2_i3 = hw.constant 2 : i3
+    %0 = comb.extract %sel from 0 {sv.namehint = "_sel__0"} : (i2) -> i1
+    %1 = comb.extract %b from 1 {sv.namehint = "_b__1"} : (i4) -> i3
+    %2 = comb.extract %sel from 1 {sv.namehint = "_sel__2"} : (i2) -> i1
+    %3 = comb.mux bin %2, %a, %c2_i3 : i3
+    %4 = comb.mux bin %0, %1, %3 {sv.namehint = "___comb_multiplexer__0__3"} : i3
+    hw.output %4 : i3
+  }
+  om.class @mux_2to1_Class(%basepath: !om.basepath) {
+    om.class.fields
+  }
+}
+```
+
+最终会生成如下用于硬件仿真的 LLVM IR：
+
+```asm
+define void @mux_2to1_eval(ptr %0) {
+  %2 = getelementptr i8, ptr %0, i32 2
+  %3 = load i2, ptr %2, align 1
+  %4 = getelementptr i8, ptr %0, i32 1
+  %5 = load i4, ptr %4, align 1
+  %6 = load i3, ptr %0, align 1
+  %7 = trunc i2 %3 to i1
+  %8 = lshr i4 %5, 1
+  %9 = trunc i4 %8 to i3
+  %10 = lshr i2 %3, 1
+  %11 = trunc i2 %10 to i1
+  %12 = select i1 %11, i3 %6, i3 2
+  %13 = select i1 %7, i3 %9, i3 %12
+  %14 = getelementptr i8, ptr %0, i32 3
+  store i3 %13, ptr %14, align 1
+  ret void
+}
+```
+
+这个 `mux_2to1_eval` 函数的参数，为一个指向连续内存的指针，对应着电路内的状态。每次执行这个函数，都会根据输入改变输出，并且将结果写回
+这片连续内存内。
+
+### 封装为 Python Testbench Module
+
+Arcilator 提供了上述的连续内存的布局信息，我们利用元编程的思想，生成了一个可以操作上述状态的 Python 模块。该模块导入了 `llvmlite` 包，
+使用 JIT 的方式加速 LLVM IR 的执行。生成这个 Python 模块时，在代码中硬编码了内存布局信息，使用 `ctypes` 操作这片内存，并且向用户
+封装这一过程。该模块还导入了 `pyvcd` 包，在仿真时还支持导出波形文件，可以使用其它工具进行查看，更加利于调试。
+
+完整代码太过冗长。这里不做展示。如果用户使用我们的模块进行仿真调试，只需要如下几行代码：
+
+```python
+# mux_2to1_pytb 模块为我们的项目生成的模块
+from mux_2to1_pytb import mux_2to1
+
+if __name__ == "__main__":
+  # dut: device under test
+  dut = mux_2to1(True) # True 意味着记录波形，仿真结束后，生成波形文件
+  # 利用类似 chisel 的 poke 和 peek 接口，控制端口信号
+  dut.view.a.poke(4)
+  dut.view.b.poke(5)
+  dut.view.sel.poke(2)
+  # 设置好输入信号后，执行 LLVM IR 求值
+  dut.eval()
+  # 利用高级语言特性，方便地进行输出与调试
+  print(dut.view.out.peek())
+  # 断言输出是否与期待的一致
+  assert dut.view.out.peek() == 4
+
+  # 重复实验
+  dut.view.a.poke(5)
+  dut.view.b.poke(7)
+  dut.view.sel.poke(1)
+  dut.eval()
+  print(dut.view.out.peek())
+  assert dut.view.out.peek() == 3
+
+  # 重复实验
+  dut.view.a.poke(5)
+  dut.view.b.poke(7)
+  dut.view.sel.poke(0)
+  dut.eval()
+  print(dut.view.out.peek())
+  assert dut.view.out.peek() == 2
+```
+
 ## 运行结果
+
+### 前端部分
 
 电路源代码：
 
@@ -280,14 +437,83 @@ end
 endmodule
 ```
 
-生成的 RTL 视图如图1所示：
+生成的 RTL 视图如图2所示：
 
 ![RTL 级别视图](doc/reg_tst_2_rtl.png)
 
-手动重绘后的视图如图2所示：
+手动重绘后的视图如图3所示：
 
 ![手动重绘后的视图（Elaborated Design）](doc/reg_tst_2_elaborated.png)
 
 可以观察到，我们的前端正常工作，正确解析了 verilog 源代码，并且正确生成了复用器（Multiplexer）、非门、加法器、比较器（全部相等）、
-寄存器、输入输出端口等电路组件，成功生成了 DAG 图。仿真功能我们目前仅支持组合逻辑，时序逻辑由于需要依赖于敏感列表进行寄存器的更新，因此
-仍然在 WIP 中。
+寄存器、输入输出端口等电路组件，成功生成了 DAG 图。我们项目内部自带了一个基于 DAG 的前向传播仿真器，仿真器的结果正确，
+集成了 gtest 框架，能够通过 CI 测试。
+
+### 后端部分
+
+为了测试后端运行结果，我们引入了本科数字电路课程中的一个实验模块：生日密码锁。该密码锁有10个按键，主要模型为 Moore 有限状态机，
+用户按键后，只要最近一次按键为密码 `919`，就进入开锁状态，否则关锁。该代码文件名为 `birthday.v`。
+
+该测例主要测试前端的解析功能，尤其是表达式中的三元运算符、线束连接和 `if-else` 块的处理和电路结构的生成。该测例也覆盖了后端的
+状态管理、硬件仿真等功能，可以验证我们项目实现的正确性。该模块生成的 RTL 视图如图4所示。根据此图也可以看出，该电路结构十分复杂，
+符合我们的测试要求。
+
+![生日密码锁模块的 RTL 级别视图](doc/birthday_rtl.png)
+
+在生成了 Python 仿真激励模块后，我们编写如下的仿真激励代码：
+
+```Python
+from birthday_locker_tb import birthday_locker
+
+if __name__ == "__main__":
+  # dut: device under test
+  dut = birthday_locker(True)
+
+  # 模块采用 one-hot 编码，这里进行转换，体现了高级语言的优越性
+  def digitToOneHot(digit):
+    assert (0 <= digit <= 9)
+    return 2 ** digit
+
+
+  # 在时钟采样前设置好用户的按键输入
+  def doInputPerClock(digit):
+    dut.view.clk.poke(0)
+    dut.view.key.poke(digitToOneHot(digit))
+    dut.eval()
+
+    dut.view.clk.poke(1)
+    dut.eval()
+
+
+  # 复位
+  dut.view.key.poke(0)
+  dut.view.rst_n.poke(0)
+  dut.view.clk.poke(0)
+  dut.eval()
+  dut.view.clk.poke(1)
+  dut.eval()
+
+  # 复位结束，电路开始工作
+  dut.view.rst_n.poke(1)
+
+  # 输入一串数字，观察什么时候开锁
+  doInputPerClock(8)
+  doInputPerClock(9)
+  doInputPerClock(1)
+  doInputPerClock(9) # 此时应该开锁，状态应该显示 UNLOCKED
+  doInputPerClock(9) # 关锁
+  doInputPerClock(1)
+  doInputPerClock(9) # 又开锁
+
+  # 用户松手
+  dut.view.key.poke(0)
+
+  # 继续仿真几个周期，开锁状态应该保持
+  # ...
+```
+
+仿真结束后，我们得到了仿真波形。使用 `gtkwave` 查看波形，波形如图 5 所示。该波形成功对应了我们的仿真激励，验证了我们实现的正确性。
+
+![生日密码锁模块的仿真波形](doc/birthday_wave.png)
+
+
