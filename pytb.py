@@ -1,5 +1,7 @@
 from enum import Enum, auto
+from vcd import VCDWriter
 import ctypes
+import sys
 import llvmlite
 
 llvmlite.opaque_pointers_enabled = True
@@ -140,17 +142,41 @@ class mux_2to1:
     self.eval_param = ctypes.cast(ctypes.byref(self.view.storage, 0),
                                   ctypes.POINTER(ctypes.c_uint8))
 
-  def eval(self):
+    fp = open(mux_2to1Layout.name + "_pytb.vcd", "w")
+    self.vcd_writer = VCDWriter(fp, timescale='1 ns', date='today')
+    for sig in mux_2to1Layout.io:
+      sig.vcd_var = self.vcd_writer.register_var(mux_2to1Layout.name, sig.name, "wire", size=sig.num_bits)
+
+    self.timestamp = 0
+
+  def eval(self, vcd_enabled=False):
     self.__eval_func(self.eval_param)
+    if vcd_enabled:
+      self.vcd_change()
+    self.timestamp += 1
+
+  def vcd_change(self):
+    for sig in mux_2to1Layout.io:
+      self.vcd_writer.change(sig.vcd_var, self.timestamp, getattr(self.view, sig.name).peek())
 
 
 if __name__ == "__main__":
   dut = mux_2to1()
-  dut.view.a.poke(3)
+  dut.view.a.poke(4)
   dut.view.b.poke(5)
   dut.view.sel.poke(2)
-  dut.eval()
-  print(dut.view.a.peek())
-  print(dut.view.b.peek())
-  print(dut.view.sel.peek())
+  dut.eval(True)
   print(dut.view.out.peek())
+  assert dut.view.out.peek() == 4
+  dut.view.a.poke(5)
+  dut.view.b.poke(7)
+  dut.view.sel.poke(1)
+  dut.eval(True)
+  print(dut.view.out.peek())
+  assert dut.view.out.peek() == 3
+  dut.view.a.poke(5)
+  dut.view.b.poke(7)
+  dut.view.sel.poke(0)
+  dut.eval(True)
+  print(dut.view.out.peek())
+  assert dut.view.out.peek() == 2
