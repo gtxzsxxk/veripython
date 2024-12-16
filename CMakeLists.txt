@@ -105,6 +105,8 @@ add_executable(veripython
         FIRToHW.h
         ArcBackend.cpp
         ArcBackend.h
+        Testbench.cpp
+        Testbench.h
 )
 
 target_link_libraries(veripython PRIVATE lexer -lfl)
@@ -136,6 +138,8 @@ if (NOT (build_type STREQUAL "release"))
             FIRToHW.h
             ArcBackend.cpp
             ArcBackend.h
+            Testbench.cpp
+            Testbench.h
     )
     target_link_libraries(ParserTests PRIVATE GTest::gtest_main)
     target_link_libraries(ParserTests PRIVATE lexer -lfl)
