@@ -1,7 +1,6 @@
 from enum import Enum, auto
 from vcd import VCDWriter
 import ctypes
-import sys
 import llvmlite
 
 llvmlite.opaque_pointers_enabled = True
@@ -28,45 +27,69 @@ class mux_2to1Layout:
   name = "mux_2to1"
   num_states = 4
   num_state_bytes = 4
-  io = [Signal("a", 0, 3, SignalType.INPUT),
-        Signal("b", 1, 4, SignalType.INPUT),
-        Signal("sel", 2, 2, SignalType.INPUT),
-        Signal("out", 3, 3, SignalType.OUTPUT)]
+  io = [
+    Signal("a", 0, 3, SignalType.INPUT),
+    Signal("b", 1, 4, SignalType.INPUT),
+    Signal("sel", 2, 2, SignalType.INPUT),
+    Signal("out", 3, 3, SignalType.OUTPUT)
+  ]
 
 
 class mux_2to1View:
-  class __io_in_op_uint8:
-    def __init__(self, ptr, offset):
+  class __io_in_:
+    def __init__(self, ptr, offset, bits):
       self.__ptr = ptr
       self.__offset = offset
+      self.__bits = bits
 
+    # Data is little endian
     def poke(self, data: int):
-      self.__ptr[self.__offset] = data
+      cur_pos = 0
+      while True:
+        self.__ptr[self.__offset + cur_pos] = (data >> (cur_pos * 8)) & 0xff
+        cur_pos += 1
+        if cur_pos * 8 >= self.__bits:
+          break
 
     def peek(self):
-      return self.__ptr[self.__offset]
+      data = 0
+      cur_pos = 0
+      while True:
+        data |= (self.__ptr[self.__offset + cur_pos] << (cur_pos * 8))
+        cur_pos += 1
+        if cur_pos * 8 >= self.__bits:
+          break
+      return data
 
-  class __io_out_op_uint8:
-    def __init__(self, ptr, offset):
+  class __io_out_:
+    def __init__(self, ptr, offset, bits):
       self.__ptr = ptr
       self.__offset = offset
+      self.__bits = bits
 
     def poke(self, data: int):
       raise TypeError("This port is read-only")
 
     def peek(self):
-      return self.__ptr[self.__offset]
+      data = 0
+      cur_pos = 0
+      while True:
+        data |= (self.__ptr[self.__offset + cur_pos] << (cur_pos * 8))
+        cur_pos += 1
+        if cur_pos * 8 >= self.__bits:
+          break
+      return data
 
   def __init__(self):
     self.storage = ctypes.create_string_buffer(4)
-    self.a = self.__io_in_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
-                                               ctypes.POINTER(ctypes.c_uint8)), 0)
-    self.b = self.__io_in_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
-                                               ctypes.POINTER(ctypes.c_uint8)), 1)
-    self.sel = self.__io_in_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
-                                                 ctypes.POINTER(ctypes.c_uint8)), 2)
-    self.out = self.__io_out_op_uint8(ctypes.cast(ctypes.pointer(self.storage),
-                                                  ctypes.POINTER(ctypes.c_uint8)), 3)
+    self.a = self.__io_in_(ctypes.cast(ctypes.pointer(self.storage),
+                                       ctypes.POINTER(ctypes.c_uint8)), 0, 3)
+    self.b = self.__io_in_(ctypes.cast(ctypes.pointer(self.storage),
+                                       ctypes.POINTER(ctypes.c_uint8)), 1, 4)
+    self.sel = self.__io_in_(ctypes.cast(ctypes.pointer(self.storage),
+                                         ctypes.POINTER(ctypes.c_uint8)), 2, 2)
+    self.out = self.__io_out_(ctypes.cast(ctypes.pointer(self.storage),
+                                          ctypes.POINTER(ctypes.c_uint8)), 3, 3)
 
 
 class mux_2to1:
@@ -98,6 +121,7 @@ class mux_2to1:
       raise ImportError("The version of llvmlite must greater than or equal to 0.44")
 
     self.view = mux_2to1View()
+    self.layout = mux_2to1Layout()
 
     llvm.initialize()
     llvm.initialize_native_target()
@@ -142,10 +166,10 @@ class mux_2to1:
     self.eval_param = ctypes.cast(ctypes.byref(self.view.storage, 0),
                                   ctypes.POINTER(ctypes.c_uint8))
 
-    fp = open(mux_2to1Layout.name + "_pytb.vcd", "w")
+    fp = open(self.layout.name + "_dump.vcd", "w")
     self.vcd_writer = VCDWriter(fp, timescale='1 ns', date='today')
-    for sig in mux_2to1Layout.io:
-      sig.vcd_var = self.vcd_writer.register_var(mux_2to1Layout.name, sig.name, "wire", size=sig.num_bits)
+    for sig in self.layout.io:
+      sig.vcd_var = self.vcd_writer.register_var(self.layout.name, sig.name, "wire", size=sig.num_bits)
 
     self.timestamp = 0
 
@@ -156,8 +180,11 @@ class mux_2to1:
     self.timestamp += 1
 
   def vcd_change(self):
-    for sig in mux_2to1Layout.io:
+    for sig in self.layout.io:
       self.vcd_writer.change(sig.vcd_var, self.timestamp, getattr(self.view, sig.name).peek())
+
+  def __del__(self):
+    self.vcd_writer.close()
 
 
 if __name__ == "__main__":
