@@ -83,7 +83,9 @@ std::string getAllTokens(const std::string &filename) {
             break;
         }
         std::string data{yylval.str};
-        free(yylval.str);
+        if (ret != TOKEN_single_line_comment_end) {
+            free(yylval.str);
+        }
         out << "{\n"
             << R"(  "token": ")" << tokenToNameArray[ret + 1024] << "\",\n"
             << R"(  "data": ")" << data << "\"\n"
