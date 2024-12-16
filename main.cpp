@@ -3,6 +3,7 @@
 #include "EmitFIRRTL.h"
 #include "FIRToHW.h"
 #include "ArcBackend.h"
+#include "Testbench.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -23,10 +24,12 @@ static const auto usageString =
         "  -firrtl      Parse the verilog source file and emit IR in FIRRTL Dialect\n"
         "  -hw          Parse the verilog source file and emit IR in HW Dialect\n"
         "  -llvm        Use Arcilator (CIRCT) as backend to emit LLVM IR for verilog simulation\n"
+        "  -testbench   [Default] Generate Python testbench module for simulation (requires llvmlite and pyvcd)\n"
         "\n"
         "Example:\n"
-        "veripython full_adder.v -o full_adder.json -ast\n"
-        "veripython mux_test.v -firrtl\n";
+        "veripython full_adder.v -o full_adder.json -ast    # Emit AST in json\n"
+        "veripython mux_test.v -firrtl                      # Emit FIRRTL\n"
+        "veripython mux_test.v                              # Generate Python testbench module\n";
 
 enum class FrontendTask {
     NOT_SPECIFIED,
@@ -34,7 +37,8 @@ enum class FrontendTask {
     TOKEN_STREAM,
     EMIT_FIRRTL,
     EMIT_HW,
-    EMIT_LLVM
+    EMIT_LLVM,
+    PYTHON_TESTBENCH
 };
 
 std::string getAllTokens(const std::string &filename);
@@ -100,6 +104,10 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (task == FrontendTask::NOT_SPECIFIED) {
+        task = FrontendTask::PYTHON_TESTBENCH;
+    }
+
     if (inputFiles.empty() || inputFiles.size() > 1) {
         usage();
         return 1;
@@ -133,25 +141,27 @@ int main(int argc, char **argv) {
 
         if (task == FrontendTask::AST) {
             outputData = parser.hardwareModule.toString();
-        } else if (task == FrontendTask::EMIT_FIRRTL || task == FrontendTask::EMIT_HW ||
-                   task == FrontendTask::EMIT_LLVM) {
+        } else {
             auto emitter = EmitFIRRTL{parser.hardwareModule};
             auto module = emitter.emitModuleOp();
-            if (task == FrontendTask::EMIT_HW || task == FrontendTask::EMIT_LLVM) {
+            if (task != FrontendTask::EMIT_FIRRTL) {
                 auto converter = FIRToHW(emitter.getContext());
                 converter.convertToHW(module);
             }
-            if (task != FrontendTask::EMIT_LLVM) {
+            if (task != FrontendTask::EMIT_LLVM && task != FrontendTask::PYTHON_TESTBENCH) {
                 outputData = EmitFIRRTL::ModuleToMLIR(module);
             } else {
                 auto backend = ArcBackend(emitter.getContext());
                 backend.convertHWToArc(module);
-                outputData = backend.convertArcToLLVMIR(module);
+                if (task == FrontendTask::PYTHON_TESTBENCH) {
+                    auto testbench = Testbench(module);
+                    auto llvmIR = backend.convertArcToLLVMIR(module);
+                    outputData = testbench.emitPythonModule(llvmIR);
+                } else {
+                    outputData = backend.convertArcToLLVMIR(module);
+                }
             }
             module.erase();
-        } else if (!visualization) {
-            usage();
-            return 1;
         }
 
         if (outputFileName.empty()) {
