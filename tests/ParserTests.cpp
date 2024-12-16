@@ -6,6 +6,7 @@
 #include "../EmitFIRRTL.h"
 #include "../FIRToHW.h"
 #include "../ArcBackend.h"
+#include "../Testbench.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <filesystem>
@@ -382,5 +383,29 @@ TEST(ParserTests, LowerToLLVMIRTest) {
     std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
     auto llvmIR = backend.convertArcToLLVMIR(module);
     std::cout << llvmIR << std::endl;
+    module.erase();
+}
+
+TEST(ParserTests, PythonTestbenchTest) {
+    const std::string filename = "../tests/verilog_srcs/reg_simple_test1.v";
+
+    auto parser = Parser(filename);
+    parser.parseHDL();
+    parser.hardwareModule.buildCircuit();
+    auto emitter = EmitFIRRTL(parser.hardwareModule);
+    auto module = emitter.emitModuleOp();
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    {
+        auto converter = FIRToHW(emitter.getContext());
+        converter.convertToHW(module);
+    }
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    auto backend = ArcBackend(emitter.getContext());
+    backend.convertHWToArc(module);
+    std::cout << EmitFIRRTL::ModuleToMLIR(module) << std::endl;
+    auto tb = Testbench(module);
+    auto llvmIR = backend.convertArcToLLVMIR(module);
+    auto pythonTb = tb.emitPythonModule(llvmIR);
+    std::cout << pythonTb << std::endl;
     module.erase();
 }
