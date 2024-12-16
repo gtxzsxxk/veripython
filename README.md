@@ -35,8 +35,6 @@ Verilog 编译器的核心任务：生成正确的硬件电路，调用 LLVM 基
 - 语义检查与组合逻辑电路生成：杨之凡
 - 语法分析、电路生成、时序逻辑与 LLVM：赵涵远
 
-## Overview
-
 ![我们的项目以 CIRCT 作为后端，整体的工作流程、调用关系如图所示](doc/overview.png)
 
 ## 编译与运行说明
@@ -68,6 +66,7 @@ $ veripython ../tests/verilog_srcs/birthday.v
 ```
 
 支持的参数有：
+
 - `-o`：指定输出文件名.
 
 - `-ast`：将语法分析树以`json`格式进行输出.
@@ -79,7 +78,7 @@ $ veripython ../tests/verilog_srcs/birthday.v
 - `-firrtl`：解析 Verilog 源文件，并且以 `FIRRTL` 作为 IR 输出.
 
 - `-hw`：基于已有的 `FIRRTL` 方言的 IR，转换为（Lowering into） `HW` 方言的IR.
-- 
+
 - `-llvm`：调用 `CIRCT` 的 `Arcilator`，将表示电路结构的 IR 转换为为可生成通用计算机机器指令的 LLVM IR.
 
 - `-testbench`：生成上述的 LLVM IR，并且封装为调用 `llvmlite` 进行仿真的 Python module，暴露电路的端口以供激励。
@@ -407,6 +406,10 @@ if __name__ == "__main__":
 
 ### 前端部分
 
+![RTL 级别视图](doc/reg_tst_2_rtl.png)
+
+![手动重绘后的视图（Elaborated Design）](doc/reg_tst_2_elaborated.png)
+
 电路源代码：
 
 ```verilog
@@ -437,13 +440,7 @@ end
 endmodule
 ```
 
-生成的 RTL 视图如图2所示：
-
-![RTL 级别视图](doc/reg_tst_2_rtl.png)
-
-手动重绘后的视图如图3所示：
-
-![手动重绘后的视图（Elaborated Design）](doc/reg_tst_2_elaborated.png)
+生成的 RTL 视图如图2所示。手动重绘后的视图如图3所示。
 
 可以观察到，我们的前端正常工作，正确解析了 verilog 源代码，并且正确生成了复用器（Multiplexer）、非门、加法器、比较器（全部相等）、
 寄存器、输入输出端口等电路组件，成功生成了 DAG 图。我们项目内部自带了一个基于 DAG 的前向传播仿真器，仿真器的结果正确，
